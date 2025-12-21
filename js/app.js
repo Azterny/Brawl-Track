@@ -1,15 +1,14 @@
 const API_BASE = "https://api.brawl-track.com/api";
 const CDN_BRAWLER = "https://cdn.brawlify.com/brawlers/borderless/";
-const CDN_MAP = "https://cdn.brawlify.com/maps/landscape-normal/"; 
+// On utilise le CDN GameMode pour les images d'event, c'est plus fiable que les maps
+const CDN_MODE = "https://cdn.brawlify.com/gamemodes/"; 
 
 let ALL_BRAWLERS = [];
 
 // --- INITIALISATION ---
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Charger les données globales (Brawlers + Maps)
     loadGlobalData();
 
-    // 2. Gérer le Routing (URL)
     if (sessionStorage.redirect) {
         const path = sessionStorage.redirect;
         delete sessionStorage.redirect;
@@ -19,18 +18,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         handleRouting(location.pathname);
     }
 
-    // Gestion bouton Précédent
     window.onpopstate = () => handleRouting(location.pathname);
 });
 
 async function loadGlobalData() {
     try {
-        // Events
         const eventRes = await fetch(`${API_BASE}/events/rotation`);
         const eventData = await eventRes.json();
         if(eventRes.ok) displayEvents(eventData);
 
-        // Tous les Brawlers (pour les grisés)
         const brawlerRes = await fetch(`${API_BASE}/brawlers`);
         const brawlerData = await brawlerRes.json();
         if(brawlerRes.ok) ALL_BRAWLERS = brawlerData.items;
@@ -40,23 +36,39 @@ async function loadGlobalData() {
     }
 }
 
-// --- ROUTING & NAVIGATION ---
+// --- ROUTING ---
 function handleRouting(path) {
+    // Reset de base
+    document.getElementById('home-section').classList.add('hidden');
+    document.getElementById('content').classList.add('hidden');
+    document.getElementById('player-view').classList.add('hidden');
+    document.getElementById('club-view').classList.add('hidden');
+    document.getElementById('leaderboard-view').classList.add('hidden');
+
     if (path === "/" || path === "") {
-        // Accueil : On montre les events
-        document.getElementById('events-section').classList.remove('hidden');
-        document.getElementById('content').classList.add('hidden');
+        document.getElementById('home-section').classList.remove('hidden');
     } 
     else if (path.includes('/stats/player/')) {
         const tag = path.split('/stats/player/')[1];
         if (tag) {
+            document.getElementById('content').classList.remove('hidden');
             document.getElementById('tagInput').value = tag;
             searchPlayer(tag, false);
         }
     } 
     else if (path.includes('/stats/club/')) {
         const tag = path.split('/stats/club/')[1];
-        if (tag) searchClub(tag, false);
+        if (tag) {
+            document.getElementById('content').classList.remove('hidden');
+            searchClub(tag, false);
+        }
+    }
+    else if (path.includes('/leaderboard/')) {
+        const country = path.split('/leaderboard/')[1]; // 'global' ou 'fr'
+        if (country) {
+            document.getElementById('content').classList.remove('hidden');
+            searchLeaderboard(country, false);
+        }
     }
 }
 
@@ -66,7 +78,7 @@ window.goTo = function(url) {
     return false;
 }
 
-// --- FONCTIONS SEARCH ---
+// --- RECHERCHES ---
 
 async function searchPlayer(tagOverride = null, updateUrl = true) {
     let tag = tagOverride || document.getElementById('tagInput').value.trim().toUpperCase().replace('#', '');
@@ -74,29 +86,29 @@ async function searchPlayer(tagOverride = null, updateUrl = true) {
 
     if (updateUrl) history.pushState(null, '', `/stats/player/${tag}`);
 
-    // UI Reset
+    // UI Handling
+    document.getElementById('home-section').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+    
     document.getElementById('loading').classList.remove('hidden');
-    document.getElementById('events-section').classList.add('hidden'); // Cacher events
-    document.getElementById('content').classList.add('hidden');
-    document.getElementById('player-view').classList.remove('hidden');
+    document.getElementById('player-view').classList.add('hidden');
     document.getElementById('club-view').classList.add('hidden');
+    document.getElementById('leaderboard-view').classList.add('hidden');
     document.getElementById('error-msg').classList.add('hidden');
 
     try {
-        // Profil
         const profileRes = await fetch(`${API_BASE}/players/%23${tag}`);
         const profileData = await profileRes.json();
         if (!profileRes.ok) throw new Error(profileData.error || "Joueur introuvable");
         
         displayProfile(profileData);
 
-        // BattleLog
         const battleRes = await fetch(`${API_BASE}/players/%23${tag}/battlelog`);
         const battleData = await battleRes.json();
         if (battleRes.ok) displayBattleLog(battleData.items);
 
         document.getElementById('loading').classList.add('hidden');
-        document.getElementById('content').classList.remove('hidden');
+        document.getElementById('player-view').classList.remove('hidden');
 
     } catch (error) {
         showError(error);
@@ -107,13 +119,13 @@ async function searchClub(tag, updateUrl = true) {
     tag = tag.replace('#', '');
     if (updateUrl) history.pushState(null, '', `/stats/club/${tag}`);
     
+    document.getElementById('home-section').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
     document.getElementById('loading').classList.remove('hidden');
-    document.getElementById('events-section').classList.add('hidden');
-    document.getElementById('content').classList.add('hidden');
     document.getElementById('player-view').classList.add('hidden');
-    document.getElementById('club-view').classList.remove('hidden');
-    document.getElementById('error-msg').classList.add('hidden');
-    
+    document.getElementById('club-view').classList.add('hidden');
+    document.getElementById('leaderboard-view').classList.add('hidden');
+
     try {
         const res = await fetch(`${API_BASE}/clubs/%23${tag}`);
         const data = await res.json();
@@ -121,24 +133,52 @@ async function searchClub(tag, updateUrl = true) {
 
         displayClub(data);
         document.getElementById('loading').classList.add('hidden');
-        document.getElementById('content').classList.remove('hidden');
+        document.getElementById('club-view').classList.remove('hidden');
     } catch (error) {
         showError(error);
     }
 }
 
-// --- AFFICHAGE (DISPLAY) ---
+async function searchLeaderboard(country, updateUrl = true) {
+    if (updateUrl) history.pushState(null, '', `/leaderboard/${country}`);
+
+    document.getElementById('home-section').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('player-view').classList.add('hidden');
+    document.getElementById('club-view').classList.add('hidden');
+    document.getElementById('leaderboard-view').classList.add('hidden');
+
+    try {
+        // L'API Brawl Stars utilise 'global' ou le code pays (ex: 'fr')
+        const res = await fetch(`${API_BASE}/rankings/${country}/players`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Classement introuvable");
+
+        displayLeaderboard(data.items, country);
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('leaderboard-view').classList.remove('hidden');
+    } catch (error) {
+        showError(error);
+    }
+}
+
+// --- AFFICHAGE ---
 
 function displayEvents(events) {
     const grid = document.getElementById('eventsGrid');
     grid.innerHTML = "";
-    // Limite à 6 events
     events.slice(0, 6).forEach(e => {
         const div = document.createElement('div');
         div.className = 'event-card';
-        const mapImg = `${CDN_MAP}${e.event.id}.png`;
+        
+        // Astuce : On nettoie le nom du mode pour correspondre au CDN (ex: "Gem Grab" -> "Gem-Grab")
+        // On gère aussi les cas spéciaux (Solo Showdown -> Showdown) si nécessaire
+        let modeName = e.event.mode.replace(/\s+/g, '-'); 
+        const modeImg = `${CDN_MODE}${modeName}.png`;
+
         div.innerHTML = `
-            <img src="${mapImg}" class="event-img" onerror="this.src='https://cdn.brawlify.com/gamemode/header/0.png'">
+            <img src="${modeImg}" class="event-img" onerror="this.src='https://cdn.brawlify.com/gamemodes/Brawl-Ball.png'">
             <div class="event-info">
                 <div class="event-mode">${e.event.mode}</div>
                 <div class="event-map">${e.event.map}</div>
@@ -149,12 +189,10 @@ function displayEvents(events) {
 }
 
 function displayProfile(data) {
-    // Header
     document.getElementById('pName').innerText = data.name;
     document.getElementById('pName').style.color = "#" + data.nameColor.substring(4);
     document.getElementById('pTag').innerText = data.tag;
 
-    // Club Link
     const clubDiv = document.getElementById('pClub');
     if (data.club && data.club.name) {
         const clubTag = data.club.tag.replace('#', '');
@@ -163,16 +201,13 @@ function displayProfile(data) {
         clubDiv.innerText = "Pas de Club";
     }
     
-    // Stats
     document.getElementById('statTrophies').innerText = data.trophies.toLocaleString();
     document.getElementById('statHighest').innerText = data.highestTrophies.toLocaleString();
     document.getElementById('stat3v3').innerText = data['3vs3Victories'].toLocaleString();
     
-    // Brawlers (Logic Merge)
+    // Brawlers logic
     const grid = document.getElementById('brawlersGrid');
     grid.innerHTML = "";
-    
-    // Si ALL_BRAWLERS n'est pas chargé, on utilise juste ceux du joueur
     let baseList = ALL_BRAWLERS.length > 0 ? ALL_BRAWLERS : data.brawlers;
 
     let mergedList = baseList.map(globalBrawler => {
@@ -181,7 +216,6 @@ function displayProfile(data) {
         return { ...globalBrawler, trophies: 0, rank: 0, power: 0, unlocked: false };
     });
 
-    // Tri : Débloqués (par trophées) > Bloqués (par ID)
     mergedList.sort((a, b) => {
         if (a.unlocked && !b.unlocked) return -1;
         if (!a.unlocked && b.unlocked) return 1;
@@ -192,21 +226,9 @@ function displayProfile(data) {
     mergedList.forEach(b => {
         const div = document.createElement('div');
         div.className = 'brawler-card ' + (b.unlocked ? '' : 'brawler-locked');
-        
-        let footerHtml = "";
-        if (b.unlocked) {
-            let gadgets = b.gadgets ? b.gadgets.length : 0;
-            let sp = b.starPowers ? b.starPowers.length : 0;
-            footerHtml = `
-                <div style="color:#f1c40f">🏆 ${b.trophies}</div>
-                <div class="brawler-details">
-                    <span class="power-badge">LVL ${b.power}</span>
-                    ${gadgets > 0 ? `<span class="gear-icon" style="background:#2ecc71;" title="Gadget"></span>` : ''}
-                    ${sp > 0 ? `<span class="gear-icon" style="background:#f1c40f;" title="Star Power"></span>` : ''}
-                </div>`;
-        } else {
-            footerHtml = `<div style="color:#7f8c8d; margin-top:5px; font-size:0.8em;">🔒 Bloqué</div>`;
-        }
+        let footerHtml = b.unlocked ? 
+            `<div style="color:#f1c40f">🏆 ${b.trophies}</div><div class="brawler-details"><span class="power-badge">LVL ${b.power}</span></div>` : 
+            `<div style="color:#7f8c8d; margin-top:5px; font-size:0.8em;">🔒 Bloqué</div>`;
 
         div.innerHTML = `
             <img src="${CDN_BRAWLER}${b.id}.png" class="brawler-img" loading="lazy">
@@ -235,6 +257,7 @@ function displayClub(data) {
         
         let roleClass = "";
         if(m.role === "president") roleClass = "role-president";
+        if(m.role === "vicePresident") roleClass = "role-vice"; // Couleur Orange ajoutée !
         if(m.role === "senior") roleClass = "role-senior";
 
         div.innerHTML = `
@@ -248,11 +271,46 @@ function displayClub(data) {
     });
 }
 
+function displayLeaderboard(items, country) {
+    const title = country === 'global' ? "🌍 Top Mondial" : "🇫🇷 Top France";
+    document.getElementById('lbTitle').innerText = title;
+    
+    const list = document.getElementById('lbList');
+    list.innerHTML = "";
+
+    items.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'rank-item';
+        const pTag = p.tag.replace('#', '');
+        div.onclick = () => goTo(`/stats/player/${pTag}`);
+
+        let rankClass = "";
+        if(p.rank === 1) rankClass = "rank-1";
+        else if(p.rank === 2) rankClass = "rank-2";
+        else if(p.rank === 3) rankClass = "rank-3";
+        else rankClass = "rank-num";
+
+        let rankDisplay = p.rank;
+        if(p.rank === 1) rankDisplay = "🥇";
+        if(p.rank === 2) rankDisplay = "🥈";
+        if(p.rank === 3) rankDisplay = "🥉";
+
+        div.innerHTML = `
+            <div class="${rankClass}" style="width:50px; text-align:center;">${rankDisplay}</div>
+            <div style="flex-grow:1; display:flex; flex-direction:column;">
+                <span style="font-weight:bold; font-size:1.1em; color: #${p.nameColor.substring(4)}">${p.name}</span>
+                <span style="font-size:0.8em; color:#bdc3c7;">${p.club ? p.club.name : 'Sans Club'}</span>
+            </div>
+            <div style="color:#f1c40f; font-weight:bold;">🏆 ${p.trophies.toLocaleString()}</div>
+        `;
+        list.appendChild(div);
+    });
+}
+
 function displayBattleLog(battles) {
     const list = document.getElementById('battleList');
     list.innerHTML = "";
     
-    // Win Rate
     let winCount = 0;
     battles.forEach(battle => {
         if (battle.battle.result === "victory" || (battle.battle.trophyChange && battle.battle.trophyChange > 0)) winCount++;
@@ -268,7 +326,6 @@ function displayBattleLog(battles) {
         else rateBadge.classList.add('rate-low');
     }
 
-    // List Items
     battles.slice(0, 10).forEach(battle => {
         const div = document.createElement('div');
         let result = "Égalité"; let className = "draw";
