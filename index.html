@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brawl Track</title>
+    <title>Brawl Track - Stats & Logs</title>
     <link rel="icon" href="https://cdn.brawlify.com/brawlers/borderless/16000005.png">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -13,72 +13,86 @@
     <header>
         <h1 onclick="goTo('/')" style="cursor:pointer;">🏆 Brawl Track</h1>
         <div class="search-box">
-            <input type="text" id="tagInput" placeholder="Tag (ex: V8LLPPC)" value="V8LLPPC">
+            <input type="text" id="tagInput" placeholder="Tag joueur (ex: V8LLPPC)" value="V8LLPPC">
             <button onclick="searchPlayer()">Analyser</button>
         </div>
     </header>
 
-    <div id="home-section" class="hidden">
-        <div class="card-section">
-            <h2>📅 Événements</h2>
-            <div id="eventsGrid" class="events-grid">Chargement...</div>
-        </div>
-        <div class="card-section">
-            <h2>🌍 Classements</h2>
-            <div class="leaderboard-selector">
-                <div class="lb-card" onclick="goTo('/leaderboard/global')">🌎 Monde</div>
-                <div class="lb-card" onclick="goTo('/leaderboard/fr')">🇫🇷 France</div>
-            </div>
+    <div id="events-section" class="card-section hidden">
+        <h2>📅 Événements en cours</h2>
+        <div id="eventsGrid" class="events-grid">
+            <div class="loader">Chargement des événements...</div>
         </div>
     </div>
 
-    <div id="loading" class="loader hidden">Chargement...</div>
-    <div id="error-msg" class="loader hidden" style="color:red;"></div>
+    <div id="loading" class="loader hidden">Chargement des données...</div>
+    <div id="error-msg" class="loader hidden" style="color: #e74c3c;"></div>
 
     <div id="content" class="hidden">
         
-        <div id="player-view" class="hidden">
+        <div id="player-view">
             <div class="card-section">
-                <h2 id="pName"></h2> <div id="pClub"></div> <div id="pTag"></div>
+                <h2 id="pName" style="font-size: 2em; margin-bottom: 5px; display:inline-block;"></h2>
+                <div id="pClub" class="club-badge"></div>
+                <div id="pTag" style="color: #bdc3c7; margin-bottom: 20px; font-family: monospace;"></div>
+                
                 <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-val" id="statTrophies">0</div> Trophées</div>
-                    <div class="stat-box"><div class="stat-val" id="statHighest">0</div> Record</div>
-                    <div class="stat-box"><div class="stat-val" id="stat3v3">0</div> 3v3</div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="statTrophies">0</div>
+                        <div class="stat-label">Trophées</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="statHighest">0</div>
+                        <div class="stat-label">Record</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="stat3v3">0</div>
+                        <div class="stat-label">Victoires 3v3</div>
+                    </div>
                 </div>
             </div>
+
             <div class="card-section">
-                <div style="display:flex; justify-content:space-between;"><h2>⚔️ Combats</h2><span id="winRate"></span></div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>⚔️ Derniers Combats</h2>
+                    <span id="winRate" class="win-rate-badge"></span>
+                </div>
                 <div id="battleList"></div>
             </div>
+
             <div class="card-section">
-                <h2>🔥 Brawlers</h2>
+                <h2>🔥 Mes Brawlers</h2>
                 <div class="brawlers-grid" id="brawlersGrid"></div>
             </div>
         </div>
 
         <div id="club-view" class="hidden">
             <div class="card-section">
-                <h2 id="cName"></h2> <div id="cDesc"></div>
+                <h2 id="cName" style="font-size: 2em; margin-bottom: 5px; color:#fab1a0;"></h2>
+                <div id="cDesc" style="color: #bdc3c7; font-style: italic; margin-bottom: 20px;"></div>
+                
                 <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-val" id="cTrophies">0</div> Trophées</div>
-                    <div class="stat-box"><div class="stat-val" id="cMembers">0</div> Membres</div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="cTrophies">0</div>
+                        <div class="stat-label">Trophées Club</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="cMembers">0</div>
+                        <div class="stat-label">Membres</div>
+                    </div>
                 </div>
             </div>
+
             <div class="card-section">
                 <h2>👥 Membres</h2>
                 <div id="membersList"></div>
             </div>
         </div>
 
-        <div id="leaderboard-view" class="hidden">
-            <div class="card-section">
-                <h2 id="lbTitle">Classement</h2>
-                <div id="lbList"></div>
-            </div>
-        </div>
-
     </div>
 </div>
+
 <script src="js/app.js"></script>
+
 </body>
 </html>
