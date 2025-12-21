@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profil - Brawl Track</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -9,45 +10,50 @@
 </head>
 <body>
 
-    <div class="container" style="width: 800px; max-width: 95%;">
+    <div class="container wide">
         
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1 id="player-name">Chargement...</h1>
-            <span id="player-tag" style="color: #ffce00; font-family: 'Lilita One';">#...</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px;">
+            <div>
+                <h1 id="player-name" style="margin: 0; text-align: left;">Chargement...</h1>
+                <span id="player-tag" style="color: #888; font-family: 'Roboto'; font-size: 0.9em;">#...</span>
+            </div>
+            
+            <div id="auth-actions" class="hidden" style="display: flex; gap: 10px;">
+                <button onclick="loadMyStats()" style="background-color: #28a745; width: auto; margin:0; font-size: 0.9em;">🔄 Actualiser</button>
+                <button onclick="logout()" style="background-color: #dc3545; width: auto; margin:0; font-size: 0.9em;">Déco</button>
+            </div>
+
+            <div id="public-actions" class="hidden">
+                <button onclick="window.location.href='index.html'" style="background-color: #444; width: auto; margin:0;">⬅ Retour</button>
+            </div>
         </div>
 
-        <div id="auth-actions" class="hidden">
-            <button onclick="loadMyStats()" style="background-color: #28a745; width: auto;">🔄 Actualiser & Sauvegarder</button>
-            <button onclick="logout()" style="background-color: #dc3545; width: auto;">Déconnexion</button>
-        </div>
-        <div id="public-actions" class="hidden">
-            <button onclick="window.location.href='index.html'" style="background-color: #666;">⬅ Retour Accueil</button>
-        </div>
+        <p id="dashboard-msg" style="color: #aaa; font-style: italic;"></p>
 
         <div id="stats-area" class="stats-grid"></div>
 
         <div id="chart-container" class="hidden" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px;">
-            <h3 style="color: #ffce00;">📈 Progression des Trophées</h3>
-            <canvas id="trophyChart"></canvas>
+            <h3 style="color: #ffce00; margin-top: 0;">📈 Progression des Trophées</h3>
+            <div style="height: 300px;">
+                <canvas id="trophyChart"></canvas>
+            </div>
         </div>
 
-        <h3 style="margin-top: 30px; border-top: 1px solid #444; padding-top: 20px;">🤖 Brawlers</h3>
-        <div id="brawlers-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px;">
+        <h3 style="margin-top: 40px; text-align: left; color: #ffce00;">🤖 Collection Brawlers</h3>
+        <div id="brawlers-grid">
             </div>
 
     </div>
 
     <script src="script.js"></script>
     <script>
-        // Détection : Est-ce une visite publique ou privée ?
+        // Logique de démarrage
         const urlParams = new URLSearchParams(window.location.search);
         const publicTag = urlParams.get('tag');
 
         if (publicTag) {
-            // Mode Public
             loadPublicProfile(publicTag);
         } else {
-            // Mode Privé
             checkAuth();
         }
     </script>
