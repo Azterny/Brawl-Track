@@ -12,13 +12,13 @@
     <div class="container">
         <h1>Brawl Track</h1>
         
-        <div style="margin-bottom: 30px; border-bottom: 1px solid #444; padding-bottom: 20px;">
+        <div style="margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 20px;">
             <h3>🔎 Recherche Rapide</h3>
-            <div style="display: flex; gap: 5px;">
+            <div style="display: flex; gap: 8px;">
                 <input type="text" id="public-tag" placeholder="#TAG du joueur" style="margin:0;">
                 <button onclick="publicSearch()" style="width: auto; margin:0; background: #ffce00; color: black;">Go</button>
             </div>
-            <p style="font-size: 0.8em; color: #888;">Pas de sauvegarde, juste les stats.</p>
+            <p style="font-size: 0.8em; color: #888; margin-top: 5px;">Voir les stats sans compte</p>
         </div>
 
         <div id="login-form">
@@ -32,13 +32,13 @@
         <div id="register-form" class="hidden">
             <h2>Inscription</h2>
             <input type="text" id="reg-username" placeholder="Nom d'utilisateur">
-            <input type="text" id="reg-tag" placeholder="Ton Tag Brawl Stars (#...)">
+            <input type="text" id="reg-tag" placeholder="Ton Tag Brawl Stars (#...)" style="border-color: #ffce00;">
             <input type="password" id="reg-password" placeholder="Mot de passe">
             <button onclick="register()">S'inscrire</button>
             <button class="toggle-btn" onclick="toggleForms()">Retour connexion</button>
         </div>
 
-        <p id="message" style="color: #ff4444; margin-top: 10px;"></p>
+        <p id="message" style="color: #ff5555; margin-top: 15px; font-weight: bold;"></p>
     </div>
 
     <script src="script.js"></script>
