@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Dashboard - Brawl Track</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container" style="width: 500px;">
+        <h1>Mon Profil</h1>
+        <h3 id="user-tag" style="color: #aaa;">Chargement...</h3>
+        
+        <div id="stats-area" class="stats-grid">
+            </div>
+
+        <button onclick="loadMyStats()" style="background-color: #28a745; margin-top: 20px;">🔄 Actualiser mes stats</button>
+        <button onclick="logout()" style="background-color: #dc3545; margin-top: 10px;">Se déconnecter</button>
+        
+        <p id="dashboard-msg"></p>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Vérification de sécurité au chargement de la page
+        checkAuth();
+    </script>
+</body>
+</html>
