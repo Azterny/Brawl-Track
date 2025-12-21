@@ -1,6 +1,5 @@
-/* style.css */
 body {
-    background-color: #121212; /* Fond très sombre */
+    background-color: #121212;
     color: white;
     font-family: 'Roboto', sans-serif;
     display: flex;
@@ -8,23 +7,36 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .container {
     background: #1e1e1e;
     padding: 2rem;
     border-radius: 15px;
-    box-shadow: 0 0 20px rgba(255, 200, 0, 0.2); /* Lueur jaune */
-    width: 350px;
+    box-shadow: 0 0 20px rgba(255, 200, 0, 0.2);
+    width: 100%;
+    max-width: 400px; /* Par défaut petit pour login */
     text-align: center;
     border: 2px solid #333;
+    transition: max-width 0.3s ease;
+}
+
+/* Pour le dashboard, on élargit */
+.container.wide {
+    max-width: 900px;
 }
 
 h1 {
-    color: #ffce00; /* Jaune Brawl Stars */
-    font-family: 'Lilita One', cursive; /* Police style cartoon si dispo */
+    color: #ffce00;
+    font-family: 'Lilita One', cursive;
     margin-bottom: 20px;
     text-transform: uppercase;
+}
+
+h2, h3 {
+    color: #eee;
 }
 
 input {
@@ -41,7 +53,7 @@ input {
 button {
     width: 100%;
     padding: 12px;
-    background: #007bff; /* Bleu standard */
+    background: #007bff;
     color: white;
     border: none;
     border-radius: 8px;
@@ -52,8 +64,8 @@ button {
 }
 
 button:hover {
-    background: #0056b3;
     transform: scale(1.02);
+    filter: brightness(1.1);
 }
 
 .toggle-btn {
@@ -63,30 +75,62 @@ button:hover {
     font-size: 0.9em;
     text-decoration: underline;
 }
-.toggle-btn:hover {
-    background: none;
-    color: white;
-}
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
-/* Style spécifique au Dashboard */
+/* Stats Cards */
 .stats-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 15px;
     margin-top: 20px;
 }
+
 .stat-card {
     background: #252525;
     padding: 15px;
     border-radius: 10px;
-    border: 1px solid #ffce00;
+    border: 1px solid #444;
 }
+
 .stat-value {
     font-size: 1.5em;
     font-weight: bold;
-    color: #ffce00;
+    margin-top: 5px;
+}
+
+/* Brawlers Grid */
+#brawlers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.brawler-card {
+    background: #111;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s;
+}
+
+.brawler-card:hover {
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.brawler-img {
+    width: 100%;
+    display: block;
+}
+
+.brawler-name {
+    font-size: 10px;
+    padding: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
