@@ -1,0 +1,92 @@
+/* style.css */
+body {
+    background-color: #121212; /* Fond très sombre */
+    color: white;
+    font-family: 'Roboto', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.container {
+    background: #1e1e1e;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(255, 200, 0, 0.2); /* Lueur jaune */
+    width: 350px;
+    text-align: center;
+    border: 2px solid #333;
+}
+
+h1 {
+    color: #ffce00; /* Jaune Brawl Stars */
+    font-family: 'Lilita One', cursive; /* Police style cartoon si dispo */
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #444;
+    background: #2a2a2a;
+    color: white;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: #007bff; /* Bleu standard */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #0056b3;
+    transform: scale(1.02);
+}
+
+.toggle-btn {
+    background: none;
+    color: #aaa;
+    margin-top: 15px;
+    font-size: 0.9em;
+    text-decoration: underline;
+}
+.toggle-btn:hover {
+    background: none;
+    color: white;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Style spécifique au Dashboard */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+.stat-card {
+    background: #252525;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #ffce00;
+}
+.stat-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ffce00;
+}
