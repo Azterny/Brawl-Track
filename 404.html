@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Redirection...</title>
+    <script>
+        // Ce script prend l'URL complexe (ex: /stats/player/TAG)
+        // et la transforme en paramètre pour la page d'accueil
+        sessionStorage.redirect = location.pathname;
+        location.replace("/");
+    </script>
+</head>
+<body>
+</body>
+</html>
