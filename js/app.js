@@ -1,58 +1,82 @@
 const API_BASE = "https://api.brawl-track.com/api";
 const CDN_BRAWLER = "https://cdn.brawlify.com/brawlers/borderless/";
+const CDN_MAP = "https://cdn.brawlify.com/maps/landscape-normal/"; 
 
-// --- 1. GESTION DU ROUTING ---
+let ALL_BRAWLERS = [];
 
-document.addEventListener("DOMContentLoaded", () => {
-    // Cas A : Redirection 404
+// --- INITIALISATION ---
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Charger les données globales (Brawlers + Maps)
+    loadGlobalData();
+
+    // 2. Gérer le Routing (URL)
     if (sessionStorage.redirect) {
         const path = sessionStorage.redirect;
         delete sessionStorage.redirect;
         history.replaceState(null, null, path);
         handleRouting(path);
-    } 
-    // Cas B : Accès direct ou rechargement
-    else {
+    } else {
         handleRouting(location.pathname);
     }
 
-    // Cas C : Bouton Précédent/Suivant
-    window.onpopstate = function() {
-        handleRouting(location.pathname);
-    };
+    // Gestion bouton Précédent
+    window.onpopstate = () => handleRouting(location.pathname);
 });
 
+async function loadGlobalData() {
+    try {
+        // Events
+        const eventRes = await fetch(`${API_BASE}/events/rotation`);
+        const eventData = await eventRes.json();
+        if(eventRes.ok) displayEvents(eventData);
+
+        // Tous les Brawlers (pour les grisés)
+        const brawlerRes = await fetch(`${API_BASE}/brawlers`);
+        const brawlerData = await brawlerRes.json();
+        if(brawlerRes.ok) ALL_BRAWLERS = brawlerData.items;
+    } catch (e) {
+        console.error("Erreur Global Data:", e);
+        document.getElementById('eventsGrid').innerHTML = "<small>Impossible de charger les événements.</small>";
+    }
+}
+
+// --- ROUTING & NAVIGATION ---
 function handleRouting(path) {
-    if (path.includes('/stats/player/')) {
+    if (path === "/" || path === "") {
+        // Accueil : On montre les events
+        document.getElementById('events-section').classList.remove('hidden');
+        document.getElementById('content').classList.add('hidden');
+    } 
+    else if (path.includes('/stats/player/')) {
         const tag = path.split('/stats/player/')[1];
         if (tag) {
             document.getElementById('tagInput').value = tag;
             searchPlayer(tag, false);
         }
-    } else if (path.includes('/stats/club/')) {
+    } 
+    else if (path.includes('/stats/club/')) {
         const tag = path.split('/stats/club/')[1];
         if (tag) searchClub(tag, false);
     }
 }
 
-// Fonction pour cliquer sur un lien interne (SPA)
 window.goTo = function(url) {
     history.pushState(null, '', url);
     handleRouting(url);
-    return false; // Empêche le rechargement
+    return false;
 }
 
-// --- 2. FONCTIONS DE RECHERCHE ---
+// --- FONCTIONS SEARCH ---
 
-// RECHERCHE JOUEUR
 async function searchPlayer(tagOverride = null, updateUrl = true) {
     let tag = tagOverride || document.getElementById('tagInput').value.trim().toUpperCase().replace('#', '');
     if (!tag) return;
 
     if (updateUrl) history.pushState(null, '', `/stats/player/${tag}`);
 
-    // UI : On affiche la vue Joueur
+    // UI Reset
     document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('events-section').classList.add('hidden'); // Cacher events
     document.getElementById('content').classList.add('hidden');
     document.getElementById('player-view').classList.remove('hidden');
     document.getElementById('club-view').classList.add('hidden');
@@ -63,6 +87,7 @@ async function searchPlayer(tagOverride = null, updateUrl = true) {
         const profileRes = await fetch(`${API_BASE}/players/%23${tag}`);
         const profileData = await profileRes.json();
         if (!profileRes.ok) throw new Error(profileData.error || "Joueur introuvable");
+        
         displayProfile(profileData);
 
         // BattleLog
@@ -72,32 +97,29 @@ async function searchPlayer(tagOverride = null, updateUrl = true) {
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('content').classList.remove('hidden');
+
     } catch (error) {
         showError(error);
     }
 }
 
-// RECHERCHE CLUB
 async function searchClub(tag, updateUrl = true) {
     tag = tag.replace('#', '');
     if (updateUrl) history.pushState(null, '', `/stats/club/${tag}`);
-
-    // UI : On affiche la vue Club
+    
     document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('events-section').classList.add('hidden');
     document.getElementById('content').classList.add('hidden');
-    document.getElementById('player-view').classList.add('hidden'); // On cache le joueur
-    document.getElementById('club-view').classList.remove('hidden'); // On montre le club
+    document.getElementById('player-view').classList.add('hidden');
+    document.getElementById('club-view').classList.remove('hidden');
     document.getElementById('error-msg').classList.add('hidden');
-
+    
     try {
-        // L'URL magique qui marche grâce au proxy Python
         const res = await fetch(`${API_BASE}/clubs/%23${tag}`);
         const data = await res.json();
-        
         if (!res.ok) throw new Error(data.error || "Club introuvable");
 
         displayClub(data);
-
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('content').classList.remove('hidden');
     } catch (error) {
@@ -105,40 +127,91 @@ async function searchClub(tag, updateUrl = true) {
     }
 }
 
-// --- 3. AFFICHAGE ---
+// --- AFFICHAGE (DISPLAY) ---
+
+function displayEvents(events) {
+    const grid = document.getElementById('eventsGrid');
+    grid.innerHTML = "";
+    // Limite à 6 events
+    events.slice(0, 6).forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'event-card';
+        const mapImg = `${CDN_MAP}${e.event.id}.png`;
+        div.innerHTML = `
+            <img src="${mapImg}" class="event-img" onerror="this.src='https://cdn.brawlify.com/gamemode/header/0.png'">
+            <div class="event-info">
+                <div class="event-mode">${e.event.mode}</div>
+                <div class="event-map">${e.event.map}</div>
+            </div>
+        `;
+        grid.appendChild(div);
+    });
+}
 
 function displayProfile(data) {
+    // Header
     document.getElementById('pName').innerText = data.name;
     document.getElementById('pName').style.color = "#" + data.nameColor.substring(4);
     document.getElementById('pTag').innerText = data.tag;
 
-    // LIEN CLUB CLIQUABLE
+    // Club Link
     const clubDiv = document.getElementById('pClub');
     if (data.club && data.club.name) {
         const clubTag = data.club.tag.replace('#', '');
-        // On utilise notre fonction goTo() pour ne pas recharger la page
         clubDiv.innerHTML = `<a href="#" onclick="return goTo('/stats/club/${clubTag}')" style="text-decoration:none; color:inherit;">🏠 ${data.club.name}</a>`;
-        clubDiv.style.cursor = "pointer";
     } else {
         clubDiv.innerText = "Pas de Club";
     }
     
+    // Stats
     document.getElementById('statTrophies').innerText = data.trophies.toLocaleString();
     document.getElementById('statHighest').innerText = data.highestTrophies.toLocaleString();
     document.getElementById('stat3v3').innerText = data['3vs3Victories'].toLocaleString();
     
-    // Brawlers...
+    // Brawlers (Logic Merge)
     const grid = document.getElementById('brawlersGrid');
     grid.innerHTML = "";
-    data.brawlers.sort((a, b) => b.trophies - a.trophies);
-    data.brawlers.forEach(b => {
+    
+    // Si ALL_BRAWLERS n'est pas chargé, on utilise juste ceux du joueur
+    let baseList = ALL_BRAWLERS.length > 0 ? ALL_BRAWLERS : data.brawlers;
+
+    let mergedList = baseList.map(globalBrawler => {
+        const playerBrawler = data.brawlers.find(pb => pb.id === globalBrawler.id);
+        if (playerBrawler) return { ...playerBrawler, unlocked: true };
+        return { ...globalBrawler, trophies: 0, rank: 0, power: 0, unlocked: false };
+    });
+
+    // Tri : Débloqués (par trophées) > Bloqués (par ID)
+    mergedList.sort((a, b) => {
+        if (a.unlocked && !b.unlocked) return -1;
+        if (!a.unlocked && b.unlocked) return 1;
+        if (a.unlocked) return b.trophies - a.trophies;
+        return a.id - b.id;
+    });
+
+    mergedList.forEach(b => {
         const div = document.createElement('div');
-        div.className = 'brawler-card';
+        div.className = 'brawler-card ' + (b.unlocked ? '' : 'brawler-locked');
+        
+        let footerHtml = "";
+        if (b.unlocked) {
+            let gadgets = b.gadgets ? b.gadgets.length : 0;
+            let sp = b.starPowers ? b.starPowers.length : 0;
+            footerHtml = `
+                <div style="color:#f1c40f">🏆 ${b.trophies}</div>
+                <div class="brawler-details">
+                    <span class="power-badge">LVL ${b.power}</span>
+                    ${gadgets > 0 ? `<span class="gear-icon" style="background:#2ecc71;" title="Gadget"></span>` : ''}
+                    ${sp > 0 ? `<span class="gear-icon" style="background:#f1c40f;" title="Star Power"></span>` : ''}
+                </div>`;
+        } else {
+            footerHtml = `<div style="color:#7f8c8d; margin-top:5px; font-size:0.8em;">🔒 Bloqué</div>`;
+        }
+
         div.innerHTML = `
             <img src="${CDN_BRAWLER}${b.id}.png" class="brawler-img" loading="lazy">
             <div style="font-weight:bold; font-size:0.9em">${b.name}</div>
-            <div style="color:#f1c40f">🏆 ${b.trophies}</div>
-            <div class="rank-badge">Rang ${b.rank}</div>
+            ${footerHtml}
         `;
         grid.appendChild(div);
     });
@@ -152,18 +225,14 @@ function displayClub(data) {
 
     const list = document.getElementById('membersList');
     list.innerHTML = "";
-
-    // On trie les membres par trophées
     data.members.sort((a, b) => b.trophies - a.trophies);
 
     data.members.forEach(m => {
         const div = document.createElement('div');
         div.className = 'member-item';
-        // On rend chaque membre cliquable pour retourner vers son profil
         const pTag = m.tag.replace('#', '');
         div.onclick = () => goTo(`/stats/player/${pTag}`);
         
-        // Couleur du rôle
         let roleClass = "";
         if(m.role === "president") roleClass = "role-president";
         if(m.role === "senior") roleClass = "role-senior";
@@ -180,32 +249,46 @@ function displayClub(data) {
 }
 
 function displayBattleLog(battles) {
-    // ... (Gardez votre fonction displayBattleLog existante ici) ...
-    // Je la remets abrégée pour l'exemple, mais gardez la vôtre avec le calcul du Win Rate !
     const list = document.getElementById('battleList');
     list.innerHTML = "";
     
-    // Calcul Win Rate (à réintégrer)
+    // Win Rate
     let winCount = 0;
     battles.forEach(battle => {
         if (battle.battle.result === "victory" || (battle.battle.trophyChange && battle.battle.trophyChange > 0)) winCount++;
     });
     const winRate = battles.length > 0 ? Math.round((winCount / battles.length) * 100) : 0;
-    document.getElementById('winRate').innerText = `Win Rate : ${winRate}%`;
-    // ... classes de couleurs ...
+    
+    const rateBadge = document.getElementById('winRate');
+    if(rateBadge) {
+        rateBadge.innerText = `Win Rate : ${winRate}%`;
+        rateBadge.classList.remove('rate-high', 'rate-mid', 'rate-low');
+        if (winRate >= 60) rateBadge.classList.add('rate-high');
+        else if (winRate >= 45) rateBadge.classList.add('rate-mid');
+        else rateBadge.classList.add('rate-low');
+    }
 
+    // List Items
     battles.slice(0, 10).forEach(battle => {
-        // ... création des divs combats ...
-        // Astuce : copiez-collez votre ancienne fonction displayBattleLog ici
         const div = document.createElement('div');
         let result = "Égalité"; let className = "draw";
         let change = battle.battle.trophyChange || 0;
+
         if (change > 0) { result = "VICTOIRE"; className = "victory"; }
         else if (change < 0) { result = "DÉFAITE"; className = "defeat"; }
         else if (battle.battle.result === "victory") { result = "VICTOIRE"; className = "victory"; }
 
+        const dateStr = battle.battleTime;
+        const timeDisplay = dateStr.substring(9, 11) + "h" + dateStr.substring(11, 13);
+
         div.className = `battle-item ${className}`;
-        div.innerHTML = `<div class="battle-info"><span class="battle-result">${result} <small>(${change>0?'+':''}${change})</small></span><span class="battle-mode">${battle.battle.mode}</span></div>`;
+        div.innerHTML = `
+            <div class="battle-info">
+                <span class="battle-result">${result} <small>(${change > 0 ? '+' : ''}${change} 🏆)</small></span>
+                <span class="battle-mode">${battle.battle.mode} - ${battle.map ? battle.map.name : 'Map inconnue'}</span>
+            </div>
+            <div style="font-size: 0.9em; color: #aaa;">${timeDisplay}</div>
+        `;
         list.appendChild(div);
     });
 }
