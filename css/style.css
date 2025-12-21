@@ -17,11 +17,7 @@ body {
     padding: 0;
 }
 
-.container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 20px;
-}
+.container { max-width: 1000px; margin: 0 auto; padding: 20px; }
 
 header { text-align: center; margin-bottom: 40px; padding-top: 20px; }
 h1 { color: var(--accent); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -58,6 +54,10 @@ h2 { border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 0; }
 .brawler-card:hover { transform: translateY(-5px); border-color: var(--accent); }
 .brawler-img { width: 60px; height: 60px; object-fit: cover; margin-bottom: 5px; }
 .rank-badge { background: #0984e3; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-top: 5px; display: inline-block; }
+.brawler-locked { filter: grayscale(100%); opacity: 0.5; }
+.brawler-details { display: flex; justify-content: center; gap: 5px; margin-top: 5px; }
+.power-badge { background: #d63031; color: white; font-size: 0.7em; padding: 2px 5px; border-radius: 3px; font-weight: bold; }
+.gear-icon { width: 15px; height: 15px; border-radius: 50%; border: 1px solid #555; display: inline-block;}
 
 /* EVENTS / MAPS */
 .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
@@ -66,12 +66,6 @@ h2 { border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 0; }
 .event-info { padding: 10px; text-align: center; }
 .event-mode { color: var(--accent); font-weight: bold; font-size: 0.9em; text-transform: uppercase; }
 .event-map { color: white; font-size: 0.8em; margin-top: 2px; }
-
-/* BRAWLER DETAILS AVANCES */
-.brawler-locked { filter: grayscale(100%); opacity: 0.5; }
-.brawler-details { display: flex; justify-content: center; gap: 5px; margin-top: 5px; }
-.power-badge { background: #d63031; color: white; font-size: 0.7em; padding: 2px 5px; border-radius: 3px; font-weight: bold; }
-.gear-icon { width: 15px; height: 15px; border-radius: 50%; border: 1px solid #555; display: inline-block;}
 
 /* CLUB & BADGES */
 .club-badge { color: #fab1a0; font-weight: bold; font-size: 1.1em; margin-top: 5px; }
@@ -83,6 +77,19 @@ h2 { border-bottom: 2px solid #444; padding-bottom: 10px; margin-top: 0; }
 /* MEMBRES CLUB */
 .member-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
 .member-item:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
-.member-role { font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: #444; margin-left: 10px; }
-.role-president { background: #e74c3c; color: white; }
-.role-senior { background: #f1c40f; color: black; }
+.member-role { font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: #444; margin-left: 10px; color: white;}
+/* Couleurs des roles */
+.role-president { background: #e74c3c; } /* Rouge */
+.role-vice { background: #e67e22; }      /* Orange */
+.role-senior { background: #f1c40f; color: black !important; }     /* Jaune */
+
+/* LEADERBOARDS */
+.leaderboard-selector { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+.lb-card { background: #353b48; padding: 20px; border-radius: 10px; width: 150px; text-align: center; cursor: pointer; border: 2px solid transparent; transition: 0.3s; display: flex; flex-direction: column; gap: 10px; }
+.lb-card:hover { border-color: var(--accent); transform: translateY(-5px); background: #3d4655; }
+.rank-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition:0.2s;}
+.rank-item:hover { background: rgba(255,255,255,0.05); }
+.rank-num { font-weight: bold; font-size: 1.2em; width: 40px; text-align: center; }
+.rank-1 { color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.5); font-size: 1.5em; } /* Or */
+.rank-2 { color: #bdc3c7; font-size: 1.4em; } /* Argent */
+.rank-3 { color: #cd6133; font-size: 1.3em; } /* Bronze */
