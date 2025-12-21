@@ -4,14 +4,14 @@ const CDN_MODE = "https://cdn.brawlify.com/gamemodes/";
 
 let ALL_BRAWLERS = [];
 
-// --- INITIALISATION ---
-document.addEventListener("DOMContentLoaded", async () => {
-    
-    // IMPORTANT : On lance le chargement global mais sans "await" bloquant
-    // Si ça échoue, le site continue de fonctionner quand même.
-    loadGlobalData().catch(err => console.log("Info: Events/Brawlers non chargés, continuation...", err));
+// --- DÉMARRAGE SÉCURISÉ ---
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("🚀 Application Démarrée");
 
-    // Gestion du rechargement de page ou liens directs
+    // On lance le chargement global SANS attendre (non bloquant)
+    loadGlobalData();
+
+    // On gère le routing immédiatement pour afficher la page
     if (sessionStorage.redirect) {
         const path = sessionStorage.redirect;
         delete sessionStorage.redirect;
@@ -24,64 +24,87 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.onpopstate = () => handleRouting(location.pathname);
 });
 
-async function loadGlobalData() {
-    // 1. Charger les Events
+// Fonction avec Timeout pour ne pas bloquer indéfiniment
+async function fetchWithTimeout(resource, options = {}) {
+    const { timeout = 4000 } = options; // 4 secondes max
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
     try {
-        const eventRes = await fetch(`${API_BASE}/events/rotation`);
+        const response = await fetch(resource, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        return response;
+    } catch (error) {
+        clearTimeout(id);
+        throw error;
+    }
+}
+
+async function loadGlobalData() {
+    console.log("🔄 Chargement données globales...");
+    
+    // 1. Events
+    try {
+        const eventRes = await fetchWithTimeout(`${API_BASE}/events/rotation`);
         if(eventRes.ok) {
             const eventData = await eventRes.json();
             displayEvents(eventData);
+            console.log("✅ Events chargés");
+        } else {
+            console.warn("⚠️ Erreur API Events:", eventRes.status);
+            document.getElementById('eventsGrid').innerHTML = "<small>Impossible de charger les événements.</small>";
         }
-    } catch(e) { console.error("Erreur events:", e); }
+    } catch(e) { 
+        console.error("❌ Erreur Réseau Events:", e); 
+        document.getElementById('eventsGrid').innerHTML = "<small>Serveur injoignable.</small>";
+    }
 
-    // 2. Charger les Brawlers (pour l'affichage "Bloqué")
+    // 2. Brawlers
     try {
-        const brawlerRes = await fetch(`${API_BASE}/brawlers`);
+        const brawlerRes = await fetchWithTimeout(`${API_BASE}/brawlers`);
         if(brawlerRes.ok) {
             const brawlerData = await brawlerRes.json();
             ALL_BRAWLERS = brawlerData.items;
+            console.log("✅ Brawlers chargés");
         }
-    } catch(e) { console.error("Erreur brawlers:", e); }
+    } catch(e) { 
+        console.error("❌ Erreur Réseau Brawlers:", e); 
+    }
 }
 
 // --- ROUTING ---
 function handleRouting(path) {
-    // On cache tout par défaut
+    console.log("Navigation vers :", path);
+    
+    // Reset UI
     document.getElementById('home-section').classList.add('hidden');
     document.getElementById('content').classList.add('hidden');
     document.getElementById('player-view').classList.add('hidden');
     document.getElementById('club-view').classList.add('hidden');
     document.getElementById('leaderboard-view').classList.add('hidden');
     document.getElementById('error-msg').classList.add('hidden');
+    document.getElementById('loading').classList.add('hidden'); // On force le cache du loader
 
-    // Route Accueil
+    // Accueil
     if (path === "/" || path === "") {
         document.getElementById('home-section').classList.remove('hidden');
     } 
-    // Route Joueur
+    // Joueur
     else if (path.includes('/stats/player/')) {
         const tag = path.split('/stats/player/')[1];
         if (tag) {
-            document.getElementById('content').classList.remove('hidden');
             document.getElementById('tagInput').value = tag;
             searchPlayer(tag, false);
         }
     } 
-    // Route Club
+    // Club
     else if (path.includes('/stats/club/')) {
         const tag = path.split('/stats/club/')[1];
-        if (tag) {
-            document.getElementById('content').classList.remove('hidden');
-            searchClub(tag, false);
-        }
+        if (tag) searchClub(tag, false);
     }
-    // Route Leaderboard
+    // Leaderboard
     else if (path.includes('/leaderboard/')) {
-        const country = path.split('/leaderboard/')[1]; // 'global' ou 'fr'
-        if (country) {
-            document.getElementById('content').classList.remove('hidden');
-            searchLeaderboard(country, false);
-        }
+        const country = path.split('/leaderboard/')[1];
+        if (country) searchLeaderboard(country, false);
     }
 }
 
@@ -99,25 +122,28 @@ async function searchPlayer(tagOverride = null, updateUrl = true) {
 
     if (updateUrl) history.pushState(null, '', `/stats/player/${tag}`);
 
-    // UI Handling
+    // UI
     document.getElementById('home-section').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
-    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('loading').classList.remove('hidden'); // On montre le loader ici
     document.getElementById('player-view').classList.add('hidden');
-    document.getElementById('club-view').classList.add('hidden');
-    document.getElementById('leaderboard-view').classList.add('hidden');
     document.getElementById('error-msg').classList.add('hidden');
 
     try {
-        const profileRes = await fetch(`${API_BASE}/players/%23${tag}`);
+        const profileRes = await fetchWithTimeout(`${API_BASE}/players/%23${tag}`);
+        if (!profileRes.ok) throw new Error("Joueur introuvable (API Error)");
         const profileData = await profileRes.json();
-        if (!profileRes.ok) throw new Error(profileData.error || "Joueur introuvable");
         
         displayProfile(profileData);
 
-        const battleRes = await fetch(`${API_BASE}/players/%23${tag}/battlelog`);
-        const battleData = await battleRes.json();
-        if (battleRes.ok) displayBattleLog(battleData.items);
+        // Battlelog (optionnel, on ne bloque pas si ça rate)
+        try {
+            const battleRes = await fetchWithTimeout(`${API_BASE}/players/%23${tag}/battlelog`);
+            if(battleRes.ok) {
+                const battleData = await battleRes.json();
+                displayBattleLog(battleData.items);
+            }
+        } catch(e) { console.log("Pas de battlelog"); }
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('player-view').classList.remove('hidden');
@@ -134,14 +160,12 @@ async function searchClub(tag, updateUrl = true) {
     document.getElementById('home-section').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
     document.getElementById('loading').classList.remove('hidden');
-    document.getElementById('player-view').classList.add('hidden');
     document.getElementById('club-view').classList.add('hidden');
-    document.getElementById('leaderboard-view').classList.add('hidden');
 
     try {
-        const res = await fetch(`${API_BASE}/clubs/%23${tag}`);
+        const res = await fetchWithTimeout(`${API_BASE}/clubs/%23${tag}`);
+        if (!res.ok) throw new Error("Club introuvable");
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Club introuvable");
 
         displayClub(data);
         document.getElementById('loading').classList.add('hidden');
@@ -157,14 +181,12 @@ async function searchLeaderboard(country, updateUrl = true) {
     document.getElementById('home-section').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
     document.getElementById('loading').classList.remove('hidden');
-    document.getElementById('player-view').classList.add('hidden');
-    document.getElementById('club-view').classList.add('hidden');
     document.getElementById('leaderboard-view').classList.add('hidden');
 
     try {
-        const res = await fetch(`${API_BASE}/rankings/${country}/players`);
+        const res = await fetchWithTimeout(`${API_BASE}/rankings/${country}/players`);
+        if (!res.ok) throw new Error("Classement indisponible");
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Classement introuvable");
 
         displayLeaderboard(data.items, country);
         document.getElementById('loading').classList.add('hidden');
@@ -174,7 +196,7 @@ async function searchLeaderboard(country, updateUrl = true) {
     }
 }
 
-// --- AFFICHAGE (DISPLAY) ---
+// --- AFFICHAGE ---
 
 function displayEvents(events) {
     const grid = document.getElementById('eventsGrid');
@@ -189,14 +211,12 @@ function displayEvents(events) {
     events.slice(0, 6).forEach(e => {
         const div = document.createElement('div');
         div.className = 'event-card';
-        
-        // Nettoyage du nom pour l'image
         let modeName = e.event.mode.replace(/\s+/g, '-'); 
         if (modeName === "Solo-Showdown") modeName = "Showdown";
         if (modeName === "Duo-Showdown") modeName = "Showdown";
-
+        
+        // Sécurité image
         const modeImg = `${CDN_MODE}${modeName}.png`;
-        // Image de secours si l'image plante
         const fallbackImg = "https://cdn.brawlify.com/gamemodes/Gem-Grab.png";
 
         div.innerHTML = `
@@ -229,8 +249,10 @@ function displayProfile(data) {
     
     const grid = document.getElementById('brawlersGrid');
     grid.innerHTML = "";
-    let baseList = ALL_BRAWLERS.length > 0 ? ALL_BRAWLERS : data.brawlers;
-
+    
+    // Fusion sécurisée
+    let baseList = (ALL_BRAWLERS && ALL_BRAWLERS.length > 0) ? ALL_BRAWLERS : data.brawlers;
+    
     let mergedList = baseList.map(globalBrawler => {
         const playerBrawler = data.brawlers.find(pb => pb.id === globalBrawler.id);
         if (playerBrawler) return { ...playerBrawler, unlocked: true };
@@ -262,7 +284,7 @@ function displayProfile(data) {
 
 function displayClub(data) {
     document.getElementById('cName').innerText = data.name;
-    document.getElementById('cDesc').innerText = data.description || "Pas de description";
+    document.getElementById('cDesc').innerText = data.description || "";
     document.getElementById('cTrophies').innerText = data.trophies.toLocaleString();
     document.getElementById('cMembers').innerText = data.members.length + "/30";
 
@@ -305,11 +327,10 @@ function displayLeaderboard(items, country) {
         const pTag = p.tag.replace('#', '');
         div.onclick = () => goTo(`/stats/player/${pTag}`);
 
-        let rankClass = "";
+        let rankClass = "rank-num";
         if(p.rank === 1) rankClass = "rank-1";
-        else if(p.rank === 2) rankClass = "rank-2";
-        else if(p.rank === 3) rankClass = "rank-3";
-        else rankClass = "rank-num";
+        if(p.rank === 2) rankClass = "rank-2";
+        if(p.rank === 3) rankClass = "rank-3";
 
         let rankDisplay = p.rank;
         if(p.rank === 1) rankDisplay = "🥇";
