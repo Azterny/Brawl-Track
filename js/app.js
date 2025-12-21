@@ -1,14 +1,17 @@
 const API_BASE = "https://api.brawl-track.com/api";
 const CDN_BRAWLER = "https://cdn.brawlify.com/brawlers/borderless/";
-// On utilise le CDN GameMode pour les images d'event, c'est plus fiable que les maps
 const CDN_MODE = "https://cdn.brawlify.com/gamemodes/"; 
 
 let ALL_BRAWLERS = [];
 
 // --- INITIALISATION ---
 document.addEventListener("DOMContentLoaded", async () => {
-    loadGlobalData().catch(err => console.error("Events error:", err));
+    
+    // IMPORTANT : On lance le chargement global mais sans "await" bloquant
+    // Si ça échoue, le site continue de fonctionner quand même.
+    loadGlobalData().catch(err => console.log("Info: Events/Brawlers non chargés, continuation...", err));
 
+    // Gestion du rechargement de page ou liens directs
     if (sessionStorage.redirect) {
         const path = sessionStorage.redirect;
         delete sessionStorage.redirect;
@@ -22,32 +25,40 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function loadGlobalData() {
+    // 1. Charger les Events
     try {
         const eventRes = await fetch(`${API_BASE}/events/rotation`);
-        const eventData = await eventRes.json();
-        if(eventRes.ok) displayEvents(eventData);
+        if(eventRes.ok) {
+            const eventData = await eventRes.json();
+            displayEvents(eventData);
+        }
+    } catch(e) { console.error("Erreur events:", e); }
 
+    // 2. Charger les Brawlers (pour l'affichage "Bloqué")
+    try {
         const brawlerRes = await fetch(`${API_BASE}/brawlers`);
-        const brawlerData = await brawlerRes.json();
-        if(brawlerRes.ok) ALL_BRAWLERS = brawlerData.items;
-    } catch (e) {
-        console.error("Erreur Global Data:", e);
-        document.getElementById('eventsGrid').innerHTML = "<small>Impossible de charger les événements.</small>";
-    }
+        if(brawlerRes.ok) {
+            const brawlerData = await brawlerRes.json();
+            ALL_BRAWLERS = brawlerData.items;
+        }
+    } catch(e) { console.error("Erreur brawlers:", e); }
 }
 
 // --- ROUTING ---
 function handleRouting(path) {
-    // Reset de base
+    // On cache tout par défaut
     document.getElementById('home-section').classList.add('hidden');
     document.getElementById('content').classList.add('hidden');
     document.getElementById('player-view').classList.add('hidden');
     document.getElementById('club-view').classList.add('hidden');
     document.getElementById('leaderboard-view').classList.add('hidden');
+    document.getElementById('error-msg').classList.add('hidden');
 
+    // Route Accueil
     if (path === "/" || path === "") {
         document.getElementById('home-section').classList.remove('hidden');
     } 
+    // Route Joueur
     else if (path.includes('/stats/player/')) {
         const tag = path.split('/stats/player/')[1];
         if (tag) {
@@ -56,6 +67,7 @@ function handleRouting(path) {
             searchPlayer(tag, false);
         }
     } 
+    // Route Club
     else if (path.includes('/stats/club/')) {
         const tag = path.split('/stats/club/')[1];
         if (tag) {
@@ -63,6 +75,7 @@ function handleRouting(path) {
             searchClub(tag, false);
         }
     }
+    // Route Leaderboard
     else if (path.includes('/leaderboard/')) {
         const country = path.split('/leaderboard/')[1]; // 'global' ou 'fr'
         if (country) {
@@ -89,7 +102,6 @@ async function searchPlayer(tagOverride = null, updateUrl = true) {
     // UI Handling
     document.getElementById('home-section').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
-    
     document.getElementById('loading').classList.remove('hidden');
     document.getElementById('player-view').classList.add('hidden');
     document.getElementById('club-view').classList.add('hidden');
@@ -150,7 +162,6 @@ async function searchLeaderboard(country, updateUrl = true) {
     document.getElementById('leaderboard-view').classList.add('hidden');
 
     try {
-        // L'API Brawl Stars utilise 'global' ou le code pays (ex: 'fr')
         const res = await fetch(`${API_BASE}/rankings/${country}/players`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Classement introuvable");
@@ -163,17 +174,15 @@ async function searchLeaderboard(country, updateUrl = true) {
     }
 }
 
-// --- AFFICHAGE ---
+// --- AFFICHAGE (DISPLAY) ---
 
 function displayEvents(events) {
     const grid = document.getElementById('eventsGrid');
-    if (!grid) return; // Sécurité si la page n'est pas prête
-    
+    if(!grid) return;
     grid.innerHTML = "";
     
-    // Si pas d'events, on affiche un message
-    if (!events || events.length === 0) {
-        grid.innerHTML = "<small>Aucun événement disponible.</small>";
+    if(!events || events.length === 0) {
+        grid.innerHTML = "<small>Aucun événement.</small>";
         return;
     }
 
@@ -181,17 +190,13 @@ function displayEvents(events) {
         const div = document.createElement('div');
         div.className = 'event-card';
         
-        // CORRECTION DU NOM DE L'IMAGE
-        // On remplace les espaces par des tirets (ex: "Gem Grab" -> "Gem-Grab")
-        let modeName = e.event.mode.replace(/\s+/g, '-');
-        
-        // Cas particuliers (Showdown se nomme parfois Solo-Showdown sur le CDN)
+        // Nettoyage du nom pour l'image
+        let modeName = e.event.mode.replace(/\s+/g, '-'); 
         if (modeName === "Solo-Showdown") modeName = "Showdown";
         if (modeName === "Duo-Showdown") modeName = "Showdown";
 
         const modeImg = `${CDN_MODE}${modeName}.png`;
-
-        // CORRECTION DU ONERROR : On met une image qui existe vraiment (Gem Grab par défaut)
+        // Image de secours si l'image plante
         const fallbackImg = "https://cdn.brawlify.com/gamemodes/Gem-Grab.png";
 
         div.innerHTML = `
@@ -222,7 +227,6 @@ function displayProfile(data) {
     document.getElementById('statHighest').innerText = data.highestTrophies.toLocaleString();
     document.getElementById('stat3v3').innerText = data['3vs3Victories'].toLocaleString();
     
-    // Brawlers logic
     const grid = document.getElementById('brawlersGrid');
     grid.innerHTML = "";
     let baseList = ALL_BRAWLERS.length > 0 ? ALL_BRAWLERS : data.brawlers;
@@ -274,7 +278,7 @@ function displayClub(data) {
         
         let roleClass = "";
         if(m.role === "president") roleClass = "role-president";
-        if(m.role === "vicePresident") roleClass = "role-vice"; // Couleur Orange ajoutée !
+        if(m.role === "vicePresident") roleClass = "role-vice";
         if(m.role === "senior") roleClass = "role-senior";
 
         div.innerHTML = `
