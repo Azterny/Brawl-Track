@@ -167,18 +167,35 @@ async function searchLeaderboard(country, updateUrl = true) {
 
 function displayEvents(events) {
     const grid = document.getElementById('eventsGrid');
+    if (!grid) return; // Sécurité si la page n'est pas prête
+    
     grid.innerHTML = "";
+    
+    // Si pas d'events, on affiche un message
+    if (!events || events.length === 0) {
+        grid.innerHTML = "<small>Aucun événement disponible.</small>";
+        return;
+    }
+
     events.slice(0, 6).forEach(e => {
         const div = document.createElement('div');
         div.className = 'event-card';
         
-        // Astuce : On nettoie le nom du mode pour correspondre au CDN (ex: "Gem Grab" -> "Gem-Grab")
-        // On gère aussi les cas spéciaux (Solo Showdown -> Showdown) si nécessaire
-        let modeName = e.event.mode.replace(/\s+/g, '-'); 
+        // CORRECTION DU NOM DE L'IMAGE
+        // On remplace les espaces par des tirets (ex: "Gem Grab" -> "Gem-Grab")
+        let modeName = e.event.mode.replace(/\s+/g, '-');
+        
+        // Cas particuliers (Showdown se nomme parfois Solo-Showdown sur le CDN)
+        if (modeName === "Solo-Showdown") modeName = "Showdown";
+        if (modeName === "Duo-Showdown") modeName = "Showdown";
+
         const modeImg = `${CDN_MODE}${modeName}.png`;
 
+        // CORRECTION DU ONERROR : On met une image qui existe vraiment (Gem Grab par défaut)
+        const fallbackImg = "https://cdn.brawlify.com/gamemodes/Gem-Grab.png";
+
         div.innerHTML = `
-            <img src="${modeImg}" class="event-img" onerror="this.src='https://cdn.brawlify.com/gamemodes/Brawl-Ball.png'">
+            <img src="${modeImg}" class="event-img" loading="lazy" onerror="this.onerror=null; this.src='${fallbackImg}'">
             <div class="event-info">
                 <div class="event-mode">${e.event.mode}</div>
                 <div class="event-map">${e.event.map}</div>
