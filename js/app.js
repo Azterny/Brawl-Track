@@ -1,6 +1,6 @@
 const API_BASE = "https://api.brawl-track.com/api";
 const CDN_BRAWLER = "https://cdn.brawlify.com/brawlers/borderless/";
-const CDN_MAP = "https://cdn.brawlify.com/maps/landscape-normal/"; 
+const CDN_MODE = "https://cdn.brawlify.com/gamemodes/"; 
 
 let ALL_BRAWLERS = [];
 
@@ -27,13 +27,17 @@ async function loadGlobalData() {
     try {
         // Events
         const eventRes = await fetch(`${API_BASE}/events/rotation`);
-        const eventData = await eventRes.json();
-        if(eventRes.ok) displayEvents(eventData);
+        if(eventRes.ok) {
+            const eventData = await eventRes.json();
+            displayEvents(eventData);
+        }
 
         // Tous les Brawlers (pour les grisés)
         const brawlerRes = await fetch(`${API_BASE}/brawlers`);
-        const brawlerData = await brawlerRes.json();
-        if(brawlerRes.ok) ALL_BRAWLERS = brawlerData.items;
+        if(brawlerRes.ok) {
+            const brawlerData = await brawlerRes.json();
+            ALL_BRAWLERS = brawlerData.items;
+        }
     } catch (e) {
         console.error("Erreur Global Data:", e);
         document.getElementById('eventsGrid').innerHTML = "<small>Impossible de charger les événements.</small>";
@@ -85,15 +89,19 @@ async function searchPlayer(tagOverride = null, updateUrl = true) {
     try {
         // Profil
         const profileRes = await fetch(`${API_BASE}/players/%23${tag}`);
+        if (!profileRes.ok) throw new Error("Joueur introuvable");
         const profileData = await profileRes.json();
-        if (!profileRes.ok) throw new Error(profileData.error || "Joueur introuvable");
         
         displayProfile(profileData);
 
-        // BattleLog
-        const battleRes = await fetch(`${API_BASE}/players/%23${tag}/battlelog`);
-        const battleData = await battleRes.json();
-        if (battleRes.ok) displayBattleLog(battleData.items);
+        // BattleLog (non bloquant si erreur)
+        try {
+            const battleRes = await fetch(`${API_BASE}/players/%23${tag}/battlelog`);
+            if (battleRes.ok) {
+                const battleData = await battleRes.json();
+                displayBattleLog(battleData.items);
+            }
+        } catch(e) { console.log("Pas de battlelog"); }
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('content').classList.remove('hidden');
@@ -116,8 +124,8 @@ async function searchClub(tag, updateUrl = true) {
     
     try {
         const res = await fetch(`${API_BASE}/clubs/%23${tag}`);
+        if (!res.ok) throw new Error("Club introuvable");
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Club introuvable");
 
         displayClub(data);
         document.getElementById('loading').classList.add('hidden');
@@ -131,14 +139,28 @@ async function searchClub(tag, updateUrl = true) {
 
 function displayEvents(events) {
     const grid = document.getElementById('eventsGrid');
+    if(!grid) return;
     grid.innerHTML = "";
-    // Limite à 6 events
+    
+    if(!events || events.length === 0) {
+        grid.innerHTML = "<small>Aucun événement.</small>";
+        return;
+    }
+
     events.slice(0, 6).forEach(e => {
         const div = document.createElement('div');
         div.className = 'event-card';
-        const mapImg = `${CDN_MAP}${e.event.id}.png`;
+        
+        // Correction nom image
+        let modeName = e.event.mode.replace(/\s+/g, '-'); 
+        if (modeName === "Solo-Showdown") modeName = "Showdown";
+        if (modeName === "Duo-Showdown") modeName = "Showdown";
+
+        const modeImg = `${CDN_MODE}${modeName}.png`;
+        const fallbackImg = "https://cdn.brawlify.com/gamemodes/Gem-Grab.png";
+
         div.innerHTML = `
-            <img src="${mapImg}" class="event-img" onerror="this.src='https://cdn.brawlify.com/gamemode/header/0.png'">
+            <img src="${modeImg}" class="event-img" loading="lazy" onerror="this.onerror=null; this.src='${fallbackImg}'">
             <div class="event-info">
                 <div class="event-mode">${e.event.mode}</div>
                 <div class="event-map">${e.event.map}</div>
@@ -149,7 +171,6 @@ function displayEvents(events) {
 }
 
 function displayProfile(data) {
-    // Header
     document.getElementById('pName').innerText = data.name;
     document.getElementById('pName').style.color = "#" + data.nameColor.substring(4);
     document.getElementById('pTag').innerText = data.tag;
@@ -163,16 +184,14 @@ function displayProfile(data) {
         clubDiv.innerText = "Pas de Club";
     }
     
-    // Stats
     document.getElementById('statTrophies').innerText = data.trophies.toLocaleString();
     document.getElementById('statHighest').innerText = data.highestTrophies.toLocaleString();
     document.getElementById('stat3v3').innerText = data['3vs3Victories'].toLocaleString();
     
-    // Brawlers (Logic Merge)
+    // Brawlers
     const grid = document.getElementById('brawlersGrid');
     grid.innerHTML = "";
     
-    // Si ALL_BRAWLERS n'est pas chargé, on utilise juste ceux du joueur
     let baseList = ALL_BRAWLERS.length > 0 ? ALL_BRAWLERS : data.brawlers;
 
     let mergedList = baseList.map(globalBrawler => {
@@ -181,7 +200,6 @@ function displayProfile(data) {
         return { ...globalBrawler, trophies: 0, rank: 0, power: 0, unlocked: false };
     });
 
-    // Tri : Débloqués (par trophées) > Bloqués (par ID)
     mergedList.sort((a, b) => {
         if (a.unlocked && !b.unlocked) return -1;
         if (!a.unlocked && b.unlocked) return 1;
@@ -252,7 +270,6 @@ function displayBattleLog(battles) {
     const list = document.getElementById('battleList');
     list.innerHTML = "";
     
-    // Win Rate
     let winCount = 0;
     battles.forEach(battle => {
         if (battle.battle.result === "victory" || (battle.battle.trophyChange && battle.battle.trophyChange > 0)) winCount++;
@@ -268,7 +285,6 @@ function displayBattleLog(battles) {
         else rateBadge.classList.add('rate-low');
     }
 
-    // List Items
     battles.slice(0, 10).forEach(battle => {
         const div = document.createElement('div');
         let result = "Égalité"; let className = "draw";
