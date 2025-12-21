@@ -32,10 +32,43 @@
 
         <div id="stats-area" class="stats-grid"></div>
 
-        <div id="chart-container" class="hidden" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px;">
-            <h3 style="color: #ffce00; margin-top: 0;">📈 Progression des Trophées</h3>
-            <div style="height: 300px;">
-                <canvas id="trophyChart"></canvas>
+<div id="chart-container" class="hidden" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: #ffce00; margin: 0;">📈 Progression</h3>
+                <span id="trophy-gain" style="color: #28a745; font-weight: bold;"></span>
+            </div>
+
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                <button onclick="updateChartFilter(7)" class="filter-btn">7 Jours</button>
+                <button onclick="updateChartFilter(31)" class="filter-btn">Mois</button>
+                <button onclick="updateChartFilter(365)" class="filter-btn">Année</button>
+                <button onclick="updateChartFilter(0)" class="filter-btn">Tout</button>
+            </div>
+
+            <canvas id="trophyChart"></canvas>
+        </div>
+
+        <h3 style="margin-top: 30px; border-top: 1px solid #444; padding-top: 20px;">🤖 Brawlers</h3>
+        <div id="brawlers-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px;">
+            </div>
+
+        <div id="archive-manager" class="hidden" style="margin-top: 40px; border-top: 1px solid #444; padding-top: 20px;">
+            <h3>💾 Gestion des Données</h3>
+            
+            <button onclick="manualArchive()" style="background: #17a2b8; margin-bottom: 20px;">➕ Ajouter une archive maintenant</button>
+            
+            <div style="background: #2a2a2a; padding: 15px; border-radius: 8px;">
+                <h4 style="margin-top:0;">Nettoyage</h4>
+                <select id="delete-select" style="padding: 8px; border-radius: 5px; background: #333; color: white; border: 1px solid #555;">
+                    <option value="7">Plus vieilles que 7 Jours</option>
+                    <option value="31">Plus vieilles que 31 Jours</option>
+                    <option value="365">Plus vieilles que 1 An</option>
+                    <option value="custom">Plus vieilles que X Jours...</option>
+                    <option value="all">⚠️ TOUT SUPPRIMER</option>
+                </select>
+                <input type="number" id="custom-days" placeholder="Jours" style="width: 60px; display: none; padding: 8px;">
+                
+                <button onclick="deleteArchives()" style="background: #dc3545; width: auto; margin-left: 10px;">Supprimer</button>
             </div>
         </div>
 
