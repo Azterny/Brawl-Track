@@ -1,220 +1,217 @@
-// Remplace par ton URL API
+// ⚠️ CHANGE CETTE URL PAR LA TIENNE !
 const API_URL = "https://api.brawl-track.com"; 
 
 // --- GESTION NAVIGATION ---
 function toggleForms() {
     document.getElementById('login-form').classList.toggle('hidden');
     document.getElementById('register-form').classList.toggle('hidden');
+    document.getElementById('message').innerText = "";
 }
 
-// --- RECHERCHE PUBLIQUE ---
 function publicSearch() {
-    const tag = document.getElementById('public-tag').value.replace('#', '');
+    const tag = document.getElementById('public-tag').value.trim().replace('#', '');
     if(tag) {
         window.location.href = `dashboard.html?tag=${tag}`;
     }
 }
 
-// --- AUTHENTIFICATION (Login/Register) ---
-// ... (Garde tes fonctions login() et register() existantes ici) ...
-// Pour gagner de la place, je ne les recopie pas si tu les as déjà, 
-// sinon demande-moi et je te remets le bloc entier.
+// --- AUTHENTIFICATION ---
+async function register() {
+    const username = document.getElementById('reg-username').value;
+    const tag = document.getElementById('reg-tag').value;
+    const password = document.getElementById('reg-password').value;
+
+    try {
+        const res = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username, tag, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert("Compte créé ! Connecte-toi.");
+            toggleForms();
+        } else {
+            document.getElementById('message').innerText = data.message;
+        }
+    } catch (e) { document.getElementById('message').innerText = "Erreur serveur"; }
+}
+
 async function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
+
     try {
-        const response = await fetch(`${API_URL}/auth/login`, {
+        const res = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ username, password })
         });
-        const data = await response.json();
-        if (response.ok) {
+        const data = await res.json();
+        if (res.ok) {
             localStorage.setItem('token', data.token);
             window.location.href = "dashboard.html";
         } else {
             document.getElementById('message').innerText = data.message;
         }
-    } catch (error) { console.error(error); }
+    } catch (e) { document.getElementById('message').innerText = "Erreur serveur"; }
 }
 
-async function register() {
-     const username = document.getElementById('reg-username').value;
-    const tag = document.getElementById('reg-tag').value;
-    const password = document.getElementById('reg-password').value;
-
-    try {
-        const response = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, tag, password })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            alert("Compte créé ! Connecte-toi maintenant.");
-            toggleForms();
-        } else {
-            document.getElementById('message').innerText = "Erreur: " + data.message;
-        }
-    } catch (error) {
-        document.getElementById('message').innerText = "Erreur de connexion au serveur.";
-        console.error(error);
-    }
-}
-
-// --- LOGOUT ---
 function logout() {
     localStorage.removeItem('token');
     window.location.href = "index.html";
 }
 
-// --- MODE PRIVÉ : CHECK AUTH ---
+// --- CHARGEMENT MODES ---
+
+// Mode Privé
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) window.location.href = "index.html";
     
-    // Affichage des boutons membres
     document.getElementById('auth-actions').classList.remove('hidden');
     document.getElementById('chart-container').classList.remove('hidden');
-    loadMyStats();
+    
+    loadMyStats(); 
 }
 
-// --- CHARGEMENT PROFIL PUBLIC ---
+// Mode Public
 async function loadPublicProfile(tag) {
     document.getElementById('public-actions').classList.remove('hidden');
+    document.getElementById('dashboard-msg').innerText = "Mode Public (Lecture seule)";
     
     try {
-        // 1. Infos Joueur
         const res = await fetch(`${API_URL}/api/public/player/${tag}`);
         const data = await res.json();
-        renderProfile(data);
+        
+        if (!res.ok) throw new Error(data.message);
 
-        // 2. Liste Brawlers (pour l'affichage gris/couleur)
-        loadBrawlersGrid(data.brawlers); // On passe les brawlers possédés
+        renderProfile(data);
+        loadBrawlersGrid(data.brawlers); // On passe la liste des brawlers du joueur
+
     } catch (e) {
         alert("Joueur introuvable !");
         window.location.href = "index.html";
     }
 }
 
-// --- CHARGEMENT PROFIL PRIVÉ ---
 async function loadMyStats() {
     const token = localStorage.getItem('token');
+    document.getElementById('dashboard-msg').innerText = "Actualisation...";
+    
     try {
-        // 1. Infos & Update DB
+        // 1. Stats
         const res = await fetch(`${API_URL}/api/my-stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
+        if (!res.ok) throw new Error("Erreur auth");
+
         renderProfile(data);
+        document.getElementById('dashboard-msg').innerText = "Dernière synchro : À l'instant";
 
         // 2. Brawlers
         loadBrawlersGrid(data.brawlers);
 
-        // 3. Graphique Historique
+        // 3. Graphique
         loadHistoryChart(token);
 
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error(e);
+        logout();
+    }
 }
 
-// --- RENDU HTML COMMUN (Stats) ---
+// --- RENDU UI ---
 function renderProfile(data) {
-    document.getElementById('player-name').innerText = data.name;
-    document.getElementById('player-name').style.color = "#" + data.nameColor.replace('0xff', '');
+    const nameEl = document.getElementById('player-name');
+    nameEl.innerText = data.name;
+    // Gestion couleur nom (ex: 0xffffffff -> #ffffff)
+    if(data.nameColor) {
+        nameEl.style.color = "#" + data.nameColor.replace('0x', '').slice(2);
+    }
+
     document.getElementById('player-tag').innerText = data.tag;
 
     document.getElementById('stats-area').innerHTML = `
-        <div class="stat-card"><div>Trophées</div><div class="stat-value">🏆 ${data.trophies}</div></div>
+        <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00">🏆 ${data.trophies}</div></div>
         <div class="stat-card"><div>Record</div><div class="stat-value">📈 ${data.highestTrophies}</div></div>
         <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff">⚔️ ${data['3vs3Victories']}</div></div>
         <div class="stat-card"><div>Solo</div><div class="stat-value" style="color:#28a745">🥇 ${data.soloVictories}</div></div>
+        <div class="stat-card"><div>Duo</div><div class="stat-value" style="color:#17a2b8">🤝 ${data.duoVictories}</div></div>
     `;
 }
 
-// --- LOGIQUE BRAWLERS (Grisés vs Débloqués) ---
-async function loadBrawlersGrid(ownedBrawlers) {
+// --- GRILLE BRAWLERS ---
+async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
-    grid.innerHTML = '<p style="color:#888">Chargement des brawlers...</p>';
+    grid.innerHTML = '<p>Chargement collection...</p>';
 
-    // 1. On récupère la liste complète des brawlers du jeu
+    // Récupérer TOUS les brawlers du jeu
     const res = await fetch(`${API_URL}/api/brawlers`);
-    const allBrawlersData = await res.json();
-    const allBrawlers = allBrawlersData.items; [span_0](start_span)// L'API renvoie { items: [...] }[span_0](end_span)
+    const globalData = await res.json();
+    const allBrawlers = globalData.items;
 
-    grid.innerHTML = ''; // Vide le chargement
+    grid.innerHTML = '';
 
-    // 2. On trie par rareté ou ID (optionnel, ici par ID implicite)
-    
-    // 3. On génère les cartes
     allBrawlers.forEach(brawler => {
-        // Est-ce que le joueur possède ce brawler ?
-        const isOwned = ownedBrawlers.find(b => b.id === brawler.id);
+        // Le joueur possède-t-il ce brawler ?
+        const owned = playerBrawlers.find(pb => pb.id === brawler.id);
 
-        const card = document.createElement('div');
-        card.style.textAlign = 'center';
-        card.style.opacity = isOwned ? '1' : '0.3'; // Grisé si pas possédé
-        card.style.filter = isOwned ? 'none' : 'grayscale(100%)';
-
-        // URL image (On utilise Brawlify CDN qui est fiable)
-        const imgUrl = `https://cdn.brawlify.com/brawlers/${brawler.id}.png`; 
+        const div = document.createElement('div');
+        div.className = 'brawler-card';
         
-        // Si possédé, on affiche les trophées
-        const trophiesInfo = isOwned ? `<div style="font-size:0.7em; color:#ffce00;">🏆 ${isOwned.trophies}</div>` : '<div style="font-size:0.7em;">🔒</div>';
+        // Style Grisé ou Normal
+        if (!owned) {
+            div.style.filter = "grayscale(100%) opacity(0.4)";
+        } else {
+            div.style.border = "1px solid #ffce00";
+        }
 
-        card.innerHTML = `
-            <img src="${imgUrl}" style="width: 100%; border-radius: 5px; border: 2px solid #333;" onerror="this.src='https://cdn.brawlify.com/brawlers/16000000.png'">
-            <div style="font-size: 0.8em; margin-top: 2px; overflow:hidden; text-overflow:ellipsis;">${brawler.name}</div>
-            ${trophiesInfo}
+        const imgUrl = `https://cdn.brawlify.com/brawlers/${brawler.id}.png`;
+        const trophyText = owned ? `🏆 ${owned.trophies}` : '🔒';
+
+        div.innerHTML = `
+            <img src="${imgUrl}" class="brawler-img" onerror="this.src='https://cdn.brawlify.com/brawlers/16000000.png'">
+            <div class="brawler-name">${brawler.name}</div>
+            <div style="font-size:0.7em; color:#ffce00; padding-bottom:2px;">${trophyText}</div>
         `;
-        grid.appendChild(card);
+        grid.appendChild(div);
     });
 }
 
-// --- LOGIQUE GRAPHIQUE (Chart.js) ---
+// --- GRAPHIQUE ---
 async function loadHistoryChart(token) {
     const res = await fetch(`${API_URL}/api/history`, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
-    const historyData = await res.json();
-
-    // Préparation des données pour Chart.js
-    const labels = historyData.map(h => new Date(h.date).toLocaleDateString());
-    const dataPoints = historyData.map(h => h.trophies);
+    const history = await res.json();
 
     const ctx = document.getElementById('trophyChart').getContext('2d');
-    
-    // Si un graph existe déjà, on le détruit pour éviter les bugs d'affichage
     if(window.myChart) window.myChart.destroy();
 
     window.myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels: history.map(h => new Date(h.date).toLocaleDateString(undefined, {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})),
             datasets: [{
                 label: 'Trophées',
-                data: dataPoints,
+                data: history.map(h => h.trophies),
                 borderColor: '#ffce00',
-                backgroundColor: 'rgba(255, 206, 0, 0.1)',
+                backgroundColor: 'rgba(255, 206, 0, 0.2)',
                 borderWidth: 2,
-                tension: 0.3, // Courbe un peu arrondie
-                fill: true
+                tension: 0.3,
+                fill: true,
+                pointRadius: 4
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { display: false } // Pas besoin de légende
-            },
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: false, // On zoome sur les valeurs
-                    grid: { color: '#333' }
-                },
-                x: {
-                    grid: { display: false }
-                }
+                y: { grid: { color: '#333' } },
+                x: { display: false }
             }
         }
     });
