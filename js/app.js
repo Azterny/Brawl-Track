@@ -7,7 +7,7 @@ let ALL_BRAWLERS = [];
 
 // --- INITIALISATION ---
 document.addEventListener("DOMContentLoaded", async () => {
-    loadGlobalData();
+    loadGlobalData().catch(err => console.error("Events error:", err));
 
     if (sessionStorage.redirect) {
         const path = sessionStorage.redirect;
