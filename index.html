@@ -2,62 +2,214 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Brawl Track</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brawl Track - Stats</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background-color: #f0f0f0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        input { padding: 10px; width: 70%; font-size: 16px; }
-        button { padding: 10px 20px; font-size: 16px; background-color: #ffc107; border: none; cursor: pointer; }
-        button:hover { background-color: #e0a800; }
-        #result { margin-top: 20px; text-align: left; }
-        .error { color: red; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e272e;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 { color: #ffce00; text-shadow: 2px 2px #000; }
+        
+        /* Barre de recherche */
+        .search-box {
+            background: #2d3436;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        input {
+            padding: 12px;
+            width: 60%;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px 25px;
+            background-color: #ffce00;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+        button:hover { background-color: #e6b800; transform: scale(1.05); }
+
+        /* Profil */
+        #profile {
+            display: none; /* Caché par défaut */
+            background: #0984e3;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: left;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-card {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-val { font-size: 1.5em; font-weight: bold; color: #ffce00; }
+
+        /* Grille des Brawlers */
+        #brawlersArea { display: none; }
+        .brawlers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+        }
+        .brawler-card {
+            background: #2d3436;
+            border-radius: 10px;
+            padding: 10px;
+            border: 2px solid #444;
+            transition: 0.3s;
+        }
+        .brawler-card:hover { transform: translateY(-5px); border-color: #ffce00; }
+        .brawler-name { font-weight: bold; margin-bottom: 5px; color: #fab1a0; }
+        .rank { background: #6c5ce7; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; }
+        .trophies-icon { color: #ffce00; }
+        
+        .loader { font-size: 1.2em; color: #aaa; margin-top: 20px; }
+        .error { color: #ff7675; font-weight: bold; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🏆 Brawl Track</h1>
-    <p>Entrez un tag de joueur (ex: 8Y8G9P)</p>
     
-    <input type="text" id="tagInput" placeholder="ex: 8Y8G9P">
-    <button onclick="searchPlayer()">Rechercher</button>
+    <div class="search-box">
+        <input type="text" id="tagInput" placeholder="Tag du joueur (ex: V8LLPPC)" value="V8LLPPC">
+        <button onclick="searchPlayer()">Rechercher</button>
+    </div>
 
-    <div id="result"></div>
+    <div id="msg" class="loader"></div>
+
+    <div id="profile">
+        <h2 id="pName" style="margin:0; font-size: 2em;"></h2>
+        <span id="pTag" style="color: #dfe6e9; font-family: monospace;"></span>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-val" id="pTrophies">0</div>
+                <div>Trophées Actuels</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="pHighest">0</div>
+                <div>Record Trophées</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="p3v3">0</div>
+                <div>Victoires 3v3</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="pSolo">0</div>
+                <div>Victoires Solo</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="brawlersArea">
+        <h3 style="text-align: left; border-bottom: 1px solid #555; padding-bottom: 10px;">Mes Brawlers</h3>
+        <div class="brawlers-grid" id="brawlersGrid"></div>
+    </div>
 </div>
 
 <script>
-    // C'EST ICI QUE TOUT SE JOUE : Votre nouveau domaine !
+    // VOTRE DOMAINE CLOUDFLARE
     const API_BASE = "https://api.brawl-track.com/api";
 
     async function searchPlayer() {
-        const tag = document.getElementById('tagInput').value.trim().replace('#', ''); // On enlève le # si l'utilisateur le met
-        const resultDiv = document.getElementById('result');
+        let tag = document.getElementById('tagInput').value.trim().toUpperCase().replace('#', '');
+        const msgDiv = document.getElementById('msg');
+        const profileDiv = document.getElementById('profile');
+        const brawlersArea = document.getElementById('brawlersArea');
         
         if (!tag) return;
 
-        resultDiv.innerHTML = "Chargement...";
+        // Reset interface
+        msgDiv.innerHTML = "Chargement des données...";
+        msgDiv.className = "loader";
+        profileDiv.style.display = "none";
+        brawlersArea.style.display = "none";
 
         try {
-            // Appel à VOTRE Raspberry Pi via le domaine
+            // Appel API
             const response = await fetch(`${API_BASE}/players/%23${tag}`);
             const data = await response.json();
 
-            if (response.ok) {
-                // Si ça marche, on affiche les infos
-                resultDiv.innerHTML = `
-                    <h2>${data.name}</h2>
-                    <p>🏆 Trophées : <strong>${data.trophies}</strong></p>
-                    <p>🏠 Club : ${data.club ? data.club.name : "Pas de club"}</p>
-                    <p>✅ Victoires 3v3 : ${data['3vs3Victories']}</p>
+            if (!response.ok) throw new Error(data.error || "Joueur introuvable");
+
+            // 1. Remplir le Profil
+            document.getElementById('pName').innerText = data.name;
+            document.getElementById('pName').style.color = "#" + data.nameColor.substring(4); // Couleur du pseudo
+            document.getElementById('pTag').innerText = "#" + data.tag.replace('#', '');
+            document.getElementById('pTrophies').innerText = data.trophies.toLocaleString();
+            document.getElementById('pHighest').innerText = data.highestTrophies.toLocaleString();
+            document.getElementById('p3v3').innerText = data['3vs3Victories'].toLocaleString();
+            document.getElementById('pSolo').innerText = data.soloVictories.toLocaleString();
+
+            // 2. Remplir les Brawlers (Triés par trophées)
+            const grid = document.getElementById('brawlersGrid');
+            grid.innerHTML = ""; // Vider l'ancienne recherche
+            
+            // On trie les brawlers : du plus grand nombre de trophées au plus petit
+            data.brawlers.sort((a, b) => b.trophies - a.trophies);
+
+            data.brawlers.forEach(brawler => {
+                const card = document.createElement('div');
+                card.className = "brawler-card";
+                card.innerHTML = `
+                    <div class="brawler-name">${brawler.name}</div>
+                    <div style="font-size: 1.2em; font-weight:bold;">
+                        <span class="trophies-icon">🏆</span> ${brawler.trophies}
+                    </div>
+                    <div style="margin-top:5px; color:#aaa; font-size:0.9em;">
+                        Rang <span class="rank" style="background-color:${getRankColor(brawler.rank)}">${brawler.rank}</span>
+                    </div>
                 `;
-            } else {
-                // Si le joueur n'existe pas
-                resultDiv.innerHTML = `<p class="error">Erreur : ${data.reason || "Joueur introuvable"}</p>`;
-            }
+                grid.appendChild(card);
+            });
+
+            // Afficher tout
+            msgDiv.innerHTML = "";
+            profileDiv.style.display = "block";
+            brawlersArea.style.display = "block";
+
         } catch (error) {
             console.error(error);
-            resultDiv.innerHTML = `<p class="error">Impossible de contacter le serveur (Est-il allumé ?)</p>`;
+            msgDiv.innerHTML = "Erreur : " + error.message;
+            msgDiv.className = "error";
         }
+    }
+
+    // Petite fonction pour colorer le rang selon le niveau (Optionnel)
+    function getRankColor(rank) {
+        if(rank >= 35) return "#000000"; // Noir (Rank 35)
+        if(rank >= 30) return "#b33939"; // Rouge foncé
+        if(rank >= 25) return "#218c74"; // Vert
+        if(rank >= 20) return "#c44569"; // Rose
+        return "#74b9ff"; // Bleu par défaut
     }
 </script>
 
