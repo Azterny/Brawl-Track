@@ -1,4 +1,3 @@
-// ⚠️ CHANGE CETTE URL PAR LA TIENNE !
 const API_URL = "https://api.brawl-track.com"; 
 
 // --- GESTION NAVIGATION ---
@@ -167,20 +166,25 @@ async function loadBrawlersGrid(playerBrawlers) {
         } else {
             div.style.border = "1px solid #ffce00";
         }
+        const formattedName = brawler.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
 
-        const imgUrl = `https://cdn.brawlify.com/brawlers/${brawler.id}.png`;
-        const trophyText = owned ? `🏆 ${owned.trophies}` : '🔒';
-
-        div.innerHTML = `
-            <img src="${imgUrl}" class="brawler-img" onerror="this.src='https://cdn.brawlify.com/brawlers/16000000.png'">
-            <div class="brawler-name">${brawler.name}</div>
-            <div style="font-size:0.7em; color:#ffce00; padding-bottom:2px;">${trophyText}</div>
+        const imgUrl = `https://cdn.brawlify.com/brawlers/${formattedName}.png`; 
+        
+        const trophiesInfo = isOwned 
+            ? `<div style="font-size:0.7em; color:#ffce00;">🏆 ${isOwned.trophies}</div>` 
+            : '<div style="font-size:0.7em;">🔒</div>';
+        
+        card.innerHTML = `
+            <img src="${imgUrl}" 
+                 style="width: 100%; border-radius: 5px; border: 2px solid #333; aspect-ratio: 1/1; object-fit: cover;" 
+                 onerror="this.onerror=null; this.src='https://cdn-old.brawlify.com/icon/Bit.png';">
+            <div style="font-size: 0.8em; margin-top: 2px; overflow:hidden; text-overflow:ellipsis; white-space: nowrap;">${brawler.name}</div>
+            ${trophiesInfo}
         `;
-        grid.appendChild(div);
+        grid.appendChild(card);
     });
-}
+    }
 
-// --- GRAPHIQUE ---
 async function loadHistoryChart(token) {
     const res = await fetch(`${API_URL}/api/history`, {
         headers: { 'Authorization': `Bearer ${token}` }
