@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Brawl Track</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background-color: #f0f0f0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        input { padding: 10px; width: 70%; font-size: 16px; }
+        button { padding: 10px 20px; font-size: 16px; background-color: #ffc107; border: none; cursor: pointer; }
+        button:hover { background-color: #e0a800; }
+        #result { margin-top: 20px; text-align: left; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏆 Brawl Track</h1>
+    <p>Entrez un tag de joueur (ex: 8Y8G9P)</p>
+    
+    <input type="text" id="tagInput" placeholder="ex: 8Y8G9P">
+    <button onclick="searchPlayer()">Rechercher</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    // C'EST ICI QUE TOUT SE JOUE : Votre nouveau domaine !
+    const API_BASE = "https://api.brawl-track.com/api";
+
+    async function searchPlayer() {
+        const tag = document.getElementById('tagInput').value.trim().replace('#', ''); // On enlève le # si l'utilisateur le met
+        const resultDiv = document.getElementById('result');
+        
+        if (!tag) return;
+
+        resultDiv.innerHTML = "Chargement...";
+
+        try {
+            // Appel à VOTRE Raspberry Pi via le domaine
+            const response = await fetch(`${API_BASE}/players/%23${tag}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                // Si ça marche, on affiche les infos
+                resultDiv.innerHTML = `
+                    <h2>${data.name}</h2>
+                    <p>🏆 Trophées : <strong>${data.trophies}</strong></p>
+                    <p>🏠 Club : ${data.club ? data.club.name : "Pas de club"}</p>
+                    <p>✅ Victoires 3v3 : ${data['3vs3Victories']}</p>
+                `;
+            } else {
+                // Si le joueur n'existe pas
+                resultDiv.innerHTML = `<p class="error">Erreur : ${data.reason || "Joueur introuvable"}</p>`;
+            }
+        } catch (error) {
+            console.error(error);
+            resultDiv.innerHTML = `<p class="error">Impossible de contacter le serveur (Est-il allumé ?)</p>`;
+        }
+    }
+</script>
+
+</body>
+</html>
