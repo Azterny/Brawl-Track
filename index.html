@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brawl Track - Stats & Logs</title>
+    <link rel="icon" href="https://cdn.brawlify.com/brawlers/borderless/16000005.png">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -17,13 +18,16 @@
         </div>
     </header>
 
-    <div id="loading" class="loader hidden">Chargement des données depuis le Raspberry Pi...</div>
+    <div id="loading" class="loader hidden">Chargement des données...</div>
     <div id="error-msg" class="loader hidden" style="color: #e74c3c;"></div>
 
     <div id="content" class="hidden">
         
         <div class="card-section">
-            <h2 id="pName" style="font-size: 2em; margin-bottom: 5px;"></h2>
+            <h2 id="pName" style="font-size: 2em; margin-bottom: 5px; display:inline-block;"></h2>
+            
+            <div id="pClub" class="club-badge"></div>
+
             <div id="pTag" style="color: #bdc3c7; margin-bottom: 20px; font-family: monospace;"></div>
             
             <div class="stats-grid">
@@ -43,7 +47,10 @@
         </div>
 
         <div class="card-section">
-            <h2>⚔️ Derniers Combats</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>⚔️ Derniers Combats</h2>
+                <span id="winRate" class="win-rate-badge"></span>
+            </div>
             <div id="battleList"></div>
         </div>
 
