@@ -1,7 +1,7 @@
 // js/app.js
 const API_BASE = "https://api.brawl-track.com/api";
 // On utilise Brawlify pour les images (ils utilisent les IDs officiels)
-const CDN_BRAWLER = "https://cdn-old.brawlify.com/brawler-png/";
+const CDN_BRAWLER = "https://cdn.brawlify.com/brawlers/borderless/";
 
 async function searchPlayer() {
     let tag = document.getElementById('tagInput').value.trim().toUpperCase().replace('#', '');
