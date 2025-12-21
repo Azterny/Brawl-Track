@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brawl Track - Stats & Logs</title>
+    <title>Brawl Track - Stats & Leaderboards</title>
     <link rel="icon" href="https://cdn.brawlify.com/brawlers/borderless/16000005.png">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -18,10 +18,27 @@
         </div>
     </header>
 
-    <div id="events-section" class="card-section hidden">
-        <h2>📅 Événements en cours</h2>
-        <div id="eventsGrid" class="events-grid">
-            <div class="loader">Chargement des événements...</div>
+    <div id="home-section" class="hidden">
+        
+        <div class="card-section">
+            <h2>📅 Événements en cours</h2>
+            <div id="eventsGrid" class="events-grid">
+                <div class="loader">Chargement des événements...</div>
+            </div>
+        </div>
+
+        <div class="card-section">
+            <h2>🌍 Classements</h2>
+            <div class="leaderboard-selector">
+                <div class="lb-card global" onclick="goTo('/leaderboard/global')">
+                    <span style="font-size: 2em;">🌎</span>
+                    <span>Top Mondial</span>
+                </div>
+                <div class="lb-card fr" onclick="goTo('/leaderboard/fr')">
+                    <span style="font-size: 2em;">🇫🇷</span>
+                    <span>Top France</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -30,7 +47,7 @@
 
     <div id="content" class="hidden">
         
-        <div id="player-view">
+        <div id="player-view" class="hidden">
             <div class="card-section">
                 <h2 id="pName" style="font-size: 2em; margin-bottom: 5px; display:inline-block;"></h2>
                 <div id="pClub" class="club-badge"></div>
@@ -86,6 +103,13 @@
             <div class="card-section">
                 <h2>👥 Membres</h2>
                 <div id="membersList"></div>
+            </div>
+        </div>
+
+        <div id="leaderboard-view" class="hidden">
+            <div class="card-section">
+                <h2 id="lbTitle">Classement</h2>
+                <div id="lbList"></div>
             </div>
         </div>
 
