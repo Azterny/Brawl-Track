@@ -126,9 +126,15 @@ async function loadMyStats() {
 function renderProfile(data) {
     const nameEl = document.getElementById('player-name');
     nameEl.innerText = data.name;
+    
     // Gestion couleur nom (ex: 0xffffffff -> #ffffff)
-    if(data.nameColor) {
-        nameEl.style.color = "#" + data.nameColor.replace('0x', '').slice(2);
+    // CORRECTION: Ajout d'une sécurité (try/catch) pour éviter les erreurs si le format change
+    if(data.nameColor && data.nameColor.length > 4) {
+        try {
+            nameEl.style.color = "#" + data.nameColor.replace('0x', '').slice(2);
+        } catch(e) {
+            console.warn("Erreur couleur nom", e);
+        }
     }
 
     document.getElementById('player-tag').innerText = data.tag;
@@ -158,7 +164,7 @@ async function loadBrawlersGrid(playerBrawlers) {
         // Le joueur possède-t-il ce brawler ?
         const owned = playerBrawlers.find(pb => pb.id === brawler.id);
 
-        const div = document.createElement('div');
+        const div = document.createElement('div'); // CORRECTION: Utilisation de 'div'
         div.className = 'brawler-card';
         
         // Style Grisé ou Normal
@@ -167,24 +173,26 @@ async function loadBrawlersGrid(playerBrawlers) {
         } else {
             div.style.border = "1px solid #ffce00";
         }
+        
         const formattedName = brawler.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
-
         const imgUrl = `https://cdn.brawlify.com/brawlers/${formattedName}.png`; 
         
-        const trophiesInfo = isOwned 
-            ? `<div style="font-size:0.7em; color:#ffce00;">🏆 ${isOwned.trophies}</div>` 
+        // CORRECTION: Utilisation cohérente de la variable 'owned' (au lieu de isOwned)
+        const trophiesInfo = owned 
+            ? `<div style="font-size:0.7em; color:#ffce00;">🏆 ${owned.trophies}</div>` 
             : '<div style="font-size:0.7em;">🔒</div>';
         
-        card.innerHTML = `
+        // CORRECTION: Utilisation cohérente de la variable 'div' (au lieu de card)
+        div.innerHTML = `
             <img src="${imgUrl}" 
                  style="width: 100%; border-radius: 5px; border: 2px solid #333; aspect-ratio: 1/1; object-fit: cover;" 
                  onerror="this.onerror=null; this.src='https://cdn-old.brawlify.com/icon/Bit.png';">
             <div style="font-size: 0.8em; margin-top: 2px; overflow:hidden; text-overflow:ellipsis; white-space: nowrap;">${brawler.name}</div>
             ${trophiesInfo}
         `;
-        grid.appendChild(card);
+        grid.appendChild(div);
     });
-    }
+}
 
 async function loadHistoryChart(token) {
     // On débloque la zone de gestion des archives
@@ -279,12 +287,14 @@ async function manualArchive() {
 }
 
 // --- SUPPRESSION ARCHIVES ---
-// Petit bonus : Afficher l'input "X Jours" si on choisit "Custom"
-document.getElementById('delete-select').addEventListener('change', function() {
-    const input = document.getElementById('custom-days');
-    if(this.value === 'custom') input.style.display = 'inline-block';
-    else input.style.display = 'none';
-});
+const deleteSelect = document.getElementById('delete-select');
+if (deleteSelect) {
+    deleteSelect.addEventListener('change', function() {
+        const input = document.getElementById('custom-days');
+        if(this.value === 'custom') input.style.display = 'inline-block';
+        else input.style.display = 'none';
+    });
+}
 
 async function deleteArchives() {
     const token = localStorage.getItem('token');
