@@ -1,4 +1,5 @@
 const API_URL = "https://api.brawl-track.com"; 
+let fullHistoryData = [];
 
 // --- GESTION NAVIGATION ---
 function toggleForms() {
@@ -186,10 +187,51 @@ async function loadBrawlersGrid(playerBrawlers) {
     }
 
 async function loadHistoryChart(token) {
+    // On débloque la zone de gestion des archives
+    document.getElementById('archive-manager').classList.remove('hidden');
+
     const res = await fetch(`${API_URL}/api/history`, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
-    const history = await res.json();
+    fullHistoryData = await res.json(); // On stocke TOUT
+
+    // Par défaut, on affiche tout (filtre 0)
+    updateChartFilter(0);
+}
+
+function updateChartFilter(days) {
+    if(!fullHistoryData.length) return;
+
+    let filteredData = [];
+    const now = new Date();
+
+    if (days === 0) {
+        filteredData = fullHistoryData;
+    } else {
+        // On calcule la date limite
+        const limitDate = new Date();
+        limitDate.setDate(now.getDate() - days);
+
+        filteredData = fullHistoryData.filter(item => {
+            const itemDate = new Date(item.date);
+            return itemDate >= limitDate;
+        });
+    }
+
+    // Calcul du GAIN
+    if (filteredData.length > 0) {
+        const first = filteredData[0].trophies;
+        const last = filteredData[filteredData.length - 1].trophies;
+        const gain = last - first;
+        const sign = gain >= 0 ? '+' : '';
+        document.getElementById('trophy-gain').innerText = `Gain: ${sign}${gain} 🏆`;
+    } else {
+        document.getElementById('trophy-gain').innerText = "Pas de données";
+    }
+
+    // Mise à jour du Graphique
+    const labels = filteredData.map(h => new Date(h.date).toLocaleDateString());
+    const dataPoints = filteredData.map(h => h.trophies);
 
     const ctx = document.getElementById('trophyChart').getContext('2d');
     if(window.myChart) window.myChart.destroy();
@@ -197,26 +239,77 @@ async function loadHistoryChart(token) {
     window.myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: history.map(h => new Date(h.date).toLocaleDateString(undefined, {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})),
+            labels: labels,
             datasets: [{
                 label: 'Trophées',
-                data: history.map(h => h.trophies),
+                data: dataPoints,
                 borderColor: '#ffce00',
-                backgroundColor: 'rgba(255, 206, 0, 0.2)',
+                backgroundColor: 'rgba(255, 206, 0, 0.1)',
                 borderWidth: 2,
                 tension: 0.3,
                 fill: true,
-                pointRadius: 4
+                pointRadius: 3 // Points un peu plus visibles
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
                 y: { grid: { color: '#333' } },
-                x: { display: false }
+                x: { grid: { display: false }, ticks: { display: false } } // On cache les dates en bas pour faire propre
             }
         }
     });
+}
+
+// --- ARCHIVE MANUELLE ---
+async function manualArchive() {
+    const token = localStorage.getItem('token');
+    if(!confirm("Voulez-vous forcer la création d'un point de sauvegarde maintenant ?")) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/archive/manual`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        alert(data.message);
+        loadHistoryChart(token); // Recharger le graph
+    } catch(e) { alert("Erreur connexion"); }
+}
+
+// --- SUPPRESSION ARCHIVES ---
+// Petit bonus : Afficher l'input "X Jours" si on choisit "Custom"
+document.getElementById('delete-select').addEventListener('change', function() {
+    const input = document.getElementById('custom-days');
+    if(this.value === 'custom') input.style.display = 'inline-block';
+    else input.style.display = 'none';
+});
+
+async function deleteArchives() {
+    const token = localStorage.getItem('token');
+    const select = document.getElementById('delete-select');
+    let mode = 'older_than';
+    let days = select.value;
+
+    if (days === 'all') mode = 'all';
+    if (days === 'custom') days = document.getElementById('custom-days').value;
+
+    if(!days && mode !== 'all') return alert("Veuillez entrer un nombre de jours.");
+
+    if(!confirm("⚠️ Attention, cette action est irréversible. Confirmer la suppression ?")) return;
+
+    try {
+        const res = await fetch(`${API_URL}/api/archive/delete`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ mode: mode, days: days })
+        });
+        const data = await res.json();
+        alert(data.message);
+        loadHistoryChart(token); // Recharger le graph
+    } catch(e) { alert("Erreur suppression"); }
 }
