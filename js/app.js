@@ -85,6 +85,15 @@ function displayProfile(data) {
     document.getElementById('pName').innerText = data.name;
     document.getElementById('pName').style.color = "#" + data.nameColor.substring(4);
     document.getElementById('pTag').innerText = data.tag;
+
+    // --- NOUVEAU : GESTION DU CLUB ---
+    const clubDiv = document.getElementById('pClub');
+    if (data.club && data.club.name) {
+        clubDiv.innerText = "🏠 " + data.club.name;
+    } else {
+        clubDiv.innerText = "Pas de Club";
+    }
+    // ---------------------------------
     
     document.getElementById('statTrophies').innerText = data.trophies.toLocaleString();
     document.getElementById('statHighest').innerText = data.highestTrophies.toLocaleString();
@@ -111,7 +120,34 @@ function displayProfile(data) {
 function displayBattleLog(battles) {
     const list = document.getElementById('battleList');
     list.innerHTML = "";
+    
+    // --- NOUVEAU : CALCUL DU TAUX DE VICTOIRE ---
+    let winCount = 0;
+    // On analyse les 25 derniers combats fournis par l'API
+    battles.forEach(battle => {
+        // Une victoire c'est : Soit le résultat est "victory", soit on a gagné des trophées (Top 4 en solo)
+        if (battle.battle.result === "victory" || (battle.battle.trophyChange && battle.battle.trophyChange > 0)) {
+            winCount++;
+        }
+    });
 
+    // Calcul du pourcentage
+    const totalBattles = battles.length; // Généralement 25
+    const winRate = totalBattles > 0 ? Math.round((winCount / totalBattles) * 100) : 0;
+
+    // Affichage et couleur
+    const rateBadge = document.getElementById('winRate');
+    rateBadge.innerText = `Win Rate : ${winRate}%`;
+    
+    // On nettoie les anciennes classes
+    rateBadge.classList.remove('rate-high', 'rate-mid', 'rate-low');
+
+    if (winRate >= 60) rateBadge.classList.add('rate-high');       // Vert si super fort
+    else if (winRate >= 45) rateBadge.classList.add('rate-mid');   // Jaune si moyen
+    else rateBadge.classList.add('rate-low');                      // Rouge si ça va mal
+    // --------------------------------------------
+
+    // Affichage de la liste (limité à 10 pour ne pas surcharger)
     battles.slice(0, 10).forEach(battle => {
         const div = document.createElement('div');
         let result = "Égalité";
