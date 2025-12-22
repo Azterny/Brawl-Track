@@ -1,6 +1,7 @@
 const API_URL = "https://api.brawl-track.com"; 
 let fullHistoryData = [];
-let currentLiveTrophies = null; // Stocke le score actuel en temps réel
+let currentLiveTrophies = null;
+let globalBrawlersList = []; // Stocke la liste fusionnée pour le tri
 
 // --- GESTION NAVIGATION ---
 function toggleForms() {
@@ -114,7 +115,7 @@ async function loadMyStats() {
         // 2. Brawlers
         loadBrawlersGrid(data.brawlers);
 
-        // 3. Graphique (On passe les trophées actuels pour le point rouge)
+        // 3. Graphique
         loadHistoryChart(token, data.trophies);
 
     } catch (e) {
@@ -145,52 +146,97 @@ function renderProfile(data) {
     `;
 }
 
-// --- GRILLE BRAWLERS ---
+// --- LOGIQUE BRAWLERS (NOUVEAU) ---
+
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
-    grid.innerHTML = '<p>Chargement collection...</p>';
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Chargement des images...</p>';
 
-    const res = await fetch(`${API_URL}/api/brawlers`);
-    const globalData = await res.json();
-    const allBrawlers = globalData.items;
+    try {
+        // 1. On récupère les images et infos officielles depuis BrawlAPI (plus fiable pour les images)
+        const res = await fetch('https://api.brawlapi.com/v1/brawlers');
+        const data = await res.json();
+        const allBrawlers = data.list; // Liste complète du jeu
 
+        // 2. On fusionne avec les stats du joueur
+        globalBrawlersList = allBrawlers.map(brawler => {
+            // On cherche si le joueur possède ce brawler (comparaison par ID)
+            const ownedStats = playerBrawlers.find(pb => pb.id === brawler.id);
+
+            return {
+                id: brawler.id,
+                name: brawler.name,
+                imageUrl: brawler.imageUrl, // URL Image officielle
+                owned: !!ownedStats,        // Booléen : Possédé ou non
+                trophies: ownedStats ? ownedStats.trophies : 0 // Trophées (0 si pas possédé)
+            };
+        });
+
+        // 3. On trie par défaut (Trophées décroissant) et on affiche
+        sortBrawlers();
+
+    } catch (e) {
+        console.error("Erreur chargement Brawlers", e);
+        grid.innerHTML = '<p>Erreur chargement liste.</p>';
+    }
+}
+
+function sortBrawlers() {
+    const criteria = document.getElementById('sort-brawlers').value;
+
+    // Logique de tri
+    if (criteria === 'trophies') {
+        // Tri par trophées décroissant (les non possédés à la fin)
+        globalBrawlersList.sort((a, b) => b.trophies - a.trophies);
+    } else if (criteria === 'name') {
+        // Tri alphabétique
+        globalBrawlersList.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (criteria === 'id') {
+        // Tri par ID (ordre d'ajout dans le jeu souvent)
+        globalBrawlersList.sort((a, b) => a.id - b.id);
+    }
+
+    renderBrawlersGrid();
+}
+
+function renderBrawlersGrid() {
+    const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '';
 
-    allBrawlers.forEach(brawler => {
-        const owned = playerBrawlers.find(pb => pb.id === brawler.id);
-
+    globalBrawlersList.forEach(b => {
         const div = document.createElement('div');
         div.className = 'brawler-card';
         
-        if (!owned) {
-            div.style.filter = "grayscale(100%) opacity(0.4)";
+        // Style : Grisé si non possédé
+        if (!b.owned) {
+            div.style.filter = "grayscale(100%) opacity(0.5)";
         } else {
             div.style.border = "1px solid #ffce00";
         }
-        
-        const formattedName = brawler.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
-        const imgUrl = `https://cdn.brawlify.com/brawlers/${formattedName}.png`; 
-        
-        const trophiesInfo = owned 
-            ? `<div style="font-size:0.7em; color:#ffce00;">🏆 ${owned.trophies}</div>` 
+
+        // Info Trophées
+        const trophiesInfo = b.owned 
+            ? `<div style="font-size:0.7em; color:#ffce00;">🏆 ${b.trophies}</div>` 
             : '<div style="font-size:0.7em;">🔒</div>';
-        
+
+        // Image : Utilisation directe de l'URL fournie par BrawlAPI
         div.innerHTML = `
-            <img src="${imgUrl}" 
+            <img src="${b.imageUrl}" 
+                 class="brawler-img"
                  style="width: 100%; border-radius: 5px; border: 2px solid #333; aspect-ratio: 1/1; object-fit: cover;" 
-                 onerror="this.onerror=null; this.src='https://cdn-old.brawlify.com/icon/Bit.png';">
-            <div style="font-size: 0.8em; margin-top: 2px; overflow:hidden; text-overflow:ellipsis; white-space: nowrap;">${brawler.name}</div>
+                 loading="lazy"
+                 onerror="this.src='https://cdn-old.brawlify.com/icon/Bit.png';">
+            <div style="font-size: 0.8em; margin-top: 2px; overflow:hidden; text-overflow:ellipsis; white-space: nowrap;">${b.name}</div>
             ${trophiesInfo}
         `;
         grid.appendChild(div);
     });
 }
 
-// --- GRAPHIQUE HISTORIQUE ---
+
+// --- GRAPHIQUE HISTORIQUE (Identique précédent) ---
 async function loadHistoryChart(token, liveTrophies) {
     document.getElementById('archive-manager').classList.remove('hidden');
-    
-    // On sauvegarde le score actuel pour l'utiliser dans le filtre
     currentLiveTrophies = liveTrophies;
 
     const res = await fetch(`${API_URL}/api/history`, {
@@ -207,9 +253,8 @@ function updateChartFilter(days) {
     let filteredData = [];
     const now = new Date();
 
-    // 1. Filtrer l'historique
     if (days === 0) {
-        filteredData = [...fullHistoryData]; // Copie
+        filteredData = [...fullHistoryData]; 
     } else {
         const limitDate = new Date();
         limitDate.setDate(now.getDate() - days);
@@ -219,26 +264,22 @@ function updateChartFilter(days) {
         });
     }
 
-    // 2. Préparer les données pour le Graph
     const labels = filteredData.map(h => new Date(h.date).toLocaleDateString());
     const dataPoints = filteredData.map(h => h.trophies);
     
-    // Créer un tableau de couleurs (Jaune par défaut)
     const pointColors = new Array(dataPoints.length).fill('#ffce00');
     const pointRadius = new Array(dataPoints.length).fill(3);
 
-    // 3. Ajouter le point "LIVE" (Rouge) si disponible
     if (currentLiveTrophies !== null) {
         labels.push("Maintenant");
         dataPoints.push(currentLiveTrophies);
-        pointColors.push('#ff0000'); // Rouge pour le dernier point
-        pointRadius.push(5);         // Un peu plus gros
+        pointColors.push('#ff0000'); 
+        pointRadius.push(5);         
     }
 
-    // Calcul du GAIN (Différence entre Live et le plus vieux point affiché)
     if (dataPoints.length > 0) {
         const first = dataPoints[0];
-        const last = dataPoints[dataPoints.length - 1]; // Le live
+        const last = dataPoints[dataPoints.length - 1]; 
         const gain = last - first;
         const sign = gain >= 0 ? '+' : '';
         document.getElementById('trophy-gain').innerText = `Gain: ${sign}${gain} 🏆`;
@@ -246,7 +287,6 @@ function updateChartFilter(days) {
         document.getElementById('trophy-gain').innerText = "Pas de données";
     }
 
-    // Mise à jour du Graphique
     const ctx = document.getElementById('trophyChart').getContext('2d');
     if(window.myChart) window.myChart.destroy();
 
@@ -262,7 +302,6 @@ function updateChartFilter(days) {
                 borderWidth: 2,
                 tension: 0.3,
                 fill: true,
-                // Configuration des points
                 pointBackgroundColor: pointColors, 
                 pointBorderColor: pointColors,
                 pointRadius: pointRadius,
@@ -280,7 +319,7 @@ function updateChartFilter(days) {
     });
 }
 
-// --- ARCHIVE ET DELETE --- (Reste identique)
+// --- ARCHIVE ET DELETE ---
 async function manualArchive() {
     const token = localStorage.getItem('token');
     if(!confirm("Voulez-vous forcer la création d'un point de sauvegarde maintenant ?")) return;
@@ -292,9 +331,6 @@ async function manualArchive() {
         });
         const data = await res.json();
         alert(data.message);
-        // On relance la fonction, mais comme on n'a pas les trophées "live" sous la main facilement ici,
-        // on recharge toute la page ou on refait un loadMyStats.
-        // Option simple : loadMyStats()
         loadMyStats(); 
     } catch(e) { alert("Erreur connexion"); }
 }
@@ -332,6 +368,6 @@ async function deleteArchives() {
         });
         const data = await res.json();
         alert(data.message);
-        loadMyStats(); // Recharger tout pour avoir le live à jour
+        loadMyStats(); 
     } catch(e) { alert("Erreur suppression"); }
 }
