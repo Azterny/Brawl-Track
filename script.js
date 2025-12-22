@@ -1,5 +1,6 @@
 const API_URL = "https://api.brawl-track.com"; 
 let fullHistoryData = [];
+let currentLiveTrophies = null; // Stocke le score actuel en temps réel
 
 // --- GESTION NAVIGATION ---
 function toggleForms() {
@@ -87,7 +88,7 @@ async function loadPublicProfile(tag) {
         if (!res.ok) throw new Error(data.message);
 
         renderProfile(data);
-        loadBrawlersGrid(data.brawlers); // On passe la liste des brawlers du joueur
+        loadBrawlersGrid(data.brawlers);
 
     } catch (e) {
         alert("Joueur introuvable !");
@@ -113,8 +114,8 @@ async function loadMyStats() {
         // 2. Brawlers
         loadBrawlersGrid(data.brawlers);
 
-        // 3. Graphique
-        loadHistoryChart(token);
+        // 3. Graphique (On passe les trophées actuels pour le point rouge)
+        loadHistoryChart(token, data.trophies);
 
     } catch (e) {
         console.error(e);
@@ -127,14 +128,10 @@ function renderProfile(data) {
     const nameEl = document.getElementById('player-name');
     nameEl.innerText = data.name;
     
-    // Gestion couleur nom (ex: 0xffffffff -> #ffffff)
-    // CORRECTION: Ajout d'une sécurité (try/catch) pour éviter les erreurs si le format change
     if(data.nameColor && data.nameColor.length > 4) {
         try {
             nameEl.style.color = "#" + data.nameColor.replace('0x', '').slice(2);
-        } catch(e) {
-            console.warn("Erreur couleur nom", e);
-        }
+        } catch(e) { console.warn("Erreur couleur", e); }
     }
 
     document.getElementById('player-tag').innerText = data.tag;
@@ -153,7 +150,6 @@ async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '<p>Chargement collection...</p>';
 
-    // Récupérer TOUS les brawlers du jeu
     const res = await fetch(`${API_URL}/api/brawlers`);
     const globalData = await res.json();
     const allBrawlers = globalData.items;
@@ -161,13 +157,11 @@ async function loadBrawlersGrid(playerBrawlers) {
     grid.innerHTML = '';
 
     allBrawlers.forEach(brawler => {
-        // Le joueur possède-t-il ce brawler ?
         const owned = playerBrawlers.find(pb => pb.id === brawler.id);
 
-        const div = document.createElement('div'); // CORRECTION: Utilisation de 'div'
+        const div = document.createElement('div');
         div.className = 'brawler-card';
         
-        // Style Grisé ou Normal
         if (!owned) {
             div.style.filter = "grayscale(100%) opacity(0.4)";
         } else {
@@ -177,12 +171,10 @@ async function loadBrawlersGrid(playerBrawlers) {
         const formattedName = brawler.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '');
         const imgUrl = `https://cdn.brawlify.com/brawlers/${formattedName}.png`; 
         
-        // CORRECTION: Utilisation cohérente de la variable 'owned' (au lieu de isOwned)
         const trophiesInfo = owned 
             ? `<div style="font-size:0.7em; color:#ffce00;">🏆 ${owned.trophies}</div>` 
             : '<div style="font-size:0.7em;">🔒</div>';
         
-        // CORRECTION: Utilisation cohérente de la variable 'div' (au lieu de card)
         div.innerHTML = `
             <img src="${imgUrl}" 
                  style="width: 100%; border-radius: 5px; border: 2px solid #333; aspect-ratio: 1/1; object-fit: cover;" 
@@ -194,42 +186,59 @@ async function loadBrawlersGrid(playerBrawlers) {
     });
 }
 
-async function loadHistoryChart(token) {
-    // On débloque la zone de gestion des archives
+// --- GRAPHIQUE HISTORIQUE ---
+async function loadHistoryChart(token, liveTrophies) {
     document.getElementById('archive-manager').classList.remove('hidden');
+    
+    // On sauvegarde le score actuel pour l'utiliser dans le filtre
+    currentLiveTrophies = liveTrophies;
 
     const res = await fetch(`${API_URL}/api/history`, {
         headers: { 'Authorization': `Bearer ${token}` }
     });
-    fullHistoryData = await res.json(); // On stocke TOUT
+    fullHistoryData = await res.json(); 
 
-    // Par défaut, on affiche tout (filtre 0)
     updateChartFilter(0);
 }
 
 function updateChartFilter(days) {
-    if(!fullHistoryData.length) return;
+    if(!fullHistoryData.length && currentLiveTrophies === null) return;
 
     let filteredData = [];
     const now = new Date();
 
+    // 1. Filtrer l'historique
     if (days === 0) {
-        filteredData = fullHistoryData;
+        filteredData = [...fullHistoryData]; // Copie
     } else {
-        // On calcule la date limite
         const limitDate = new Date();
         limitDate.setDate(now.getDate() - days);
-
         filteredData = fullHistoryData.filter(item => {
             const itemDate = new Date(item.date);
             return itemDate >= limitDate;
         });
     }
 
-    // Calcul du GAIN
-    if (filteredData.length > 0) {
-        const first = filteredData[0].trophies;
-        const last = filteredData[filteredData.length - 1].trophies;
+    // 2. Préparer les données pour le Graph
+    const labels = filteredData.map(h => new Date(h.date).toLocaleDateString());
+    const dataPoints = filteredData.map(h => h.trophies);
+    
+    // Créer un tableau de couleurs (Jaune par défaut)
+    const pointColors = new Array(dataPoints.length).fill('#ffce00');
+    const pointRadius = new Array(dataPoints.length).fill(3);
+
+    // 3. Ajouter le point "LIVE" (Rouge) si disponible
+    if (currentLiveTrophies !== null) {
+        labels.push("Maintenant");
+        dataPoints.push(currentLiveTrophies);
+        pointColors.push('#ff0000'); // Rouge pour le dernier point
+        pointRadius.push(5);         // Un peu plus gros
+    }
+
+    // Calcul du GAIN (Différence entre Live et le plus vieux point affiché)
+    if (dataPoints.length > 0) {
+        const first = dataPoints[0];
+        const last = dataPoints[dataPoints.length - 1]; // Le live
         const gain = last - first;
         const sign = gain >= 0 ? '+' : '';
         document.getElementById('trophy-gain').innerText = `Gain: ${sign}${gain} 🏆`;
@@ -238,9 +247,6 @@ function updateChartFilter(days) {
     }
 
     // Mise à jour du Graphique
-    const labels = filteredData.map(h => new Date(h.date).toLocaleDateString());
-    const dataPoints = filteredData.map(h => h.trophies);
-
     const ctx = document.getElementById('trophyChart').getContext('2d');
     if(window.myChart) window.myChart.destroy();
 
@@ -256,7 +262,11 @@ function updateChartFilter(days) {
                 borderWidth: 2,
                 tension: 0.3,
                 fill: true,
-                pointRadius: 3 // Points un peu plus visibles
+                // Configuration des points
+                pointBackgroundColor: pointColors, 
+                pointBorderColor: pointColors,
+                pointRadius: pointRadius,
+                pointHoverRadius: 7
             }]
         },
         options: {
@@ -264,13 +274,13 @@ function updateChartFilter(days) {
             plugins: { legend: { display: false } },
             scales: {
                 y: { grid: { color: '#333' } },
-                x: { grid: { display: false }, ticks: { display: false } } // On cache les dates en bas pour faire propre
+                x: { grid: { display: false }, ticks: { display: false } } 
             }
         }
     });
 }
 
-// --- ARCHIVE MANUELLE ---
+// --- ARCHIVE ET DELETE --- (Reste identique)
 async function manualArchive() {
     const token = localStorage.getItem('token');
     if(!confirm("Voulez-vous forcer la création d'un point de sauvegarde maintenant ?")) return;
@@ -282,11 +292,13 @@ async function manualArchive() {
         });
         const data = await res.json();
         alert(data.message);
-        loadHistoryChart(token); // Recharger le graph
+        // On relance la fonction, mais comme on n'a pas les trophées "live" sous la main facilement ici,
+        // on recharge toute la page ou on refait un loadMyStats.
+        // Option simple : loadMyStats()
+        loadMyStats(); 
     } catch(e) { alert("Erreur connexion"); }
 }
 
-// --- SUPPRESSION ARCHIVES ---
 const deleteSelect = document.getElementById('delete-select');
 if (deleteSelect) {
     deleteSelect.addEventListener('change', function() {
@@ -320,6 +332,6 @@ async function deleteArchives() {
         });
         const data = await res.json();
         alert(data.message);
-        loadHistoryChart(token); // Recharger le graph
+        loadMyStats(); // Recharger tout pour avoir le live à jour
     } catch(e) { alert("Erreur suppression"); }
 }
