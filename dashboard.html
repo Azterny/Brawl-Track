@@ -32,7 +32,7 @@
 
         <div id="stats-area" class="stats-grid"></div>
 
-<div id="chart-container" class="hidden" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px;">
+        <div id="chart-container" class="hidden" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="color: #ffce00; margin: 0;">📈 Progression</h3>
                 <span id="trophy-gain" style="color: #28a745; font-weight: bold;"></span>
@@ -48,9 +48,18 @@
             <canvas id="trophyChart"></canvas>
         </div>
 
-        <h3 style="margin-top: 30px; border-top: 1px solid #444; padding-top: 20px;">🤖 Brawlers</h3>
-        <div id="brawlers-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px;">
-            </div>
+        <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 20px;">
+            <h3 style="margin: 0;">🤖 Brawlers</h3>
+            
+            <select id="sort-brawlers" onchange="sortBrawlers()" style="width: auto; padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 5px;">
+                <option value="trophies">▼ Trophées</option>
+                <option value="name">A-Z Nom</option>
+                <option value="id">Base (ID)</option>
+            </select>
+        </div>
+
+        <div id="brawlers-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-top: 15px;">
+        </div>
 
         <div id="archive-manager" class="hidden" style="margin-top: 40px; border-top: 1px solid #444; padding-top: 20px;">
             <h3>💾 Gestion des Données</h3>
@@ -72,15 +81,11 @@
             </div>
         </div>
 
-        <h3 style="margin-top: 40px; text-align: left; color: #ffce00;">🤖 Collection Brawlers</h3>
-        <div id="brawlers-grid">
-            </div>
-
     </div>
 
     <script src="script.js"></script>
     <script>
-        // Logique de démarrage
+        // Logique de démarrage : Détecte si on est en mode Public ou Privé
         const urlParams = new URLSearchParams(window.location.search);
         const publicTag = urlParams.get('tag');
 
