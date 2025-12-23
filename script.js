@@ -150,34 +150,48 @@ function renderProfile(data) {
 
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Chargement des images...</p>';
+    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Chargement collection...</p>';
 
     try {
-        // 1. On récupère les images et infos officielles depuis BrawlAPI (plus fiable pour les images)
-        const res = await fetch('https://api.brawlapi.com/v1/brawlers');
+        // 1. On récupère la liste officielle via ton API
+        const res = await fetch(`${API_URL}/api/brawlers`);
+        if (!res.ok) throw new Error("Erreur API");
+        
         const data = await res.json();
-        const allBrawlers = data.list; // Liste complète du jeu
+        // L'API Supercell renvoie "items", pas "list"
+        const allBrawlers = data.items || [];
 
-        // 2. On fusionne avec les stats du joueur
+        if (allBrawlers.length === 0) {
+            grid.innerHTML = '<p>Aucun brawler trouvé.</p>';
+            return;
+        }
+
+        // 2. Fusion des données + Génération de l'URL d'image
         globalBrawlersList = allBrawlers.map(brawler => {
-            // On cherche si le joueur possède ce brawler (comparaison par ID)
             const ownedStats = playerBrawlers.find(pb => pb.id === brawler.id);
-
+            
+            // Formatage du nom pour l'URL Brawlify
+            // Ex: "El Primo" -> "El-Primo" | "Mr. P" -> "Mr-P"
+            const formattedName = brawler.name
+                .replace(/\./g, '')    // Enlève les points
+                .replace(/\s+/g, '-'); // Remplace les espaces par des tirets
+            
             return {
                 id: brawler.id,
                 name: brawler.name,
-                imageUrl: brawler.imageUrl, // URL Image officielle
-                owned: !!ownedStats,        // Booléen : Possédé ou non
-                trophies: ownedStats ? ownedStats.trophies : 0 // Trophées (0 si pas possédé)
+                // On génère le lien vers le CDN Brawlify
+                imageUrl: `https://cdn.brawlify.com/brawlers/${formattedName}.png`, 
+                owned: !!ownedStats,
+                trophies: ownedStats ? ownedStats.trophies : 0
             };
         });
 
-        // 3. On trie par défaut (Trophées décroissant) et on affiche
+        // 3. Affichage
         sortBrawlers();
 
     } catch (e) {
-        console.error("Erreur chargement Brawlers", e);
-        grid.innerHTML = '<p>Erreur chargement liste.</p>';
+        console.error("Erreur Brawlers:", e);
+        grid.innerHTML = '<p>Impossible de charger la liste.</p>';
     }
 }
 
