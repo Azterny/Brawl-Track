@@ -153,12 +153,11 @@ async function loadBrawlersGrid(playerBrawlers) {
     grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Chargement collection...</p>';
 
     try {
-        // 1. On récupère la liste officielle via ton API
+        // 1. On récupère la liste officielle via ton API (qui relaie Supercell)
         const res = await fetch(`${API_URL}/api/brawlers`);
         if (!res.ok) throw new Error("Erreur API");
         
         const data = await res.json();
-        // L'API Supercell renvoie "items", pas "list"
         const allBrawlers = data.items || [];
 
         if (allBrawlers.length === 0) {
@@ -166,21 +165,28 @@ async function loadBrawlersGrid(playerBrawlers) {
             return;
         }
 
-        // 2. Fusion des données + Génération de l'URL d'image
+        // 2. Fusion des données
         globalBrawlersList = allBrawlers.map(brawler => {
             const ownedStats = playerBrawlers.find(pb => pb.id === brawler.id);
             
-            // Formatage du nom pour l'URL Brawlify
-            // Ex: "El Primo" -> "El-Primo" | "Mr. P" -> "Mr-P"
-            const formattedName = brawler.name
-                .replace(/\./g, '')    // Enlève les points
-                .replace(/\s+/g, '-'); // Remplace les espaces par des tirets
+            // --- CORRECTION DU NOM POUR L'IMAGE ---
+            // L'API renvoie "EL PRIMO", on veut "El-Primo"
+            let formattedName = brawler.name.toLowerCase(); // "el primo"
             
+            // Met la première lettre de chaque mot en majuscule
+            formattedName = formattedName.replace(/\b\w/g, l => l.toUpperCase()); // "El Primo"
+            
+            // Cas particuliers manuels (si nécessaire)
+            if(formattedName === "8-bit") formattedName = "8-Bit";
+            
+            // Remplace espaces par tirets et enlève les points
+            formattedName = formattedName.replace(/\./g, '').replace(/\s+/g, '-'); // "El-Primo" / "Mr-P"
+
             return {
                 id: brawler.id,
-                name: brawler.name,
-                // On génère le lien vers le CDN Brawlify
-                imageUrl: `https://cdn.brawlify.com/brawlers/${formattedName}.png`, 
+                name: brawler.name, // On garde le vrai nom pour l'affichage ("EL PRIMO")
+                // On utilise le "vieux" CDN Brawlify qui est plus fiable sur les noms
+                imageUrl: `https://cdn-old.brawlify.com/brawler/${formattedName}.png`, 
                 owned: !!ownedStats,
                 trophies: ownedStats ? ownedStats.trophies : 0
             };
@@ -194,6 +200,7 @@ async function loadBrawlersGrid(playerBrawlers) {
         grid.innerHTML = '<p>Impossible de charger la liste.</p>';
     }
 }
+
 
 function sortBrawlers() {
     const criteria = document.getElementById('sort-brawlers').value;
