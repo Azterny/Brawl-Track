@@ -1,1 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brawl Track - Accueil</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
 
+    <div class="container">
+        <h1 style="font-size: 3em; margin-bottom: 10px;">BRAWL TRACK</h1>
+        <p style="color: #888; margin-bottom: 30px;">Suivi de statistiques & Historique</p>
+        
+        <div style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 25px;">
+            <h3 style="margin-top: 0; color: #fff;">🔎 Recherche Rapide</h3>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="public-tag" placeholder="#TAG du joueur">
+                <button onclick="publicSearch()" style="width: auto; margin:0; background: #444; color: white;">Go</button>
+            </div>
+        </div>
+
+        <div id="login-form">
+            <h2 style="color: #ffce00;">Connexion</h2>
+            <input type="text" id="login-username" placeholder="Nom d'utilisateur">
+            <input type="password" id="login-password" placeholder="Mot de passe">
+            <button onclick="login()">SE CONNECTER</button>
+            <p style="margin-top: 15px; color: #888;">
+                Pas de compte ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Créer un compte</a>
+            </p>
+        </div>
+
+        <div id="register-form" class="hidden">
+            <h2 style="color: #ffce00;">Créer un compte</h2>
+            <input type="text" id="reg-username" placeholder="Pseudo">
+            <input type="text" id="reg-tag" placeholder="Ton Tag Brawl Stars (#...)" style="border: 1px solid #ffce00;">
+            <input type="password" id="reg-password" placeholder="Mot de passe">
+            <button onclick="register()" style="background: #28a745;">S'INSCRIRE</button>
+            <p style="margin-top: 15px; color: #888;">
+                Déjà inscrit ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Se connecter</a>
+            </p>
+        </div>
+
+        <p id="message" style="color: #ff5555; margin-top: 15px; font-weight: bold;"></p>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script> </body>
+</html>
