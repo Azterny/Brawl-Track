@@ -4,73 +4,44 @@ let currentLiveTrophies = null;
 let globalBrawlersList = [];
 let currentUserTier = 'basic'; 
 
-// --- NAVIGATION & MENU BURGER ---
-function toggleMenu() {
-    document.getElementById('menu-dropdown').classList.toggle('active');
-}
-
-window.addEventListener('click', function(e) {
-    if (!document.getElementById('burger-menu').contains(e.target)) {
-        document.getElementById('menu-dropdown').classList.remove('active');
-    }
-});
-
-function switchView(viewName) {
+// --- MENU & NAVIGATION ---
+function toggleMenu() { document.getElementById('menu-dropdown').classList.toggle('active'); }
+window.onclick = function(e) { if (!document.getElementById('burger-menu').contains(e.target)) document.getElementById('menu-dropdown').classList.remove('active'); }
+function switchView(view) {
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-    document.getElementById(`view-${viewName}`).classList.add('active');
+    document.getElementById(`view-${view}`).classList.add('active');
     document.getElementById('menu-dropdown').classList.remove('active');
 }
 
-// --- AUTHENTIFICATION ---
-function logout() {
-    localStorage.removeItem('token');
-    window.location.href = "index.html";
-}
-
+// --- AUTH & LOAD ---
+function logout() { localStorage.removeItem('token'); window.location.href = "index.html"; }
 function checkAuth() {
-    const token = localStorage.getItem('token');
-    if (!token) window.location.href = "index.html";
-    
+    if (!localStorage.getItem('token')) window.location.href = "index.html";
     document.getElementById('burger-menu').classList.remove('hidden');
-    loadMyStats(); 
+    loadMyStats();
 }
 
-// --- CHARGEMENT PRINCIPAL ---
 async function loadMyStats() {
-    const token = localStorage.getItem('token');
-    
     try {
-        const res = await fetch(`${API_URL}/api/my-stats`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await fetch(`${API_URL}/api/my-stats`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
         const data = await res.json();
-        if (!res.ok) throw new Error("Session expirée");
-
-        currentUserTier = data.internal_tier || 'basic';
+        if (!res.ok) throw new Error();
         
+        currentUserTier = data.internal_tier || 'basic';
         renderProfile(data);
         setupIntervalUI(data.internal_tier, data.internal_interval);
         loadBrawlersGrid(data.brawlers);
-        loadHistoryChart(token, data.trophies);
-
-    } catch (e) {
-        console.error(e);
-        logout();
-    }
+        loadHistoryChart(localStorage.getItem('token'), data.trophies);
+    } catch (e) { logout(); }
 }
 
 function renderProfile(data) {
     document.getElementById('player-name').innerText = data.name;
     document.getElementById('player-tag').innerText = data.tag;
-    
     const badge = document.getElementById('tier-badge');
     badge.className = `badge badge-${currentUserTier}`;
+    badge.innerText = currentUserTier === 'subscriber' ? 'Abonné' : currentUserTier;
     
-    let tierText = "Basic";
-    if (currentUserTier === 'subscriber') tierText = "Abonné";
-    if (currentUserTier === 'premium') tierText = "Premium";
-    badge.innerText = tierText;
-
     document.getElementById('stats-area').innerHTML = `
         <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00">🏆 ${data.trophies}</div></div>
         <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff">⚔️ ${data['3vs3Victories']}</div></div>
@@ -79,246 +50,132 @@ function renderProfile(data) {
     `;
 }
 
-function setupIntervalUI(tier, currentInterval) {
-    const basicDiv = document.getElementById('interval-basic');
-    const customDiv = document.getElementById('interval-custom');
-    const msg = document.getElementById('interval-limit-msg');
-
-    basicDiv.classList.add('hidden');
-    customDiv.classList.add('hidden');
-
+// --- CONFIG AUTO UPDATE ---
+function setupIntervalUI(tier, interval) {
+    document.getElementById('interval-basic').classList.add('hidden');
+    document.getElementById('interval-custom').classList.add('hidden');
     if (tier === 'basic') {
-        basicDiv.classList.remove('hidden');
-        document.getElementById('select-interval-basic').value = currentInterval || 720;
+        document.getElementById('interval-basic').classList.remove('hidden');
+        document.getElementById('select-interval-basic').value = interval || 720;
     } else {
-        customDiv.classList.remove('hidden');
-        const h = Math.floor(currentInterval / 60);
-        const m = currentInterval % 60;
-        document.getElementById('input-hours').value = h;
-        document.getElementById('input-minutes').value = m;
-
+        document.getElementById('interval-custom').classList.remove('hidden');
+        document.getElementById('input-hours').value = Math.floor(interval / 60);
+        document.getElementById('input-minutes').value = interval % 60;
+        const msg = document.getElementById('interval-limit-msg');
         if (tier === 'subscriber') {
-            msg.innerText = "⭐ Abonné : Minimum 1 Heure (Minutes ignorées).";
+            msg.innerText = "⭐ Abonné : Min 1H. Minutes ignorées.";
             document.getElementById('input-minutes').disabled = true;
-            document.getElementById('input-minutes').value = 0;
         } else {
-            msg.innerText = "👑 Premium : Minimum 15 Minutes.";
+            msg.innerText = "👑 Premium : Min 15 Minutes.";
             document.getElementById('input-minutes').disabled = false;
         }
     }
 }
 
 async function saveInterval() {
-    const token = localStorage.getItem('token');
-    let minutes = 720;
-
-    if (currentUserTier === 'basic') {
-        minutes = parseInt(document.getElementById('select-interval-basic').value);
-    } else {
-        const h = parseInt(document.getElementById('input-hours').value) || 0;
-        const m = parseInt(document.getElementById('input-minutes').value) || 0;
-        minutes = (h * 60) + m;
-    }
-
-    try {
-        const res = await fetch(`${API_URL}/api/settings/interval`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-            },
-            body: JSON.stringify({ minutes: minutes })
-        });
-        const data = await res.json();
-        
-        if(res.ok) alert("✅ " + data.message);
-        else alert("❌ " + data.message);
-        
-    } catch(e) { alert("Erreur serveur"); }
+    let min = 720;
+    if (currentUserTier === 'basic') min = parseInt(document.getElementById('select-interval-basic').value);
+    else min = (parseInt(document.getElementById('input-hours').value)||0)*60 + (parseInt(document.getElementById('input-minutes').value)||0);
+    
+    await fetch(`${API_URL}/api/settings/interval`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ minutes: min })
+    }).then(r => r.json()).then(d => alert(d.message));
 }
 
+// --- SETTINGS ---
 async function updateProfile() {
-    const username = document.getElementById('new-username').value;
-    const password = document.getElementById('new-password').value;
-    
-    if(!username && !password) return alert("Remplissez au moins un champ.");
-
-    try {
-        const res = await fetch(`${API_URL}/api/settings/update-profile`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}` 
-            },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        alert(data.message);
-    } catch(e) { alert("Erreur serveur"); }
+    const u = document.getElementById('new-username').value, p = document.getElementById('new-password').value;
+    if(!u && !p) return;
+    await fetch(`${API_URL}/api/settings/update-profile`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ username: u, password: p })
+    }).then(r => r.json()).then(d => alert(d.message));
 }
 
 async function deleteAccount() {
-    if(!confirm("⚠️ Êtes-vous sûr de vouloir supprimer votre compte DÉFINITIVEMENT ?")) return;
-    try {
-        await fetch(`${API_URL}/api/settings/delete-account`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        alert("Compte supprimé.");
-        logout();
-    } catch(e) { alert("Erreur serveur"); }
+    if(!confirm("SUPPRIMER DÉFINITIVEMENT ?")) return;
+    await fetch(`${API_URL}/api/settings/delete-account`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }});
+    logout();
 }
 
+// --- BRAWLERS ---
 async function loadBrawlersGrid(playerBrawlers) {
-    const grid = document.getElementById('brawlers-grid');
-    grid.innerHTML = '<p>Chargement...</p>';
-    try {
-        const res = await fetch(`${API_URL}/api/brawlers`);
-        const data = await res.json();
-        const allBrawlers = data.items || [];
-
-        globalBrawlersList = allBrawlers.map(b => {
-            const owned = playerBrawlers.find(pb => pb.id === b.id);
-            return {
-                id: b.id, 
-                name: b.name, 
-                imageUrl: `https://cdn.brawlify.com/brawlers/borderless/${b.id}.png`,
-                owned: !!owned, 
-                trophies: owned ? owned.trophies : 0
-            };
-        });
-        sortBrawlers();
-    } catch(e) { grid.innerHTML = 'Erreur chargement'; }
+    const res = await fetch(`${API_URL}/api/brawlers`);
+    const data = await res.json();
+    globalBrawlersList = (data.items || []).map(b => {
+        const owned = playerBrawlers.find(pb => pb.id === b.id);
+        return { id: b.id, name: b.name, imageUrl: `https://cdn.brawlify.com/brawlers/borderless/${b.id}.png`, owned: !!owned, trophies: owned ? owned.trophies : 0 };
+    });
+    sortBrawlers();
 }
 
 function sortBrawlers() {
-    const criteria = document.getElementById('sort-brawlers').value;
-    if (criteria === 'trophies') globalBrawlersList.sort((a, b) => b.trophies - a.trophies);
-    else if (criteria === 'name') globalBrawlersList.sort((a, b) => a.name.localeCompare(b.name));
+    const c = document.getElementById('sort-brawlers').value;
+    if (c === 'trophies') globalBrawlersList.sort((a, b) => b.trophies - a.trophies);
+    else if (c === 'name') globalBrawlersList.sort((a, b) => a.name.localeCompare(b.name));
     else globalBrawlersList.sort((a, b) => a.id - b.id);
-    renderBrawlersGrid();
-}
-
-function renderBrawlersGrid() {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '';
     globalBrawlersList.forEach(b => {
-        const div = document.createElement('div');
-        div.className = 'brawler-card';
-        if (!b.owned) div.style.filter = "grayscale(100%) opacity(0.3)";
-        else div.style.border = "1px solid #ffce00";
-        
-        div.innerHTML = `
-            <img src="${b.imageUrl}" style="width:100%; aspect-ratio:1/1; object-fit:contain;" loading="lazy">
-            <div style="font-size:0.8em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${b.name}</div>
-            ${b.owned ? `<div style="color:#ffce00;font-size:0.7em;">🏆 ${b.trophies}</div>` : ''}
-        `;
-        grid.appendChild(div);
+        const d = document.createElement('div');
+        d.className = 'brawler-card';
+        if (!b.owned) d.style.filter = "grayscale(100%) opacity(0.3)";
+        else d.style.border = "1px solid #ffce00";
+        d.innerHTML = `<img src="${b.imageUrl}" style="width:100%;aspect-ratio:1/1;object-fit:contain;"><div style="font-size:0.8em;overflow:hidden;text-overflow:ellipsis;">${b.name}</div>${b.owned ? `<div style="color:#ffce00;font-size:0.7em;">🏆 ${b.trophies}</div>` : ''}`;
+        grid.appendChild(d);
     });
 }
 
-// --- CORRECTION GRAPHIQUE ---
+// --- CHART ---
 async function loadHistoryChart(token, liveTrophies) {
-    // 1. On rend le conteneur visible ! (C'est ce qui manquait)
-    document.getElementById('chart-container').classList.remove('hidden');
-
     currentLiveTrophies = liveTrophies;
-    const res = await fetch(`${API_URL}/api/history`, { headers: { 'Authorization': `Bearer ${token}` } });
-    fullHistoryData = await res.json(); 
+    try {
+        const res = await fetch(`${API_URL}/api/history`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if(res.ok) fullHistoryData = await res.json();
+        else fullHistoryData = [];
+    } catch(e) { fullHistoryData = []; }
     updateChartFilter(0);
 }
 
 function updateChartFilter(days) {
-    if(!fullHistoryData.length && currentLiveTrophies === null) return;
-    
-    let filteredData = [...fullHistoryData];
+    const canvas = document.getElementById('trophyChart');
+    if (!canvas) return;
+    let data = [...fullHistoryData];
     if (days > 0) {
-        const limitDate = new Date();
-        limitDate.setDate(new Date().getDate() - days);
-        filteredData = fullHistoryData.filter(item => new Date(item.date) >= limitDate);
+        const limit = new Date(); limit.setDate(new Date().getDate() - days);
+        data = fullHistoryData.filter(i => new Date(i.date) >= limit);
     }
-    
-    const dataset = filteredData.map(h => ({ x: h.date, y: h.trophies }));
-    if (currentLiveTrophies !== null) {
-        dataset.push({ x: new Date().toISOString(), y: currentLiveTrophies });
-    }
+    const dataset = data.map(h => ({ x: h.date, y: h.trophies }));
+    if (currentLiveTrophies) dataset.push({ x: new Date().toISOString(), y: currentLiveTrophies });
+    if (!dataset.length) return;
 
-    const ctx = document.getElementById('trophyChart').getContext('2d');
     if(window.myChart) window.myChart.destroy();
-    
-    window.myChart = new Chart(ctx, {
+    window.myChart = new Chart(canvas.getContext('2d'), {
         type: 'line',
-        data: {
-            datasets: [{
-                label: 'Trophées', data: dataset, 
-                borderColor: '#ffce00', backgroundColor: 'rgba(255, 206, 0, 0.1)',
-                borderWidth: 2, tension: 0.1, fill: true, pointRadius: 3, pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true, 
-            plugins: { 
-                legend: {display:false},
-                tooltip: {
-                    mode: 'index', intersect: false,
-                    callbacks: {
-                        title: (ctx) => {
-                            const d = new Date(ctx[0].parsed.x);
-                            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                        }
-                    }
-                }
-            },
-            scales: { 
-                x: { 
-                    type: 'time', time: { unit: 'day', displayFormats: { day: 'dd/MM' } }, 
-                    grid: {color:'#333'} 
-                }, 
-                y: { grid: {color:'#333'} } 
-            }
-        }
+        data: { datasets: [{ data: dataset, borderColor: '#ffce00', backgroundColor: 'rgba(255, 206, 0, 0.1)', borderWidth: 2, tension: 0.1, fill: true, pointRadius: 3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { x: { type: 'time', time: { unit: 'day', displayFormats: { day: 'dd/MM' } }, grid: {color:'#333'} }, y: { grid: {color:'#333'} } } }
     });
 }
 
-// --- MODE PUBLIC ---
+// --- PUBLIC ---
 async function loadPublicProfile(tag) {
     document.getElementById('public-actions').classList.remove('hidden');
     document.getElementById('burger-menu').classList.add('hidden');
     try {
         const res = await fetch(`${API_URL}/api/public/player/${tag}`);
         const data = await res.json();
-        renderProfile(data);
-        loadBrawlersGrid(data.brawlers);
-        // En mode public, on n'a pas l'historique, donc pas de graph
+        renderProfile(data); loadBrawlersGrid(data.brawlers);
     } catch (e) { alert("Joueur introuvable"); }
 }
-
 async function manualArchive() {
-    const token = localStorage.getItem('token');
-    if(!confirm("Créer un point de sauvegarde maintenant ?")) return;
-    try {
-        const res = await fetch(`${API_URL}/api/archive/manual`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        alert(data.message);
-        loadMyStats(); 
-    } catch(e) { alert("Erreur"); }
+    if(!confirm("Sauvegarder ?")) return;
+    await fetch(`${API_URL}/api/archive/manual`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+    loadMyStats();
 }
-
 async function deleteArchives() {
-    const token = localStorage.getItem('token');
-    const select = document.getElementById('delete-select');
-    if(!confirm("Supprimer l'historique sélectionné ?")) return;
-    try {
-        const res = await fetch(`${API_URL}/api/archive/delete`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ mode: select.value === 'all' ? 'all' : 'older_than', days: select.value })
-        });
-        const data = await res.json();
-        alert(data.message);
-        loadMyStats();
-    } catch(e) { alert("Erreur"); }
+    const s = document.getElementById('delete-select').value;
+    if(!confirm("Supprimer ?")) return;
+    await fetch(`${API_URL}/api/archive/delete`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: JSON.stringify({ mode: s==='all'?'all':'older_than', days: s }) });
+    loadMyStats();
 }
