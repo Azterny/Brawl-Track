@@ -141,6 +141,7 @@ input:focus, select:focus {
 }
 
 /* BOUTONS GENERIQUES (Style 3D) */
+/* ATTENTION : C'est cette règle qui causait le bug, nous allons l'écraser plus bas pour les filtres */
 button { 
     width: 100%; 
     padding: 12px; 
@@ -176,15 +177,17 @@ button:active {
 .btn-danger:active { box-shadow: 0 0 0 #bd2130; }
 
 /* =========================================
-   4. FILTRES GRAPHIQUE (SCROLL MOBILE)
+   4. FILTRES GRAPHIQUE (CORRECTION MOBILE)
    ========================================= */
 .chart-filters {
-    display: flex;
+    display: flex !important;        /* Force le Flexbox */
+    flex-direction: row !important;  /* Force la ligne */
+    flex-wrap: nowrap !important;    /* INTERDIT le passage à la ligne */
     gap: 8px;
     margin-bottom: 15px;
+    width: 100%;
     
-    /* Force l'horizontalité et le scroll */
-    flex-wrap: nowrap;
+    /* Active le scroll horizontal */
     overflow-x: auto;
     -webkit-overflow-scrolling: touch; 
     
@@ -196,19 +199,20 @@ button:active {
 .chart-filters::-webkit-scrollbar { display: none; }
 
 .filter-btn {
+    /* ÉCRASEMENT DU STYLE BOUTON GLOBAL */
+    width: auto !important;          /* Force la largeur naturelle */
+    margin-top: 0 !important;        /* Supprime la marge haut */
+    flex: 0 0 auto;                  /* Interdit le rétrécissement */
+    
     background: #333;
     color: #ccc;
     border: 1px solid #444;
     padding: 8px 16px;
     font-size: 0.85em;
-    width: auto;
-    margin-top: 0;
     border-radius: 20px;
-    box-shadow: none;
+    box-shadow: none !important;     /* Pas d'ombre 3D */
     
-    /* Empêche le texte de casser sur mobile */
     white-space: nowrap;
-    flex-shrink: 0;
     transition: all 0.2s ease;
 }
 
@@ -216,7 +220,6 @@ button:active {
     background: #444;
     color: white;
     transform: translateY(-1px);
-    box-shadow: none; /* Pas d'effet 3D ici */
 }
 
 .filter-btn:active { transform: translateY(0); }
@@ -226,7 +229,7 @@ button:active {
     color: black;
     border-color: #ffce00;
     font-weight: bold;
-    box-shadow: 0 0 10px rgba(255, 206, 0, 0.4);
+    box-shadow: 0 0 10px rgba(255, 206, 0, 0.4) !important;
 }
 
 /* =========================================
