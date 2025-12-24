@@ -2,14 +2,13 @@ const API_URL = "https://api.brawl-track.com";
 let fullHistoryData = [];
 let currentLiveTrophies = null;
 let globalBrawlersList = [];
-let currentUserTier = 'basic'; // Valeur par défaut
+let currentUserTier = 'basic'; 
 
 // --- NAVIGATION & MENU BURGER ---
 function toggleMenu() {
     document.getElementById('menu-dropdown').classList.toggle('active');
 }
 
-// Fermer le menu si on clique en dehors
 window.addEventListener('click', function(e) {
     if (!document.getElementById('burger-menu').contains(e.target)) {
         document.getElementById('menu-dropdown').classList.remove('active');
@@ -17,11 +16,8 @@ window.addEventListener('click', function(e) {
 });
 
 function switchView(viewName) {
-    // Masquer toutes les vues
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-    // Afficher la vue demandée
     document.getElementById(`view-${viewName}`).classList.add('active');
-    // Fermer le menu
     document.getElementById('menu-dropdown').classList.remove('active');
 }
 
@@ -34,7 +30,6 @@ function logout() {
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) window.location.href = "index.html";
-    
     document.getElementById('burger-menu').classList.remove('hidden');
     loadMyStats(); 
 }
@@ -42,7 +37,6 @@ function checkAuth() {
 // --- CHARGEMENT PRINCIPAL ---
 async function loadMyStats() {
     const token = localStorage.getItem('token');
-    
     try {
         const res = await fetch(`${API_URL}/api/my-stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -50,16 +44,10 @@ async function loadMyStats() {
         const data = await res.json();
         if (!res.ok) throw new Error("Session expirée");
 
-        // Sauvegarde du grade pour l'interface
         currentUserTier = data.internal_tier || 'basic';
         
-        // 1. Rendu Profil
         renderProfile(data);
-        
-        // 2. Initialisation UI selon Grade (Intervalle auto)
         setupIntervalUI(data.internal_tier, data.internal_interval);
-        
-        // 3. Contenu
         loadBrawlersGrid(data.brawlers);
         loadHistoryChart(token, data.trophies);
 
@@ -74,7 +62,6 @@ function renderProfile(data) {
     document.getElementById('player-name').innerText = data.name;
     document.getElementById('player-tag').innerText = data.tag;
     
-    // Badge de Grade
     const badge = document.getElementById('tier-badge');
     badge.className = `badge badge-${currentUserTier}`;
     
@@ -83,7 +70,6 @@ function renderProfile(data) {
     if (currentUserTier === 'premium') tierText = "Premium";
     badge.innerText = tierText;
 
-    // Stats
     document.getElementById('stats-area').innerHTML = `
         <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00">🏆 ${data.trophies}</div></div>
         <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff">⚔️ ${data['3vs3Victories']}</div></div>
@@ -106,7 +92,6 @@ function setupIntervalUI(tier, currentInterval) {
         document.getElementById('select-interval-basic').value = currentInterval || 720;
     } else {
         customDiv.classList.remove('hidden');
-        // Convertir minutes en Heures/Minutes
         const h = Math.floor(currentInterval / 60);
         const m = currentInterval % 60;
         document.getElementById('input-hours').value = h;
@@ -138,17 +123,12 @@ async function saveInterval() {
     try {
         const res = await fetch(`${API_URL}/api/settings/interval`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ minutes: minutes })
         });
         const data = await res.json();
-        
         if(res.ok) alert("✅ " + data.message);
         else alert("❌ " + data.message);
-        
     } catch(e) { alert("Erreur serveur"); }
 }
 
@@ -156,16 +136,12 @@ async function saveInterval() {
 async function updateProfile() {
     const username = document.getElementById('new-username').value;
     const password = document.getElementById('new-password').value;
-    
     if(!username && !password) return alert("Remplissez au moins un champ.");
 
     try {
         const res = await fetch(`${API_URL}/api/settings/update-profile`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}` 
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
             body: JSON.stringify({ username, password })
         });
         const data = await res.json();
@@ -185,7 +161,7 @@ async function deleteAccount() {
     } catch(e) { alert("Erreur serveur"); }
 }
 
-// --- BRAWLERS (Avec ID pour images fiables) ---
+// --- BRAWLERS ---
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '<p>Chargement...</p>';
@@ -197,12 +173,9 @@ async function loadBrawlersGrid(playerBrawlers) {
         globalBrawlersList = allBrawlers.map(b => {
             const owned = playerBrawlers.find(pb => pb.id === b.id);
             return {
-                id: b.id, 
-                name: b.name, 
-                // URL Image : ID Borderless
+                id: b.id, name: b.name, 
                 imageUrl: `https://cdn.brawlify.com/brawlers/borderless/${b.id}.png`,
-                owned: !!owned, 
-                trophies: owned ? owned.trophies : 0
+                owned: !!owned, trophies: owned ? owned.trophies : 0
             };
         });
         sortBrawlers();
@@ -235,17 +208,15 @@ function renderBrawlersGrid() {
     });
 }
 
-// --- GRAPHIQUE & ARCHIVES ---
+// --- GRAPHIQUE HISTORIQUE (RESTAURÉ VERSION SIMPLE) ---
 async function loadHistoryChart(token, liveTrophies) {
     currentLiveTrophies = liveTrophies;
     const res = await fetch(`${API_URL}/api/history`, { headers: { 'Authorization': `Bearer ${token}` } });
     fullHistoryData = await res.json(); 
-    // On lance le graph avec vue "Tout" par défaut
     updateChartFilter(0);
 }
 
 function updateChartFilter(days) {
-    // Si pas de donnée, on arrête
     if(!fullHistoryData.length && currentLiveTrophies === null) return;
     
     let filteredData = [...fullHistoryData];
@@ -255,10 +226,18 @@ function updateChartFilter(days) {
         filteredData = fullHistoryData.filter(item => new Date(item.date) >= limitDate);
     }
     
-    // Format pour l'adaptateur temporel {x, y}
-    const dataset = filteredData.map(h => ({ x: h.date, y: h.trophies }));
+    // RESTAURATION : Labels et Data séparés (pas d'objet x/y)
+    const labels = filteredData.map(h => new Date(h.date).toLocaleDateString());
+    const dataPoints = filteredData.map(h => h.trophies);
+    
+    const pointColors = new Array(dataPoints.length).fill('#ffce00');
+    const pointRadius = new Array(dataPoints.length).fill(3);
+
     if (currentLiveTrophies !== null) {
-        dataset.push({ x: new Date().toISOString(), y: currentLiveTrophies });
+        labels.push("Maintenant");
+        dataPoints.push(currentLiveTrophies);
+        pointColors.push('#ff0000');
+        pointRadius.push(5);
     }
 
     const ctx = document.getElementById('trophyChart').getContext('2d');
@@ -267,30 +246,31 @@ function updateChartFilter(days) {
     window.myChart = new Chart(ctx, {
         type: 'line',
         data: {
+            labels: labels, // Utilisation de labels simples
             datasets: [{
-                label: 'Trophées', data: dataset, 
-                borderColor: '#ffce00', backgroundColor: 'rgba(255, 206, 0, 0.1)',
-                borderWidth: 2, tension: 0.1, fill: true, pointRadius: 3, pointHoverRadius: 6
+                label: 'Trophées', 
+                data: dataPoints, // Utilisation de data simple
+                borderColor: '#ffce00', 
+                backgroundColor: 'rgba(255, 206, 0, 0.1)',
+                borderWidth: 2, 
+                tension: 0.3, // Courbe plus douce (style initial)
+                fill: true, 
+                pointBackgroundColor: pointColors, 
+                pointBorderColor: pointColors,
+                pointRadius: pointRadius, 
+                pointHoverRadius: 7
             }]
         },
         options: {
             responsive: true, 
             plugins: { 
                 legend: {display:false},
-                tooltip: {
-                    mode: 'index', intersect: false,
-                    callbacks: {
-                        title: (ctx) => {
-                            const d = new Date(ctx[0].parsed.x);
-                            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                        }
-                    }
-                }
+                tooltip: { mode: 'index', intersect: false }
             },
             scales: { 
                 x: { 
-                    type: 'time', time: { unit: 'day', displayFormats: { day: 'dd/MM' } }, 
-                    grid: {color:'#333'} 
+                    grid: { display: false }, 
+                    ticks: { display: false } // On cache les dates pour faire propre
                 }, 
                 y: { grid: {color:'#333'} } 
             }
@@ -298,19 +278,18 @@ function updateChartFilter(days) {
     });
 }
 
-// --- MODE PUBLIC ---
+// --- MODE PUBLIC & ARCHIVES ---
 async function loadPublicProfile(tag) {
     document.getElementById('public-actions').classList.remove('hidden');
-    document.getElementById('burger-menu').classList.add('hidden'); // Cacher le menu burger
+    document.getElementById('burger-menu').classList.add('hidden');
     try {
         const res = await fetch(`${API_URL}/api/public/player/${tag}`);
         const data = await res.json();
-        renderProfile(data); // Utilise 'basic' par défaut car pas de login
+        renderProfile(data);
         loadBrawlersGrid(data.brawlers);
     } catch (e) { alert("Joueur introuvable"); }
 }
 
-// --- ACTIONS ARCHIVES MANUELLES ---
 async function manualArchive() {
     const token = localStorage.getItem('token');
     if(!confirm("Créer un point de sauvegarde maintenant ?")) return;
