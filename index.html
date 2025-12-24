@@ -10,35 +10,47 @@
 <body>
 
     <div class="container">
-        <h1>Brawl Track</h1>
+        <h1 style="font-size: 3em; margin-bottom: 10px;">BRAWL TRACK</h1>
+        <p style="color: #888; margin-bottom: 30px;">Suivi de statistiques & Historique de Trophées</p>
         
-        <div style="margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 20px;">
-            <h3>🔎 Recherche Rapide</h3>
-            <div style="display: flex; gap: 8px;">
+        <div style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 25px;">
+            <h3 style="margin-top: 0; color: #fff;">🔎 Recherche Rapide</h3>
+            <div style="display: flex; gap: 10px;">
                 <input type="text" id="public-tag" placeholder="#TAG du joueur" style="margin:0;">
-                <button onclick="publicSearch()" style="width: auto; margin:0; background: #ffce00; color: black;">Go</button>
+                <button onclick="publicSearch()" style="width: auto; margin:0; background: #444; color: white;">Go</button>
             </div>
-            <p style="font-size: 0.8em; color: #888; margin-top: 5px;">Voir les stats sans compte</p>
+            <p style="font-size: 0.8em; color: #666; margin-top: 5px;">Consulter un profil sans compte</p>
         </div>
 
         <div id="login-form">
-            <h2>Espace Membre</h2>
+            <h2 style="color: #ffce00;">Connexion Membre</h2>
             <input type="text" id="login-username" placeholder="Nom d'utilisateur">
             <input type="password" id="login-password" placeholder="Mot de passe">
-            <button onclick="login()">Se connecter</button>
-            <button class="toggle-btn" onclick="toggleForms()">Créer un compte</button>
+            
+            <button onclick="login()" style="font-size: 1.1em;">SE CONNECTER</button>
+            
+            <p style="margin-top: 15px; font-size: 0.9em; color: #888;">
+                Pas encore de compte ? 
+                <a href="#" onclick="toggleForms()" style="color: #ffce00; text-decoration: none;">Créer un compte</a>
+            </p>
         </div>
 
         <div id="register-form" class="hidden">
-            <h2>Inscription</h2>
-            <input type="text" id="reg-username" placeholder="Nom d'utilisateur">
-            <input type="text" id="reg-tag" placeholder="Ton Tag Brawl Stars (#...)" style="border-color: #ffce00;">
-            <input type="password" id="reg-password" placeholder="Mot de passe">
-            <button onclick="register()">S'inscrire</button>
-            <button class="toggle-btn" onclick="toggleForms()">Retour connexion</button>
+            <h2 style="color: #ffce00;">Créer un compte</h2>
+            <input type="text" id="reg-username" placeholder="Choisis un pseudo">
+            <input type="text" id="reg-tag" placeholder="Ton Tag Brawl Stars (#...)" style="border: 1px solid #ffce00;">
+            <input type="password" id="reg-password" placeholder="Choisis un mot de passe">
+            
+            <button onclick="register()" style="background: #28a745; color: white;">S'INSCRIRE</button>
+            
+            <p style="margin-top: 15px; font-size: 0.9em; color: #888;">
+                Déjà inscrit ? 
+                <a href="#" onclick="toggleForms()" style="color: #ffce00; text-decoration: none;">Se connecter</a>
+            </p>
         </div>
 
-        <p id="message" style="color: #ff5555; margin-top: 15px; font-weight: bold;"></p>
+        <p id="message" style="color: #ff5555; margin-top: 15px; font-weight: bold; min-height: 20px;"></p>
+
     </div>
 
     <script src="script.js"></script>
