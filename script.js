@@ -5,14 +5,13 @@ let globalBrawlersList = [];
 let currentUserTier = 'basic'; 
 
 // ==========================================
-// 1. FONCTIONS POUR LA PAGE D'ACCUEIL (INDEX)
+// 1. FONCTIONS POUR LA PAGE D'ACCUEIL
 // ==========================================
 
 function toggleForms() {
     const loginForm = document.getElementById('login-form');
     const regForm = document.getElementById('register-form');
     const msg = document.getElementById('message');
-    
     if(loginForm && regForm) {
         loginForm.classList.toggle('hidden');
         regForm.classList.toggle('hidden');
@@ -23,11 +22,8 @@ function toggleForms() {
 function publicSearch() {
     const tagInput = document.getElementById('public-tag');
     if(!tagInput) return;
-    
     const tag = tagInput.value.trim().replace('#', '');
-    if(tag) {
-        window.location.href = `dashboard.html?tag=${tag}`;
-    }
+    if(tag) window.location.href = `dashboard.html?tag=${tag}`;
 }
 
 async function login() {
@@ -65,7 +61,6 @@ async function register() {
             body: JSON.stringify({ username, tag, password })
         });
         const data = await res.json();
-        
         if (res.ok) {
             alert("✅ Compte créé avec succès ! Connecte-toi maintenant.");
             toggleForms();
@@ -79,7 +74,6 @@ async function register() {
 // 2. LOGIQUE DU DASHBOARD
 // ==========================================
 
-// --- NAVIGATION & MENU BURGER ---
 function toggleMenu() { document.getElementById('menu-dropdown').classList.toggle('active'); }
 window.onclick = function(e) { 
     const burger = document.getElementById('burger-menu');
@@ -92,12 +86,10 @@ function switchView(view) {
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
     const target = document.getElementById(`view-${view}`);
     if(target) target.classList.add('active');
-    
     const menu = document.getElementById('menu-dropdown');
     if(menu) menu.classList.remove('active');
 }
 
-// --- AUTH & LOAD ---
 function logout() { localStorage.removeItem('token'); window.location.href = "index.html"; }
 
 function checkAuth() {
@@ -112,10 +104,7 @@ async function loadMyStats() {
         const res = await fetch(`${API_URL}/api/my-stats`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
         const data = await res.json();
         if (!res.ok) throw new Error();
-        
         currentUserTier = data.internal_tier || 'basic';
-        
-        // On vérifie qu'on est bien sur le dashboard avant de lancer le rendu
         if(document.getElementById('player-name')) {
             renderProfile(data);
             setupIntervalUI(data.internal_tier, data.internal_interval);
@@ -140,14 +129,11 @@ function renderProfile(data) {
     `;
 }
 
-// --- CONFIG AUTO UPDATE ---
 function setupIntervalUI(tier, interval) {
     const basicDiv = document.getElementById('interval-basic');
-    if(!basicDiv) return; // Sécurité si élément absent
-
+    if(!basicDiv) return;
     document.getElementById('interval-basic').classList.add('hidden');
     document.getElementById('interval-custom').classList.add('hidden');
-    
     if (tier === 'basic') {
         document.getElementById('interval-basic').classList.remove('hidden');
         document.getElementById('select-interval-basic').value = interval || 720;
@@ -170,14 +156,12 @@ async function saveInterval() {
     let min = 720;
     if (currentUserTier === 'basic') min = parseInt(document.getElementById('select-interval-basic').value);
     else min = (parseInt(document.getElementById('input-hours').value)||0)*60 + (parseInt(document.getElementById('input-minutes').value)||0);
-    
     await fetch(`${API_URL}/api/settings/interval`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ minutes: min })
     }).then(r => r.json()).then(d => alert(d.message));
 }
 
-// --- SETTINGS ---
 async function updateProfile() {
     const u = document.getElementById('new-username').value, p = document.getElementById('new-password').value;
     if(!u && !p) return;
@@ -193,7 +177,6 @@ async function deleteAccount() {
     logout();
 }
 
-// --- BRAWLERS ---
 async function loadBrawlersGrid(playerBrawlers) {
     if(!document.getElementById('brawlers-grid')) return;
     const res = await fetch(`${API_URL}/api/brawlers`);
@@ -224,7 +207,7 @@ function sortBrawlers() {
     });
 }
 
-// --- CHART ---
+// --- GRAPHIQUE CORRIGÉ (Responsif) ---
 async function loadHistoryChart(token, liveTrophies) {
     currentLiveTrophies = liveTrophies;
     try {
@@ -246,24 +229,27 @@ function updateChartFilter(days) {
     const dataset = data.map(h => ({ x: h.date, y: h.trophies }));
     if (currentLiveTrophies) dataset.push({ x: new Date().toISOString(), y: currentLiveTrophies });
     
-    // Si pas de données, ne rien dessiner pour éviter crash
     if(dataset.length === 0) return;
 
     if(window.myChart) window.myChart.destroy();
     window.myChart = new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: { datasets: [{ data: dataset, borderColor: '#ffce00', backgroundColor: 'rgba(255, 206, 0, 0.1)', borderWidth: 2, tension: 0.1, fill: true, pointRadius: 3 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: {display:false} }, scales: { x: { type: 'time', time: { unit: 'day', displayFormats: { day: 'dd/MM' } }, grid: {color:'#333'} }, y: { grid: {color:'#333'} } } }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Important: permet au graph de s'adapter au conteneur de 300px
+            plugins: { legend: {display:false} }, 
+            scales: { x: { type: 'time', time: { unit: 'day', displayFormats: { day: 'dd/MM' } }, grid: {color:'#333'} }, y: { grid: {color:'#333'} } } 
+        }
     });
 }
 
-// --- PUBLIC ---
+// --- PUBLIC & ARCHIVES ---
 async function loadPublicProfile(tag) {
     const actions = document.getElementById('public-actions');
     if(actions) actions.classList.remove('hidden');
     const burger = document.getElementById('burger-menu');
     if(burger) burger.classList.add('hidden');
-    
     try {
         const res = await fetch(`${API_URL}/api/public/player/${tag}`);
         const data = await res.json();
