@@ -141,6 +141,8 @@ function renderProfile(data) {
 
 // --- LOGIQUE BRAWLERS ---
 
+// --- DANS script.js ---
+
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Chargement collection...</p>';
@@ -160,21 +162,15 @@ async function loadBrawlersGrid(playerBrawlers) {
         globalBrawlersList = allBrawlers.map(brawler => {
             const ownedStats = playerBrawlers.find(pb => pb.id === brawler.id);
             
-            // --- CORRECTION "LOWER" (Minuscules) ---
-            // Ex: "EL PRIMO" -> "el-primo"
-            // Ex: "MR. P"    -> "mr-p"
-            // Ex: "R-T"      -> "r-t"
+            // --- NOUVELLE LOGIQUE ID ---
+            // On utilise directement l'ID unique (ex: 16000000)
+            // Plus besoin de formater le nom !
             
-            const formattedName = brawler.name
-                .toLowerCase()          // 1. Tout en minuscule
-                .replace(/\./g, '')     // 2. Enlever les points
-                .replace(/\s+/g, '-');  // 3. Remplacer les espaces par des tirets
-
             return {
                 id: brawler.id,
                 name: brawler.name, 
-                // URL basée sur le nom formaté en minuscule
-                imageUrl: `https://cdn.brawlify.com/brawlers/${formattedName}.png`, 
+                // URL basée sur l'ID (Borderless)
+                imageUrl: `https://cdn.brawlify.com/brawlers/borderless/${brawler.id}.png`, 
                 owned: !!ownedStats,
                 trophies: ownedStats ? ownedStats.trophies : 0
             };
