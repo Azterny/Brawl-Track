@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brawl Track - App</title>
+    
     <link rel="stylesheet" href="css/style.css">
+    
     <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -41,19 +43,22 @@
         </div>
 
         <div id="view-dashboard" class="view-section active">
+            
             <div id="stats-area" class="stats-grid"></div>
 
             <div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0;">📈 Progression</h3>
                 </div>
-<div class="chart-filters">
-    <button onclick="updateChartFilter(1)" class="filter-btn">24H</button>
-    <button onclick="updateChartFilter(7)" class="filter-btn">7J</button>
-    <button onclick="updateChartFilter(31)" class="filter-btn">Mois</button>
-    <button onclick="updateChartFilter(365)" class="filter-btn">1 An</button>
-    <button onclick="updateChartFilter(0)" class="filter-btn active">Tout</button>
-</div>
+
+                <div class="chart-filters">
+                    <button onclick="updateChartFilter(1)" class="filter-btn">24H</button>
+                    <button onclick="updateChartFilter(7)" class="filter-btn">7J</button>
+                    <button onclick="updateChartFilter(31)" class="filter-btn">Mois</button>
+                    <button onclick="updateChartFilter(365)" class="filter-btn">1 An</button>
+                    <button onclick="updateChartFilter(0)" class="filter-btn active">Tout</button>
+                </div>
+
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="trophyChart"></canvas>
                 </div>
@@ -67,6 +72,7 @@
                     <option value="id">Base (ID)</option>
                 </select>
             </div>
+            
             <div id="brawlers-grid" style="margin-top: 15px;"></div>
         </div>
 
@@ -78,39 +84,52 @@
                 
                 <div id="interval-basic" class="hidden">
                     <select id="select-interval-basic">
-                        <option value="2880">48H</option><option value="1440">24H</option><option value="720">12H</option>
+                        <option value="2880">48 Heures</option>
+                        <option value="1440">24 Heures</option>
+                        <option value="720">12 Heures</option>
                     </select>
                 </div>
 
                 <div id="interval-custom" class="hidden">
                     <div style="display: flex; gap: 10px;">
-                        <input type="number" id="input-hours" placeholder="H" min="0" max="48">
-                        <input type="number" id="input-minutes" placeholder="Min" min="0" max="59">
+                        <input type="number" id="input-hours" placeholder="Heures" min="0" max="48">
+                        <input type="number" id="input-minutes" placeholder="Minutes" min="0" max="59">
                     </div>
                     <p style="font-size: 0.8em; color: #ffce00;" id="interval-limit-msg"></p>
                 </div>
-                <button class="btn-save" onclick="saveInterval()">Enregistrer</button>
+                <button class="btn-save" onclick="saveInterval()">Enregistrer la fréquence</button>
             </div>
 
             <div style="background: #2a2a2a; padding: 20px; border-radius: 10px; text-align: left;">
                 <h3 style="margin-top: 0;">Actions</h3>
-                <button onclick="manualArchive()" style="background: #17a2b8; margin-bottom: 10px;">➕ Sauvegarde</button>
-                <div style="display: flex; gap: 10px;">
-                    <select id="delete-select"><option value="7">7 Jours</option><option value="all">Tout</option></select>
-                    <button onclick="deleteArchives()" class="btn-danger">Suppr.</button>
+                <button onclick="manualArchive()" style="background: #17a2b8; margin-bottom: 15px;">➕ Créer point de sauvegarde</button>
+                
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="delete-select" style="flex: 2;">
+                        <option value="7">Plus vieux que 7 Jours</option>
+                        <option value="all">TOUT Supprimer</option>
+                    </select>
+                    <button onclick="deleteArchives()" class="btn-danger" style="flex: 1; margin-top: 0;">Suppr.</button>
                 </div>
             </div>
         </div>
 
         <div id="view-settings" class="view-section">
             <h2>⚙️ Paramètres</h2>
-            <div style="background: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            
+            <div style="background: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: left;">
+                <h3 style="margin-top: 0;">Profil</h3>
                 <input type="text" id="new-username" placeholder="Nouveau pseudo">
                 <input type="password" id="new-password" placeholder="Nouveau mot de passe">
-                <button class="btn-save" onclick="updateProfile()">Valider</button>
+                <button class="btn-save" onclick="updateProfile()">Sauvegarder</button>
             </div>
-            <button class="btn-danger" onclick="deleteAccount()">SUPPRIMER COMPTE</button>
+
+            <div style="background: #331515; padding: 20px; border-radius: 10px; text-align: left; border: 1px solid #dc3545;">
+                <h3 style="color: #ff5555; margin-top: 0;">Zone Danger</h3>
+                <button class="btn-danger" onclick="deleteAccount()">SUPPRIMER MON COMPTE</button>
+            </div>
         </div>
+
     </div>
 
     <script src="js/config.js"></script>
@@ -122,8 +141,12 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const publicTag = urlParams.get('tag');
-        if (publicTag) loadPublicProfile(publicTag);
-        else checkAuth();
+        
+        if (publicTag) {
+            loadPublicProfile(publicTag);
+        } else {
+            checkAuth();
+        }
     </script>
 </body>
 </html>
