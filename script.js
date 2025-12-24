@@ -30,6 +30,7 @@ function logout() {
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) window.location.href = "index.html";
+    
     document.getElementById('burger-menu').classList.remove('hidden');
     loadMyStats(); 
 }
@@ -37,6 +38,7 @@ function checkAuth() {
 // --- CHARGEMENT PRINCIPAL ---
 async function loadMyStats() {
     const token = localStorage.getItem('token');
+    
     try {
         const res = await fetch(`${API_URL}/api/my-stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -57,7 +59,6 @@ async function loadMyStats() {
     }
 }
 
-// --- RENDU PROFIL & BADGE ---
 function renderProfile(data) {
     document.getElementById('player-name').innerText = data.name;
     document.getElementById('player-tag').innerText = data.tag;
@@ -78,7 +79,6 @@ function renderProfile(data) {
     `;
 }
 
-// --- CONFIGURATION INTERVALLE AUTO ---
 function setupIntervalUI(tier, currentInterval) {
     const basicDiv = document.getElementById('interval-basic');
     const customDiv = document.getElementById('interval-custom');
@@ -123,25 +123,33 @@ async function saveInterval() {
     try {
         const res = await fetch(`${API_URL}/api/settings/interval`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
             body: JSON.stringify({ minutes: minutes })
         });
         const data = await res.json();
+        
         if(res.ok) alert("✅ " + data.message);
         else alert("❌ " + data.message);
+        
     } catch(e) { alert("Erreur serveur"); }
 }
 
-// --- PARAMÈTRES COMPTE ---
 async function updateProfile() {
     const username = document.getElementById('new-username').value;
     const password = document.getElementById('new-password').value;
+    
     if(!username && !password) return alert("Remplissez au moins un champ.");
 
     try {
         const res = await fetch(`${API_URL}/api/settings/update-profile`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}` 
+            },
             body: JSON.stringify({ username, password })
         });
         const data = await res.json();
@@ -161,7 +169,6 @@ async function deleteAccount() {
     } catch(e) { alert("Erreur serveur"); }
 }
 
-// --- BRAWLERS ---
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '<p>Chargement...</p>';
@@ -173,9 +180,11 @@ async function loadBrawlersGrid(playerBrawlers) {
         globalBrawlersList = allBrawlers.map(b => {
             const owned = playerBrawlers.find(pb => pb.id === b.id);
             return {
-                id: b.id, name: b.name, 
+                id: b.id, 
+                name: b.name, 
                 imageUrl: `https://cdn.brawlify.com/brawlers/borderless/${b.id}.png`,
-                owned: !!owned, trophies: owned ? owned.trophies : 0
+                owned: !!owned, 
+                trophies: owned ? owned.trophies : 0
             };
         });
         sortBrawlers();
@@ -208,8 +217,11 @@ function renderBrawlersGrid() {
     });
 }
 
-// --- GRAPHIQUE HISTORIQUE (RESTAURÉ VERSION SIMPLE) ---
+// --- CORRECTION GRAPHIQUE ---
 async function loadHistoryChart(token, liveTrophies) {
+    // 1. On rend le conteneur visible ! (C'est ce qui manquait)
+    document.getElementById('chart-container').classList.remove('hidden');
+
     currentLiveTrophies = liveTrophies;
     const res = await fetch(`${API_URL}/api/history`, { headers: { 'Authorization': `Bearer ${token}` } });
     fullHistoryData = await res.json(); 
@@ -226,18 +238,9 @@ function updateChartFilter(days) {
         filteredData = fullHistoryData.filter(item => new Date(item.date) >= limitDate);
     }
     
-    // RESTAURATION : Labels et Data séparés (pas d'objet x/y)
-    const labels = filteredData.map(h => new Date(h.date).toLocaleDateString());
-    const dataPoints = filteredData.map(h => h.trophies);
-    
-    const pointColors = new Array(dataPoints.length).fill('#ffce00');
-    const pointRadius = new Array(dataPoints.length).fill(3);
-
+    const dataset = filteredData.map(h => ({ x: h.date, y: h.trophies }));
     if (currentLiveTrophies !== null) {
-        labels.push("Maintenant");
-        dataPoints.push(currentLiveTrophies);
-        pointColors.push('#ff0000');
-        pointRadius.push(5);
+        dataset.push({ x: new Date().toISOString(), y: currentLiveTrophies });
     }
 
     const ctx = document.getElementById('trophyChart').getContext('2d');
@@ -246,31 +249,30 @@ function updateChartFilter(days) {
     window.myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels, // Utilisation de labels simples
             datasets: [{
-                label: 'Trophées', 
-                data: dataPoints, // Utilisation de data simple
-                borderColor: '#ffce00', 
-                backgroundColor: 'rgba(255, 206, 0, 0.1)',
-                borderWidth: 2, 
-                tension: 0.3, // Courbe plus douce (style initial)
-                fill: true, 
-                pointBackgroundColor: pointColors, 
-                pointBorderColor: pointColors,
-                pointRadius: pointRadius, 
-                pointHoverRadius: 7
+                label: 'Trophées', data: dataset, 
+                borderColor: '#ffce00', backgroundColor: 'rgba(255, 206, 0, 0.1)',
+                borderWidth: 2, tension: 0.1, fill: true, pointRadius: 3, pointHoverRadius: 6
             }]
         },
         options: {
             responsive: true, 
             plugins: { 
                 legend: {display:false},
-                tooltip: { mode: 'index', intersect: false }
+                tooltip: {
+                    mode: 'index', intersect: false,
+                    callbacks: {
+                        title: (ctx) => {
+                            const d = new Date(ctx[0].parsed.x);
+                            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                        }
+                    }
+                }
             },
             scales: { 
                 x: { 
-                    grid: { display: false }, 
-                    ticks: { display: false } // On cache les dates pour faire propre
+                    type: 'time', time: { unit: 'day', displayFormats: { day: 'dd/MM' } }, 
+                    grid: {color:'#333'} 
                 }, 
                 y: { grid: {color:'#333'} } 
             }
@@ -278,7 +280,7 @@ function updateChartFilter(days) {
     });
 }
 
-// --- MODE PUBLIC & ARCHIVES ---
+// --- MODE PUBLIC ---
 async function loadPublicProfile(tag) {
     document.getElementById('public-actions').classList.remove('hidden');
     document.getElementById('burger-menu').classList.add('hidden');
@@ -287,6 +289,7 @@ async function loadPublicProfile(tag) {
         const data = await res.json();
         renderProfile(data);
         loadBrawlersGrid(data.brawlers);
+        // En mode public, on n'a pas l'historique, donc pas de graph
     } catch (e) { alert("Joueur introuvable"); }
 }
 
