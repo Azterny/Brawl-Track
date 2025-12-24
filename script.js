@@ -2,112 +2,64 @@ const API_URL = "https://api.brawl-track.com";
 let fullHistoryData = [];
 let currentLiveTrophies = null;
 let globalBrawlersList = [];
+let currentUserTier = 'basic'; // Valeur par défaut
 
-// --- GESTION NAVIGATION ---
-function toggleForms() {
-    document.getElementById('login-form').classList.toggle('hidden');
-    document.getElementById('register-form').classList.toggle('hidden');
-    document.getElementById('message').innerText = "";
+// --- NAVIGATION & MENU BURGER ---
+function toggleMenu() {
+    document.getElementById('menu-dropdown').classList.toggle('active');
 }
 
-function publicSearch() {
-    const tag = document.getElementById('public-tag').value.trim().replace('#', '');
-    if(tag) {
-        window.location.href = `dashboard.html?tag=${tag}`;
+// Fermer le menu si on clique en dehors
+window.addEventListener('click', function(e) {
+    if (!document.getElementById('burger-menu').contains(e.target)) {
+        document.getElementById('menu-dropdown').classList.remove('active');
     }
+});
+
+function switchView(viewName) {
+    // Masquer toutes les vues
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    // Afficher la vue demandée
+    document.getElementById(`view-${viewName}`).classList.add('active');
+    // Fermer le menu
+    document.getElementById('menu-dropdown').classList.remove('active');
 }
 
 // --- AUTHENTIFICATION ---
-async function register() {
-    const username = document.getElementById('reg-username').value;
-    const tag = document.getElementById('reg-tag').value;
-    const password = document.getElementById('reg-password').value;
-
-    try {
-        const res = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ username, tag, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            alert("Compte créé ! Connecte-toi.");
-            toggleForms();
-        } else {
-            document.getElementById('message').innerText = data.message;
-        }
-    } catch (e) { document.getElementById('message').innerText = "Erreur serveur"; }
-}
-
-async function login() {
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-
-    try {
-        const res = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            localStorage.setItem('token', data.token);
-            window.location.href = "dashboard.html";
-        } else {
-            document.getElementById('message').innerText = data.message;
-        }
-    } catch (e) { document.getElementById('message').innerText = "Erreur serveur"; }
-}
-
 function logout() {
     localStorage.removeItem('token');
     window.location.href = "index.html";
 }
 
-// --- CHARGEMENT MODES ---
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) window.location.href = "index.html";
     
-    document.getElementById('auth-actions').classList.remove('hidden');
-    document.getElementById('chart-container').classList.remove('hidden');
-    
+    document.getElementById('burger-menu').classList.remove('hidden');
     loadMyStats(); 
 }
 
-async function loadPublicProfile(tag) {
-    document.getElementById('public-actions').classList.remove('hidden');
-    document.getElementById('dashboard-msg').innerText = "Mode Public (Lecture seule)";
-    
-    try {
-        const res = await fetch(`${API_URL}/api/public/player/${tag}`);
-        const data = await res.json();
-        
-        if (!res.ok) throw new Error(data.message);
-
-        renderProfile(data);
-        loadBrawlersGrid(data.brawlers);
-
-    } catch (e) {
-        alert("Joueur introuvable !");
-        window.location.href = "index.html";
-    }
-}
-
+// --- CHARGEMENT PRINCIPAL ---
 async function loadMyStats() {
     const token = localStorage.getItem('token');
-    document.getElementById('dashboard-msg').innerText = "Actualisation...";
     
     try {
         const res = await fetch(`${API_URL}/api/my-stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
-        if (!res.ok) throw new Error("Erreur auth");
+        if (!res.ok) throw new Error("Session expirée");
 
+        // Sauvegarde du grade pour l'interface
+        currentUserTier = data.internal_tier || 'basic';
+        
+        // 1. Rendu Profil
         renderProfile(data);
-        document.getElementById('dashboard-msg').innerText = "Dernière synchro : À l'instant";
-
+        
+        // 2. Initialisation UI selon Grade (Intervalle auto)
+        setupIntervalUI(data.internal_tier, data.internal_interval);
+        
+        // 3. Contenu
         loadBrawlersGrid(data.brawlers);
         loadHistoryChart(token, data.trophies);
 
@@ -117,239 +69,251 @@ async function loadMyStats() {
     }
 }
 
-// --- RENDU UI ---
+// --- RENDU PROFIL & BADGE ---
 function renderProfile(data) {
-    const nameEl = document.getElementById('player-name');
-    nameEl.innerText = data.name;
-    
-    if(data.nameColor && data.nameColor.length > 4) {
-        try {
-            nameEl.style.color = "#" + data.nameColor.replace('0x', '').slice(2);
-        } catch(e) { console.warn("Erreur couleur", e); }
-    }
-
+    document.getElementById('player-name').innerText = data.name;
     document.getElementById('player-tag').innerText = data.tag;
+    
+    // Badge de Grade
+    const badge = document.getElementById('tier-badge');
+    badge.className = `badge badge-${currentUserTier}`;
+    
+    let tierText = "Basic";
+    if (currentUserTier === 'subscriber') tierText = "Abonné";
+    if (currentUserTier === 'premium') tierText = "Premium";
+    badge.innerText = tierText;
 
+    // Stats
     document.getElementById('stats-area').innerHTML = `
         <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00">🏆 ${data.trophies}</div></div>
-        <div class="stat-card"><div>Record</div><div class="stat-value">📈 ${data.highestTrophies}</div></div>
         <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff">⚔️ ${data['3vs3Victories']}</div></div>
         <div class="stat-card"><div>Solo</div><div class="stat-value" style="color:#28a745">🥇 ${data.soloVictories}</div></div>
         <div class="stat-card"><div>Duo</div><div class="stat-value" style="color:#17a2b8">🤝 ${data.duoVictories}</div></div>
     `;
 }
 
-// --- LOGIQUE BRAWLERS ---
+// --- CONFIGURATION INTERVALLE AUTO ---
+function setupIntervalUI(tier, currentInterval) {
+    const basicDiv = document.getElementById('interval-basic');
+    const customDiv = document.getElementById('interval-custom');
+    const msg = document.getElementById('interval-limit-msg');
 
-// --- DANS script.js ---
+    basicDiv.classList.add('hidden');
+    customDiv.classList.add('hidden');
 
-async function loadBrawlersGrid(playerBrawlers) {
-    const grid = document.getElementById('brawlers-grid');
-    grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Chargement collection...</p>';
+    if (tier === 'basic') {
+        basicDiv.classList.remove('hidden');
+        document.getElementById('select-interval-basic').value = currentInterval || 720;
+    } else {
+        customDiv.classList.remove('hidden');
+        // Convertir minutes en Heures/Minutes
+        const h = Math.floor(currentInterval / 60);
+        const m = currentInterval % 60;
+        document.getElementById('input-hours').value = h;
+        document.getElementById('input-minutes').value = m;
+
+        if (tier === 'subscriber') {
+            msg.innerText = "⭐ Abonné : Minimum 1 Heure (Minutes ignorées).";
+            document.getElementById('input-minutes').disabled = true;
+            document.getElementById('input-minutes').value = 0;
+        } else {
+            msg.innerText = "👑 Premium : Minimum 15 Minutes.";
+            document.getElementById('input-minutes').disabled = false;
+        }
+    }
+}
+
+async function saveInterval() {
+    const token = localStorage.getItem('token');
+    let minutes = 720;
+
+    if (currentUserTier === 'basic') {
+        minutes = parseInt(document.getElementById('select-interval-basic').value);
+    } else {
+        const h = parseInt(document.getElementById('input-hours').value) || 0;
+        const m = parseInt(document.getElementById('input-minutes').value) || 0;
+        minutes = (h * 60) + m;
+    }
 
     try {
-        const res = await fetch(`${API_URL}/api/brawlers`);
-        if (!res.ok) throw new Error("Erreur API");
+        const res = await fetch(`${API_URL}/api/settings/interval`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ minutes: minutes })
+        });
+        const data = await res.json();
         
+        if(res.ok) alert("✅ " + data.message);
+        else alert("❌ " + data.message);
+        
+    } catch(e) { alert("Erreur serveur"); }
+}
+
+// --- PARAMÈTRES COMPTE ---
+async function updateProfile() {
+    const username = document.getElementById('new-username').value;
+    const password = document.getElementById('new-password').value;
+    
+    if(!username && !password) return alert("Remplissez au moins un champ.");
+
+    try {
+        const res = await fetch(`${API_URL}/api/settings/update-profile`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}` 
+            },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        alert(data.message);
+    } catch(e) { alert("Erreur serveur"); }
+}
+
+async function deleteAccount() {
+    if(!confirm("⚠️ Êtes-vous sûr de vouloir supprimer votre compte DÉFINITIVEMENT ?")) return;
+    try {
+        await fetch(`${API_URL}/api/settings/delete-account`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        alert("Compte supprimé.");
+        logout();
+    } catch(e) { alert("Erreur serveur"); }
+}
+
+// --- BRAWLERS (Avec ID pour images fiables) ---
+async function loadBrawlersGrid(playerBrawlers) {
+    const grid = document.getElementById('brawlers-grid');
+    grid.innerHTML = '<p>Chargement...</p>';
+    try {
+        const res = await fetch(`${API_URL}/api/brawlers`);
         const data = await res.json();
         const allBrawlers = data.items || [];
 
-        if (allBrawlers.length === 0) {
-            grid.innerHTML = '<p>Aucun brawler trouvé.</p>';
-            return;
-        }
-
-        globalBrawlersList = allBrawlers.map(brawler => {
-            const ownedStats = playerBrawlers.find(pb => pb.id === brawler.id);
-            
-            // --- NOUVELLE LOGIQUE ID ---
-            // On utilise directement l'ID unique (ex: 16000000)
-            // Plus besoin de formater le nom !
-            
+        globalBrawlersList = allBrawlers.map(b => {
+            const owned = playerBrawlers.find(pb => pb.id === b.id);
             return {
-                id: brawler.id,
-                name: brawler.name, 
-                // URL basée sur l'ID (Borderless)
-                imageUrl: `https://cdn.brawlify.com/brawlers/borderless/${brawler.id}.png`, 
-                owned: !!ownedStats,
-                trophies: ownedStats ? ownedStats.trophies : 0
+                id: b.id, 
+                name: b.name, 
+                // URL Image : ID Borderless
+                imageUrl: `https://cdn.brawlify.com/brawlers/borderless/${b.id}.png`,
+                owned: !!owned, 
+                trophies: owned ? owned.trophies : 0
             };
         });
-
         sortBrawlers();
-
-    } catch (e) {
-        console.error("Erreur Brawlers:", e);
-        grid.innerHTML = '<p>Impossible de charger la liste.</p>';
-    }
+    } catch(e) { grid.innerHTML = 'Erreur chargement'; }
 }
 
 function sortBrawlers() {
     const criteria = document.getElementById('sort-brawlers').value;
-
-    if (criteria === 'trophies') {
-        globalBrawlersList.sort((a, b) => b.trophies - a.trophies);
-    } else if (criteria === 'name') {
-        globalBrawlersList.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (criteria === 'id') {
-        globalBrawlersList.sort((a, b) => a.id - b.id);
-    }
-
+    if (criteria === 'trophies') globalBrawlersList.sort((a, b) => b.trophies - a.trophies);
+    else if (criteria === 'name') globalBrawlersList.sort((a, b) => a.name.localeCompare(b.name));
+    else globalBrawlersList.sort((a, b) => a.id - b.id);
     renderBrawlersGrid();
 }
 
 function renderBrawlersGrid() {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '';
-
     globalBrawlersList.forEach(b => {
         const div = document.createElement('div');
         div.className = 'brawler-card';
+        if (!b.owned) div.style.filter = "grayscale(100%) opacity(0.3)";
+        else div.style.border = "1px solid #ffce00";
         
-        if (!b.owned) {
-            div.style.filter = "grayscale(100%) opacity(0.5)";
-        } else {
-            div.style.border = "1px solid #ffce00";
-        }
-
-        const trophiesInfo = b.owned 
-            ? `<div style="font-size:0.7em; color:#ffce00;">🏆 ${b.trophies}</div>` 
-            : '<div style="font-size:0.7em;">🔒</div>';
-
         div.innerHTML = `
-            <img src="${b.imageUrl}" 
-                 class="brawler-img"
-                 style="width: 100%; border-radius: 5px; border: 2px solid #333; aspect-ratio: 1/1; object-fit: cover;" 
-                 loading="lazy"
-                 onerror="this.src='https://cdn-old.brawlify.com/icon/Bit.png';">
-            <div style="font-size: 0.8em; margin-top: 2px; overflow:hidden; text-overflow:ellipsis; white-space: nowrap;">${b.name}</div>
-            ${trophiesInfo}
+            <img src="${b.imageUrl}" style="width:100%; aspect-ratio:1/1; object-fit:contain;" loading="lazy">
+            <div style="font-size:0.8em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${b.name}</div>
+            ${b.owned ? `<div style="color:#ffce00;font-size:0.7em;">🏆 ${b.trophies}</div>` : ''}
         `;
         grid.appendChild(div);
     });
 }
 
-// --- GRAPHIQUE HISTORIQUE ---
+// --- GRAPHIQUE & ARCHIVES ---
 async function loadHistoryChart(token, liveTrophies) {
-    document.getElementById('archive-manager').classList.remove('hidden');
     currentLiveTrophies = liveTrophies;
-
-    const res = await fetch(`${API_URL}/api/history`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
+    const res = await fetch(`${API_URL}/api/history`, { headers: { 'Authorization': `Bearer ${token}` } });
     fullHistoryData = await res.json(); 
-
+    // On lance le graph avec vue "Tout" par défaut
     updateChartFilter(0);
 }
 
 function updateChartFilter(days) {
+    // Si pas de donnée, on arrête
     if(!fullHistoryData.length && currentLiveTrophies === null) return;
-
-    let filteredData = [];
-    const now = new Date();
-
-    if (days === 0) {
-        filteredData = [...fullHistoryData]; 
-    } else {
+    
+    let filteredData = [...fullHistoryData];
+    if (days > 0) {
         const limitDate = new Date();
-        limitDate.setDate(now.getDate() - days);
-        filteredData = fullHistoryData.filter(item => {
-            const itemDate = new Date(item.date);
-            return itemDate >= limitDate;
-        });
+        limitDate.setDate(new Date().getDate() - days);
+        filteredData = fullHistoryData.filter(item => new Date(item.date) >= limitDate);
     }
-
-    // --- MODIFICATION ICI : Données sous forme d'objets {x, y} ---
-    const dataset = filteredData.map(h => ({
-        x: h.date, // Format date string compatible avec l'adaptateur
-        y: h.trophies
-    }));
-
-    // Ajout du point "Maintenant"
-    let pointColors = new Array(dataset.length).fill('#ffce00');
-    let pointRadius = new Array(dataset.length).fill(3);
-
+    
+    // Format pour l'adaptateur temporel {x, y}
+    const dataset = filteredData.map(h => ({ x: h.date, y: h.trophies }));
     if (currentLiveTrophies !== null) {
-        dataset.push({
-            x: new Date().toISOString(), // Date actuelle précise
-            y: currentLiveTrophies
-        });
-        pointColors.push('#ff0000'); // Rouge
-        pointRadius.push(5);
+        dataset.push({ x: new Date().toISOString(), y: currentLiveTrophies });
     }
 
-    // Calcul du GAIN
-    if (dataset.length > 0) {
-        const first = dataset[0].y;
-        const last = dataset[dataset.length - 1].y;
-        const gain = last - first;
-        const sign = gain >= 0 ? '+' : '';
-        document.getElementById('trophy-gain').innerText = `Gain: ${sign}${gain} 🏆`;
-    } else {
-        document.getElementById('trophy-gain').innerText = "Pas de données";
-    }
-
-    // Création du Graphique
     const ctx = document.getElementById('trophyChart').getContext('2d');
     if(window.myChart) window.myChart.destroy();
-
+    
     window.myChart = new Chart(ctx, {
         type: 'line',
         data: {
             datasets: [{
-                label: 'Trophées',
-                data: dataset, // Données {x, y}
-                borderColor: '#ffce00',
-                backgroundColor: 'rgba(255, 206, 0, 0.1)',
-                borderWidth: 2,
-                tension: 0.1, // Ligne un peu plus droite pour être précis sur le temps
-                fill: true,
-                pointBackgroundColor: pointColors, 
-                pointBorderColor: pointColors,
-                pointRadius: pointRadius,
-                pointHoverRadius: 7
+                label: 'Trophées', data: dataset, 
+                borderColor: '#ffce00', backgroundColor: 'rgba(255, 206, 0, 0.1)',
+                borderWidth: 2, tension: 0.1, fill: true, pointRadius: 3, pointHoverRadius: 6
             }]
         },
         options: {
-            responsive: true,
+            responsive: true, 
             plugins: { 
-                legend: { display: false },
+                legend: {display:false},
                 tooltip: {
-                    intersect: false,
-                    mode: 'index',
-                    // Formatage du titre du tooltip pour afficher l'heure
+                    mode: 'index', intersect: false,
                     callbacks: {
-                        title: function(context) {
-                            const date = new Date(context[0].parsed.x);
-                            return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                        title: (ctx) => {
+                            const d = new Date(ctx[0].parsed.x);
+                            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
                         }
                     }
                 }
             },
-            scales: {
-                y: { grid: { color: '#333' } },
+            scales: { 
                 x: { 
-                    type: 'time', // AXE TEMPOREL
-                    time: {
-                        unit: 'day',
-                        displayFormats: {
-                            day: 'dd/MM' // Format affiché sur l'axe
-                        },
-                        tooltipFormat: 'dd/MM HH:mm' // Format par défaut
-                    },
-                    grid: { color: '#333' },
-                    ticks: { color: '#aaa' }
-                } 
+                    type: 'time', time: { unit: 'day', displayFormats: { day: 'dd/MM' } }, 
+                    grid: {color:'#333'} 
+                }, 
+                y: { grid: {color:'#333'} } 
             }
         }
     });
 }
 
-// --- ARCHIVE ET DELETE ---
+// --- MODE PUBLIC ---
+async function loadPublicProfile(tag) {
+    document.getElementById('public-actions').classList.remove('hidden');
+    document.getElementById('burger-menu').classList.add('hidden'); // Cacher le menu burger
+    try {
+        const res = await fetch(`${API_URL}/api/public/player/${tag}`);
+        const data = await res.json();
+        renderProfile(data); // Utilise 'basic' par défaut car pas de login
+        loadBrawlersGrid(data.brawlers);
+    } catch (e) { alert("Joueur introuvable"); }
+}
+
+// --- ACTIONS ARCHIVES MANUELLES ---
 async function manualArchive() {
     const token = localStorage.getItem('token');
-    if(!confirm("Voulez-vous forcer la création d'un point de sauvegarde maintenant ?")) return;
-
+    if(!confirm("Créer un point de sauvegarde maintenant ?")) return;
     try {
         const res = await fetch(`${API_URL}/api/archive/manual`, {
             method: 'POST',
@@ -358,42 +322,21 @@ async function manualArchive() {
         const data = await res.json();
         alert(data.message);
         loadMyStats(); 
-    } catch(e) { alert("Erreur connexion"); }
-}
-
-const deleteSelect = document.getElementById('delete-select');
-if (deleteSelect) {
-    deleteSelect.addEventListener('change', function() {
-        const input = document.getElementById('custom-days');
-        if(this.value === 'custom') input.style.display = 'inline-block';
-        else input.style.display = 'none';
-    });
+    } catch(e) { alert("Erreur"); }
 }
 
 async function deleteArchives() {
     const token = localStorage.getItem('token');
     const select = document.getElementById('delete-select');
-    let mode = 'older_than';
-    let days = select.value;
-
-    if (days === 'all') mode = 'all';
-    if (days === 'custom') days = document.getElementById('custom-days').value;
-
-    if(!days && mode !== 'all') return alert("Veuillez entrer un nombre de jours.");
-
-    if(!confirm("⚠️ Attention, cette action est irréversible. Confirmer la suppression ?")) return;
-
+    if(!confirm("Supprimer l'historique sélectionné ?")) return;
     try {
         const res = await fetch(`${API_URL}/api/archive/delete`, {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
-            },
-            body: JSON.stringify({ mode: mode, days: days })
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ mode: select.value === 'all' ? 'all' : 'older_than', days: select.value })
         });
         const data = await res.json();
         alert(data.message);
-        loadMyStats(); 
-    } catch(e) { alert("Erreur suppression"); }
+        loadMyStats();
+    } catch(e) { alert("Erreur"); }
 }
