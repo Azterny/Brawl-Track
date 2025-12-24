@@ -4,20 +4,106 @@ let currentLiveTrophies = null;
 let globalBrawlersList = [];
 let currentUserTier = 'basic'; 
 
-// --- MENU & NAVIGATION ---
+// ==========================================
+// 1. FONCTIONS POUR LA PAGE D'ACCUEIL (INDEX)
+// ==========================================
+
+function toggleForms() {
+    const loginForm = document.getElementById('login-form');
+    const regForm = document.getElementById('register-form');
+    const msg = document.getElementById('message');
+    
+    if(loginForm && regForm) {
+        loginForm.classList.toggle('hidden');
+        regForm.classList.toggle('hidden');
+        if(msg) msg.innerText = "";
+    }
+}
+
+function publicSearch() {
+    const tagInput = document.getElementById('public-tag');
+    if(!tagInput) return;
+    
+    const tag = tagInput.value.trim().replace('#', '');
+    if(tag) {
+        window.location.href = `dashboard.html?tag=${tag}`;
+    }
+}
+
+async function login() {
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+    const msg = document.getElementById('message');
+
+    try {
+        const res = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            localStorage.setItem('token', data.token);
+            window.location.href = "dashboard.html";
+        } else {
+            if(msg) msg.innerText = "❌ " + data.message;
+        }
+    } catch (e) { if(msg) msg.innerText = "❌ Erreur serveur"; }
+}
+
+async function register() {
+    const username = document.getElementById('reg-username').value;
+    const tag = document.getElementById('reg-tag').value;
+    const password = document.getElementById('reg-password').value;
+    const msg = document.getElementById('message');
+
+    try {
+        const res = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username, tag, password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            alert("✅ Compte créé avec succès ! Connecte-toi maintenant.");
+            toggleForms();
+        } else {
+            if(msg) msg.innerText = "⚠️ " + data.message;
+        }
+    } catch (e) { if(msg) msg.innerText = "❌ Erreur serveur"; }
+}
+
+// ==========================================
+// 2. LOGIQUE DU DASHBOARD
+// ==========================================
+
+// --- NAVIGATION & MENU BURGER ---
 function toggleMenu() { document.getElementById('menu-dropdown').classList.toggle('active'); }
-window.onclick = function(e) { if (!document.getElementById('burger-menu').contains(e.target)) document.getElementById('menu-dropdown').classList.remove('active'); }
+window.onclick = function(e) { 
+    const burger = document.getElementById('burger-menu');
+    if (burger && !burger.contains(e.target)) {
+        const menu = document.getElementById('menu-dropdown');
+        if(menu) menu.classList.remove('active');
+    }
+}
 function switchView(view) {
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-    document.getElementById(`view-${view}`).classList.add('active');
-    document.getElementById('menu-dropdown').classList.remove('active');
+    const target = document.getElementById(`view-${view}`);
+    if(target) target.classList.add('active');
+    
+    const menu = document.getElementById('menu-dropdown');
+    if(menu) menu.classList.remove('active');
 }
 
 // --- AUTH & LOAD ---
 function logout() { localStorage.removeItem('token'); window.location.href = "index.html"; }
+
 function checkAuth() {
     if (!localStorage.getItem('token')) window.location.href = "index.html";
-    document.getElementById('burger-menu').classList.remove('hidden');
+    const burger = document.getElementById('burger-menu');
+    if(burger) burger.classList.remove('hidden');
     loadMyStats();
 }
 
@@ -28,10 +114,14 @@ async function loadMyStats() {
         if (!res.ok) throw new Error();
         
         currentUserTier = data.internal_tier || 'basic';
-        renderProfile(data);
-        setupIntervalUI(data.internal_tier, data.internal_interval);
-        loadBrawlersGrid(data.brawlers);
-        loadHistoryChart(localStorage.getItem('token'), data.trophies);
+        
+        // On vérifie qu'on est bien sur le dashboard avant de lancer le rendu
+        if(document.getElementById('player-name')) {
+            renderProfile(data);
+            setupIntervalUI(data.internal_tier, data.internal_interval);
+            loadBrawlersGrid(data.brawlers);
+            loadHistoryChart(localStorage.getItem('token'), data.trophies);
+        }
     } catch (e) { logout(); }
 }
 
@@ -52,8 +142,12 @@ function renderProfile(data) {
 
 // --- CONFIG AUTO UPDATE ---
 function setupIntervalUI(tier, interval) {
+    const basicDiv = document.getElementById('interval-basic');
+    if(!basicDiv) return; // Sécurité si élément absent
+
     document.getElementById('interval-basic').classList.add('hidden');
     document.getElementById('interval-custom').classList.add('hidden');
+    
     if (tier === 'basic') {
         document.getElementById('interval-basic').classList.remove('hidden');
         document.getElementById('select-interval-basic').value = interval || 720;
@@ -101,6 +195,7 @@ async function deleteAccount() {
 
 // --- BRAWLERS ---
 async function loadBrawlersGrid(playerBrawlers) {
+    if(!document.getElementById('brawlers-grid')) return;
     const res = await fetch(`${API_URL}/api/brawlers`);
     const data = await res.json();
     globalBrawlersList = (data.items || []).map(b => {
@@ -111,7 +206,9 @@ async function loadBrawlersGrid(playerBrawlers) {
 }
 
 function sortBrawlers() {
-    const c = document.getElementById('sort-brawlers').value;
+    const el = document.getElementById('sort-brawlers');
+    if(!el) return;
+    const c = el.value;
     if (c === 'trophies') globalBrawlersList.sort((a, b) => b.trophies - a.trophies);
     else if (c === 'name') globalBrawlersList.sort((a, b) => a.name.localeCompare(b.name));
     else globalBrawlersList.sort((a, b) => a.id - b.id);
@@ -148,7 +245,9 @@ function updateChartFilter(days) {
     }
     const dataset = data.map(h => ({ x: h.date, y: h.trophies }));
     if (currentLiveTrophies) dataset.push({ x: new Date().toISOString(), y: currentLiveTrophies });
-    if (!dataset.length) return;
+    
+    // Si pas de données, ne rien dessiner pour éviter crash
+    if(dataset.length === 0) return;
 
     if(window.myChart) window.myChart.destroy();
     window.myChart = new Chart(canvas.getContext('2d'), {
@@ -160,8 +259,11 @@ function updateChartFilter(days) {
 
 // --- PUBLIC ---
 async function loadPublicProfile(tag) {
-    document.getElementById('public-actions').classList.remove('hidden');
-    document.getElementById('burger-menu').classList.add('hidden');
+    const actions = document.getElementById('public-actions');
+    if(actions) actions.classList.remove('hidden');
+    const burger = document.getElementById('burger-menu');
+    if(burger) burger.classList.add('hidden');
+    
     try {
         const res = await fetch(`${API_URL}/api/public/player/${tag}`);
         const data = await res.json();
