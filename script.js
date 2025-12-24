@@ -1,7 +1,7 @@
 const API_URL = "https://api.brawl-track.com"; 
 let fullHistoryData = [];
 let currentLiveTrophies = null;
-let globalBrawlersList = []; // Stocke la liste fusionnée pour le tri
+let globalBrawlersList = [];
 
 // --- GESTION NAVIGATION ---
 function toggleForms() {
@@ -65,8 +65,6 @@ function logout() {
 }
 
 // --- CHARGEMENT MODES ---
-
-// Mode Privé
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) window.location.href = "index.html";
@@ -77,7 +75,6 @@ function checkAuth() {
     loadMyStats(); 
 }
 
-// Mode Public
 async function loadPublicProfile(tag) {
     document.getElementById('public-actions').classList.remove('hidden');
     document.getElementById('dashboard-msg').innerText = "Mode Public (Lecture seule)";
@@ -102,7 +99,6 @@ async function loadMyStats() {
     document.getElementById('dashboard-msg').innerText = "Actualisation...";
     
     try {
-        // 1. Stats
         const res = await fetch(`${API_URL}/api/my-stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -112,10 +108,7 @@ async function loadMyStats() {
         renderProfile(data);
         document.getElementById('dashboard-msg').innerText = "Dernière synchro : À l'instant";
 
-        // 2. Brawlers
         loadBrawlersGrid(data.brawlers);
-
-        // 3. Graphique
         loadHistoryChart(token, data.trophies);
 
     } catch (e) {
@@ -146,14 +139,12 @@ function renderProfile(data) {
     `;
 }
 
-// --- LOGIQUE BRAWLERS (NOUVEAU) ---
-
+// --- LOGIQUE BRAWLERS ---
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Chargement collection...</p>';
 
     try {
-        // 1. On récupère la liste officielle via ton API (qui relaie Supercell)
         const res = await fetch(`${API_URL}/api/brawlers`);
         if (!res.ok) throw new Error("Erreur API");
         
@@ -165,34 +156,24 @@ async function loadBrawlersGrid(playerBrawlers) {
             return;
         }
 
-        // 2. Fusion des données
         globalBrawlersList = allBrawlers.map(brawler => {
             const ownedStats = playerBrawlers.find(pb => pb.id === brawler.id);
             
-            // --- CORRECTION DU NOM POUR L'IMAGE ---
-            // L'API renvoie "EL PRIMO", on veut "El-Primo"
-            let formattedName = brawler.name.toLowerCase(); // "el primo"
-            
-            // Met la première lettre de chaque mot en majuscule
-            formattedName = formattedName.replace(/\b\w/g, l => l.toUpperCase()); // "El Primo"
-            
-            // Cas particuliers manuels (si nécessaire)
+            // Formatage du nom pour l'URL Image
+            let formattedName = brawler.name.toLowerCase(); 
+            formattedName = formattedName.replace(/\b\w/g, l => l.toUpperCase()); 
             if(formattedName === "8-bit") formattedName = "8-Bit";
-            
-            // Remplace espaces par tirets et enlève les points
-            formattedName = formattedName.replace(/\./g, '').replace(/\s+/g, '-'); // "El-Primo" / "Mr-P"
+            formattedName = formattedName.replace(/\./g, '').replace(/\s+/g, '-'); 
 
             return {
                 id: brawler.id,
-                name: brawler.name, // On garde le vrai nom pour l'affichage ("EL PRIMO")
-                // On utilise le "vieux" CDN Brawlify qui est plus fiable sur les noms
+                name: brawler.name, 
                 imageUrl: `https://cdn-old.brawlify.com/brawler/${formattedName}.png`, 
                 owned: !!ownedStats,
                 trophies: ownedStats ? ownedStats.trophies : 0
             };
         });
 
-        // 3. Affichage
         sortBrawlers();
 
     } catch (e) {
@@ -201,19 +182,14 @@ async function loadBrawlersGrid(playerBrawlers) {
     }
 }
 
-
 function sortBrawlers() {
     const criteria = document.getElementById('sort-brawlers').value;
 
-    // Logique de tri
     if (criteria === 'trophies') {
-        // Tri par trophées décroissant (les non possédés à la fin)
         globalBrawlersList.sort((a, b) => b.trophies - a.trophies);
     } else if (criteria === 'name') {
-        // Tri alphabétique
         globalBrawlersList.sort((a, b) => a.name.localeCompare(b.name));
     } else if (criteria === 'id') {
-        // Tri par ID (ordre d'ajout dans le jeu souvent)
         globalBrawlersList.sort((a, b) => a.id - b.id);
     }
 
@@ -228,19 +204,16 @@ function renderBrawlersGrid() {
         const div = document.createElement('div');
         div.className = 'brawler-card';
         
-        // Style : Grisé si non possédé
         if (!b.owned) {
             div.style.filter = "grayscale(100%) opacity(0.5)";
         } else {
             div.style.border = "1px solid #ffce00";
         }
 
-        // Info Trophées
         const trophiesInfo = b.owned 
             ? `<div style="font-size:0.7em; color:#ffce00;">🏆 ${b.trophies}</div>` 
             : '<div style="font-size:0.7em;">🔒</div>';
 
-        // Image : Utilisation directe de l'URL fournie par BrawlAPI
         div.innerHTML = `
             <img src="${b.imageUrl}" 
                  class="brawler-img"
@@ -254,8 +227,7 @@ function renderBrawlersGrid() {
     });
 }
 
-
-// --- GRAPHIQUE HISTORIQUE (Identique précédent) ---
+// --- GRAPHIQUE HISTORIQUE ---
 async function loadHistoryChart(token, liveTrophies) {
     document.getElementById('archive-manager').classList.remove('hidden');
     currentLiveTrophies = liveTrophies;
@@ -285,22 +257,29 @@ function updateChartFilter(days) {
         });
     }
 
-    const labels = filteredData.map(h => new Date(h.date).toLocaleDateString());
-    const dataPoints = filteredData.map(h => h.trophies);
-    
-    const pointColors = new Array(dataPoints.length).fill('#ffce00');
-    const pointRadius = new Array(dataPoints.length).fill(3);
+    // --- MODIFICATION ICI : Données sous forme d'objets {x, y} ---
+    const dataset = filteredData.map(h => ({
+        x: h.date, // Format date string compatible avec l'adaptateur
+        y: h.trophies
+    }));
+
+    // Ajout du point "Maintenant"
+    let pointColors = new Array(dataset.length).fill('#ffce00');
+    let pointRadius = new Array(dataset.length).fill(3);
 
     if (currentLiveTrophies !== null) {
-        labels.push("Maintenant");
-        dataPoints.push(currentLiveTrophies);
-        pointColors.push('#ff0000'); 
-        pointRadius.push(5);         
+        dataset.push({
+            x: new Date().toISOString(), // Date actuelle précise
+            y: currentLiveTrophies
+        });
+        pointColors.push('#ff0000'); // Rouge
+        pointRadius.push(5);
     }
 
-    if (dataPoints.length > 0) {
-        const first = dataPoints[0];
-        const last = dataPoints[dataPoints.length - 1]; 
+    // Calcul du GAIN
+    if (dataset.length > 0) {
+        const first = dataset[0].y;
+        const last = dataset[dataset.length - 1].y;
         const gain = last - first;
         const sign = gain >= 0 ? '+' : '';
         document.getElementById('trophy-gain').innerText = `Gain: ${sign}${gain} 🏆`;
@@ -308,20 +287,20 @@ function updateChartFilter(days) {
         document.getElementById('trophy-gain').innerText = "Pas de données";
     }
 
+    // Création du Graphique
     const ctx = document.getElementById('trophyChart').getContext('2d');
     if(window.myChart) window.myChart.destroy();
 
     window.myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
             datasets: [{
                 label: 'Trophées',
-                data: dataPoints,
+                data: dataset, // Données {x, y}
                 borderColor: '#ffce00',
                 backgroundColor: 'rgba(255, 206, 0, 0.1)',
                 borderWidth: 2,
-                tension: 0.3,
+                tension: 0.1, // Ligne un peu plus droite pour être précis sur le temps
                 fill: true,
                 pointBackgroundColor: pointColors, 
                 pointBorderColor: pointColors,
@@ -331,10 +310,34 @@ function updateChartFilter(days) {
         },
         options: {
             responsive: true,
-            plugins: { legend: { display: false } },
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    intersect: false,
+                    mode: 'index',
+                    // Formatage du titre du tooltip pour afficher l'heure
+                    callbacks: {
+                        title: function(context) {
+                            const date = new Date(context[0].parsed.x);
+                            return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+                        }
+                    }
+                }
+            },
             scales: {
                 y: { grid: { color: '#333' } },
-                x: { grid: { display: false }, ticks: { display: false } } 
+                x: { 
+                    type: 'time', // AXE TEMPOREL
+                    time: {
+                        unit: 'day',
+                        displayFormats: {
+                            day: 'dd/MM' // Format affiché sur l'axe
+                        },
+                        tooltipFormat: 'dd/MM HH:mm' // Format par défaut
+                    },
+                    grid: { color: '#333' },
+                    ticks: { color: '#aaa' }
+                } 
             }
         }
     });
