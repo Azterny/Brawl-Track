@@ -3,213 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Brawl Track</title>
+    <title>Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #0f0f0f; color: #eee; font-family: 'Roboto', sans-serif; padding: 20px; margin: 0; }
-        h1, h2 { color: #ff4444; text-transform: uppercase; margin-bottom: 15px; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        
-        /* Stats Cards */
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .card { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .card-val { font-size: 2em; font-weight: bold; color: #fff; }
-        .card-label { color: #888; font-size: 0.9em; margin-top: 5px; }
-        .card.alert { border-color: #dc3545; }
-
-        /* Table */
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: #1e1e1e; margin-top: 20px; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
-        th { background: #252525; color: #ffce00; text-transform: uppercase; font-size: 0.85em; }
-        tr:hover { background: #2a2a2a; }
-
-        /* Buttons */
-        button { padding: 8px 12px; cursor: pointer; border: none; border-radius: 4px; color: white; font-weight: bold; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
+        body { background: #0f0f0f; color: #eee; font-family: 'Roboto', sans-serif; padding: 20px; }
+        .card { background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; text-align: center; display: inline-block; width: 150px; }
+        .val { font-size: 1.5em; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; background: #1e1e1e; margin-top: 20px; }
+        th, td { padding: 10px; border-bottom: 1px solid #333; text-align: left; }
+        th { color: #ffce00; }
+        button { cursor: pointer; padding: 5px 10px; border: none; border-radius: 4px; color: white; }
         .btn-del { background: #dc3545; }
-        .btn-clean { background: #17a2b8; margin-right: 5px; }
-        .btn-refresh { background: #28a745; padding: 10px 20px; font-size: 1rem; }
-        
-        /* Login Modal */
-        #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #000; z-index: 999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-        #admin-pass { padding: 10px; font-size: 1.2rem; text-align: center; border-radius: 5px; border: none; margin-top: 20px; width: 200px; }
+        .btn-set { background: #007bff; margin-left: 5px; }
+        select { padding: 5px; background: #333; color: white; border: 1px solid #555; }
     </style>
 </head>
 <body>
-
-    <div id="login-overlay">
-        <h1 style="color: #ffce00;">ACCÈS RESTREINT</h1>
-        <p style="color: #888;">Zone réservée aux administrateurs</p>
-        <input type="password" id="admin-pass" placeholder="Mot de passe" onkeyup="if(event.key === 'Enter') checkAdmin()">
-        <button onclick="checkAdmin()" style="margin-top: 15px; background: #ffce00; color: #000; width: 220px;">ENTRER</button>
+    <div id="login"><input type="password" id="pass" placeholder="Password"><button onclick="login()">Enter</button></div>
+    <div id="dash" style="display:none;">
+        <h1>Admin Panel</h1>
+        <div>
+            <div class="card">Users: <div id="c-users" class="val">--</div></div>
+            <div class="card">Archives: <div id="c-arch" class="val">--</div></div>
+            <div class="card">CPU: <div id="c-cpu" class="val">--%</div></div>
+        </div>
+        <table>
+            <thead><tr><th>User</th><th>Tag</th><th>Tier</th><th>Freq (min)</th><th>Action</th></tr></thead>
+            <tbody id="tbody"></tbody>
+        </table>
     </div>
-
-    <div class="container" id="dashboard" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px;">
-            <h1 style="margin: 0;">🛠️ Panneau Admin</h1>
-            <button class="btn-refresh" onclick="loadData()">🔄 Actualiser</button>
-        </div>
-
-        <h2>🖥️ État du Serveur (Pi)</h2>
-        <div class="stats-row">
-            <div class="card">
-                <div class="card-val" id="cpu-val">--%</div>
-                <div class="card-label">CPU</div>
-            </div>
-            <div class="card">
-                <div class="card-val" id="ram-val">--%</div>
-                <div class="card-label">RAM</div>
-            </div>
-            <div class="card" id="disk-card">
-                <div class="card-val" id="disk-val">-- GB</div>
-                <div class="card-label">Disque Utilisé</div>
-            </div>
-        </div>
-
-        <h2>📊 Métriques Application</h2>
-        <div class="stats-row">
-            <div class="card">
-                <div class="card-val" id="users-val">--</div>
-                <div class="card-label">Utilisateurs</div>
-            </div>
-            <div class="card">
-                <div class="card-val" id="archives-val">--</div>
-                <div class="card-label">Total Archives</div>
-            </div>
-            <div class="card">
-                <div class="card-val" id="today-val">--</div>
-                <div class="card-label">Activité (24h)</div>
-            </div>
-             <div class="card">
-                <div class="card-val" id="avg-val">--</div>
-                <div class="card-label">Moy. Archives/User</div>
-            </div>
-        </div>
-
-        <h2>👤 Gestion des Utilisateurs</h2>
-        <div class="table-responsive">
-            <table id="users-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Pseudo</th>
-                        <th>Tag Brawl</th>
-                        <th>Archives</th>
-                        <th>Dernière Activité</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
     <script>
-        const API_URL = "https://api.brawl-track.com"; // Assure-toi que c'est la bonne URL
-        let ADMIN_KEY = "";
-
-        // 1. Vérification Login
-        function checkAdmin() {
-            const pass = document.getElementById('admin-pass').value;
-            if(pass) {
-                ADMIN_KEY = pass;
-                loadData().then(success => {
-                    if(success) {
-                        document.getElementById('login-overlay').style.display = 'none';
-                        document.getElementById('dashboard').style.display = 'block';
-                    }
-                });
-            }
-        }
-
-        // 2. Chargement des données
-        async function loadData() {
+        const API = "https://api.brawl-track.com/api/admin";
+        let KEY = "";
+        async function login() {
+            KEY = document.getElementById('pass').value;
             try {
-                // Charger Stats
-                const resStats = await fetch(`${API_URL}/api/admin/stats`, {
-                    headers: { 'X-Admin-Pass': ADMIN_KEY }
-                });
-                
-                if(resStats.status === 403) {
-                    alert("Mot de passe incorrect !");
-                    document.getElementById('admin-pass').value = '';
-                    return false;
-                }
-                
-                const stats = await resStats.json();
-                
-                // Remplissage Stats
-                document.getElementById('cpu-val').innerText = stats.cpu_percent + '%';
-                document.getElementById('ram-val').innerText = stats.ram_percent + '%';
-                document.getElementById('disk-val').innerText = `${stats.disk_used_gb}/${stats.disk_total_gb} GB`;
-                document.getElementById('users-val').innerText = stats.users;
-                document.getElementById('archives-val').innerText = stats.total_archives;
-                document.getElementById('today-val').innerText = stats.archives_today;
-                document.getElementById('avg-val').innerText = stats.avg_archives_per_user;
-
-                // Alerte si disque plein (> 90%)
-                if(stats.disk_percent > 90) document.getElementById('disk-card').classList.add('alert');
-
-                // Charger Utilisateurs
-                const resUsers = await fetch(`${API_URL}/api/admin/users`, {
-                    headers: { 'X-Admin-Pass': ADMIN_KEY }
-                });
-                const users = await resUsers.json();
-                renderUsers(users);
-                return true;
-
-            } catch(e) { 
-                console.error(e); 
-                alert("Erreur de connexion au serveur."); 
-                return false; 
-            }
+                const s = await fetch(`${API}/stats`, { headers: {'X-Admin-Pass': KEY} }).then(r=>r.json());
+                if(!s.users) return alert("Wrong Password");
+                document.getElementById('c-users').innerText = s.users;
+                document.getElementById('c-arch').innerText = s.total_archives;
+                document.getElementById('c-cpu').innerText = s.cpu_percent + "%";
+                loadUsers();
+                document.getElementById('login').style.display='none';
+                document.getElementById('dash').style.display='block';
+            } catch(e) { alert("Error"); }
         }
-
-        // 3. Affichage Tableau
-        function renderUsers(users) {
-            const tbody = document.querySelector('#users-table tbody');
-            tbody.innerHTML = '';
-            
-            if(users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Aucun utilisateur inscrit.</td></tr>';
-                return;
-            }
-
+        async function loadUsers() {
+            const users = await fetch(`${API}/users`, { headers: {'X-Admin-Pass': KEY} }).then(r=>r.json());
+            const tb = document.getElementById('tbody'); tb.innerHTML = "";
             users.forEach(u => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${u.id}</td>
-                    <td style="font-weight:bold; color:#fff;">${u.username}</td>
-                    <td>${u.brawl_tag}</td>
-                    <td>${u.archive_count}</td>
-                    <td style="font-size:0.8em; color:#aaa;">${u.last_active || 'Jamais'}</td>
+                    <td>${u.username}</td><td>${u.brawl_tag}</td>
                     <td>
-                        <button class="btn-clean" onclick="flushUser(${u.id})">🧹 Vider Hist.</button>
-                        <button class="btn-del" onclick="deleteUser(${u.id})">🗑️ Supprimer</button>
+                        <select id="tier-${u.id}">
+                            <option value="basic" ${u.tier=='basic'?'selected':''}>Basic</option>
+                            <option value="subscriber" ${u.tier=='subscriber'?'selected':''}>Abonné</option>
+                            <option value="premium" ${u.tier=='premium'?'selected':''}>Premium</option>
+                        </select>
+                        <button class="btn-set" onclick="setTier(${u.id})">OK</button>
                     </td>
+                    <td>${u.update_interval}</td>
+                    <td><button class="btn-del" onclick="del(${u.id})">X</button></td>
                 `;
-                tbody.appendChild(tr);
+                tb.appendChild(tr);
             });
         }
-
-        // 4. Actions Admin
-        async function deleteUser(id) {
-            if(!confirm("⚠️ DANGER : SUPPRIMER définitivement cet utilisateur et TOUTES ses données ?")) return;
-            await fetch(`${API_URL}/api/admin/user/${id}`, {
-                method: 'DELETE',
-                headers: { 'X-Admin-Pass': ADMIN_KEY }
-            });
-            loadData();
+        async function setTier(id) {
+            const t = document.getElementById(`tier-${id}`).value;
+            await fetch(`${API}/set-tier`, { method:'POST', headers: {'X-Admin-Pass': KEY, 'Content-Type':'application/json'}, body: JSON.stringify({user_id: id, tier: t}) });
+            alert("Updated"); loadUsers();
         }
-
-        async function flushUser(id) {
-            if(!confirm("Supprimer tout l'historique de ce joueur (sauf la dernière sauvegarde) pour libérer de la place ?")) return;
-            await fetch(`${API_URL}/api/admin/flush-archives/${id}`, {
-                method: 'POST',
-                headers: { 'X-Admin-Pass': ADMIN_KEY }
-            });
-            loadData();
+        async function del(id) {
+            if(confirm("Delete?")) { await fetch(`${API}/user/${id}`, { method:'DELETE', headers: {'X-Admin-Pass': KEY} }); loadUsers(); }
         }
     </script>
 </body>
