@@ -13,7 +13,6 @@ async function loadMyStats() {
 
         renderProfile(data);
         
-        // Appel aux fonctions des autres modules si besoin
         if(typeof setupIntervalUI === 'function') setupIntervalUI(data.internal_tier, data.internal_interval);
         
         loadBrawlersGrid(data.brawlers);
@@ -60,12 +59,25 @@ async function loadBrawlersGrid(playerBrawlers) {
     sortBrawlers();
 }
 
+// === C'EST ICI QUE LA MAGIE OPÈRE ===
 function sortBrawlers() {
     const criteria = document.getElementById('sort-brawlers').value;
     
-    if (criteria === 'trophies') globalBrawlersList.sort((a, b) => b.trophies - a.trophies);
-    else if (criteria === 'name') globalBrawlersList.sort((a, b) => a.name.localeCompare(b.name));
-    else globalBrawlersList.sort((a, b) => a.id - b.id);
+    globalBrawlersList.sort((a, b) => {
+        // 1. TRI PRIMAIRE : Possession (Les possédés d'abord)
+        if (a.owned !== b.owned) {
+            return a.owned ? -1 : 1; // Si a est possédé, il passe devant b
+        }
+
+        // 2. TRI SECONDAIRE : Critère choisi (si statut de possession identique)
+        if (criteria === 'trophies') {
+            return b.trophies - a.trophies;
+        } else if (criteria === 'name') {
+            return a.name.localeCompare(b.name);
+        } else {
+            return a.id - b.id; // Par défaut : ID
+        }
+    });
     
     renderBrawlersGrid();
 }
