@@ -44,7 +44,18 @@
             <div id="stats-area" class="stats-grid"></div>
 
             <div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px;">
-                <h3 style="margin:0 0 15px 0;">📈 Progression</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">📈 Progression</h3>
+                </div>
+
+                <div class="chart-filters">
+                    <button onclick="updateChartFilter(1)" class="filter-btn">24H</button>
+                    <button onclick="updateChartFilter(7)" class="filter-btn">7J</button>
+                    <button onclick="updateChartFilter(31)" class="filter-btn">Mois</button>
+                    <button onclick="updateChartFilter(365)" class="filter-btn">1 An</button>
+                    <button onclick="updateChartFilter(0)" class="filter-btn active">Tout</button>
+                </div>
+
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="trophyChart"></canvas>
                 </div>
@@ -111,7 +122,6 @@
     <script src="js/dashboard.js"></script>
     
     <script>
-        // Point d'entrée
         const urlParams = new URLSearchParams(window.location.search);
         const publicTag = urlParams.get('tag');
         if (publicTag) loadPublicProfile(publicTag);
