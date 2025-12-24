@@ -1,11 +1,12 @@
 /* =========================================
-   1. BASE & STRUCTURE
+   1. BASE & TYPOGRAPHIE
    ========================================= */
 body {
     background-color: #121212;
     color: white;
     font-family: 'Roboto', sans-serif;
-    margin: 0; padding: 0;
+    margin: 0; 
+    padding: 0;
     min-height: 100vh;
 }
 
@@ -18,19 +19,22 @@ h1, h2, h3 {
 
 .container {
     padding: 25px;
-    max-width: 400px;
+    max-width: 400px; /* Login size */
     margin: 40px auto;
     background: #1e1e1e;
-    border-radius: 20px; /* Plus arrondi */
+    border-radius: 20px;
     text-align: center;
     border: 1px solid #333;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.6); /* Ombre plus profonde */
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
     transition: transform 0.3s ease;
 }
-.container.wide { max-width: 900px; }
+
+.container.wide { 
+    max-width: 900px; /* Dashboard size */
+}
 
 /* =========================================
-   2. HEADER & MENU
+   2. EN-TÊTE & MENU BURGER
    ========================================= */
 .header-bar { 
     display: flex; 
@@ -39,11 +43,13 @@ h1, h2, h3 {
     border-bottom: 2px solid #333; 
     padding-bottom: 15px; 
     margin-bottom: 20px; 
+    position: relative;
 }
 
 .burger-icon { 
     font-size: 2rem; 
     cursor: pointer; 
+    user-select: none;
     padding: 5px 10px; 
     transition: transform 0.2s ease, color 0.2s ease;
 }
@@ -51,7 +57,9 @@ h1, h2, h3 {
     color: #ffce00; 
     transform: scale(1.1); 
 }
-.burger-icon:active { transform: scale(0.95); }
+.burger-icon:active { 
+    transform: scale(0.95); 
+}
 
 .menu-overlay {
     position: absolute; 
@@ -83,14 +91,16 @@ h1, h2, h3 {
 .menu-item:hover { 
     background: #333; 
     color: #ffce00; 
-    padding-left: 20px; /* Petit glissement vers la droite */
+    padding-left: 20px; 
 }
 .menu-item.logout { color: #ff5555; }
+.menu-item.logout:hover { background: #3a1a1a; }
 .menu-item-divider { height: 5px; background: #1a1a1a; }
 
 /* =========================================
-   3. ELEMENTS UI (Badges, Inputs, Boutons)
+   3. ÉLÉMENTS UI (Badges, Inputs, Boutons)
    ========================================= */
+/* BADGES */
 .badge { 
     padding: 4px 10px; 
     border-radius: 6px; 
@@ -98,6 +108,7 @@ h1, h2, h3 {
     font-weight: bold; 
     text-transform: uppercase; 
     vertical-align: middle; 
+    display: inline-block;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 .badge-basic { background: #444; color: #ccc; border: 1px solid #666; }
@@ -106,9 +117,10 @@ h1, h2, h3 {
     background: linear-gradient(45deg, #ffce00, #ffa500); 
     color: #000; 
     border: 1px solid #ffd700; 
-    box-shadow: 0 0 15px rgba(255, 206, 0, 0.3);
+    box-shadow: 0 0 10px rgba(255, 206, 0, 0.3);
 }
 
+/* FORMULAIRES */
 input, select { 
     width: 100%; 
     padding: 12px; 
@@ -118,6 +130,7 @@ input, select {
     background: #2a2a2a; 
     color: white; 
     box-sizing: border-box; 
+    font-size: 1rem;
     transition: all 0.2s ease;
 }
 input:focus, select:focus { 
@@ -127,6 +140,7 @@ input:focus, select:focus {
     box-shadow: 0 0 0 3px rgba(255, 206, 0, 0.1);
 }
 
+/* BOUTONS GENERIQUES (Style 3D) */
 button { 
     width: 100%; 
     padding: 12px; 
@@ -138,9 +152,9 @@ button {
     cursor: pointer; 
     margin-top: 10px; 
     position: relative;
-    top: 0;
+    font-size: 1rem;
     transition: all 0.1s ease;
-    box-shadow: 0 4px 0 #b38f00; /* Effet 3D */
+    box-shadow: 0 4px 0 #b38f00; 
 }
 button:hover { 
     filter: brightness(1.1); 
@@ -152,6 +166,7 @@ button:active {
     box-shadow: 0 0 0 #b38f00;
 }
 
+/* Variantes Boutons */
 .btn-save { background: linear-gradient(to bottom, #28a745, #218838); color: white; box-shadow: 0 4px 0 #1e7e34; }
 .btn-save:hover { box-shadow: 0 6px 0 #1e7e34; }
 .btn-save:active { box-shadow: 0 0 0 #1e7e34; }
@@ -161,11 +176,66 @@ button:active {
 .btn-danger:active { box-shadow: 0 0 0 #bd2130; }
 
 /* =========================================
-   4. SECTIONS & GRIDS
+   4. FILTRES GRAPHIQUE (SCROLL MOBILE)
+   ========================================= */
+.chart-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    
+    /* Force l'horizontalité et le scroll */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; 
+    
+    /* Masquer scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 5px;
+}
+.chart-filters::-webkit-scrollbar { display: none; }
+
+.filter-btn {
+    background: #333;
+    color: #ccc;
+    border: 1px solid #444;
+    padding: 8px 16px;
+    font-size: 0.85em;
+    width: auto;
+    margin-top: 0;
+    border-radius: 20px;
+    box-shadow: none;
+    
+    /* Empêche le texte de casser sur mobile */
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background: #444;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: none; /* Pas d'effet 3D ici */
+}
+
+.filter-btn:active { transform: translateY(0); }
+
+.filter-btn.active {
+    background: #ffce00;
+    color: black;
+    border-color: #ffce00;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(255, 206, 0, 0.4);
+}
+
+/* =========================================
+   5. SECTIONS & GRILLES
    ========================================= */
 .view-section { display: none; }
 .view-section.active { display: block; animation: slideUpFade 0.4s ease-out; }
 
+/* STATS */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
 
 .stat-card { 
@@ -180,7 +250,6 @@ button:active {
     box-shadow: 0 10px 20px rgba(0,0,0,0.4);
     border-color: #444;
 }
-
 .stat-value { font-size: 1.6em; font-weight: bold; margin-top: 5px; }
 
 /* BRAWLERS */
@@ -195,8 +264,6 @@ button:active {
     position: relative;
     border: 1px solid transparent;
 }
-
-/* Effet de survol sur les brawlers */
 .brawler-card:hover { 
     transform: scale(1.1) translateY(-5px); 
     z-index: 10; 
@@ -205,80 +272,30 @@ button:active {
     border-color: #ffce00;
 }
 
-/* Brawlers grisés */
+/* Brawlers Gris (Non possédés) */
 .brawler-card[style*="grayscale"] {
     opacity: 0.5;
     filter: grayscale(100%);
     transition: all 0.3s ease;
 }
 .brawler-card[style*="grayscale"]:hover {
-    filter: grayscale(0%); /* On remet la couleur au survol ! */
+    filter: grayscale(0%);
     opacity: 1;
     transform: scale(1.1);
     z-index: 10;
 }
 
 /* =========================================
-   5. KEYFRAMES (Animations)
+   6. ANIMATIONS & UTILITAIRES
    ========================================= */
-
-/* Apparition douce des pages (Glissement vers le haut) */
 @keyframes slideUpFade {
-    from { 
-        opacity: 0; 
-        transform: translateY(20px); 
-    }
-    to { 
-        opacity: 1; 
-        transform: translateY(0); 
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Menu Burger qui "Pop" */
 @keyframes menuPop {
-    from {
-        opacity: 0;
-        transform: scale(0.8) translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
+    from { opacity: 0; transform: scale(0.8) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* Utilitaires */
 .hidden { display: none !important; }
-
-
-/* CHART FILTERS */
-.chart-filters {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-}
-
-.filter-btn {
-    background: #333;
-    color: #ccc;
-    border: 1px solid #444;
-    padding: 6px 12px;
-    font-size: 0.85em;
-    width: auto;
-    margin-top: 0; /* Override du style global button */
-    border-radius: 20px; /* Forme de pilule */
-    box-shadow: none;
-}
-
-.filter-btn:hover {
-    background: #444;
-    color: white;
-    transform: translateY(-1px);
-}
-
-.filter-btn.active {
-    background: #ffce00;
-    color: black;
-    border-color: #ffce00;
-    font-weight: bold;
-}
