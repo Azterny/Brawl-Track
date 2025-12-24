@@ -6,7 +6,7 @@
     <title>Admin Panel - Brawl Track</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS INTÉGRÉ (Pour éviter les bugs de chargement) */
+        /* CSS INTÉGRÉ */
         body { 
             background-color: #121212; 
             color: #eee; 
@@ -22,7 +22,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100vh;
         }
-        input { padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; }
+        input { padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; margin-bottom: 10px; width: 250px; text-align: center; }
         
         /* Dashboard */
         .container { max-width: 1200px; margin: 0 auto; display: none; }
@@ -37,22 +37,23 @@
         .card-label { color: #888; font-size: 0.9em; }
 
         /* Table */
-        table { width: 100%; border-collapse: collapse; background: #1e1e1e; border-radius: 8px; overflow: hidden; }
+        .table-container { overflow-x: auto; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; background: #1e1e1e; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
         th { background: #252525; color: #ffce00; }
         tr:hover { background: #2a2a2a; }
 
-        /* Badges & Selects */
+        /* Elements */
         select { padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
-        
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold; }
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold; text-transform: uppercase; }
         .badge-basic { background: #555; }
         .badge-subscriber { background: #0056b3; }
         .badge-premium { background: #ffd700; color: #000; }
 
         /* Buttons */
-        button { cursor: pointer; padding: 8px 12px; border: none; border-radius: 4px; color: white; font-weight: bold; }
-        .btn-login { background: #ffce00; color: black; margin-top: 10px; width: 200px; }
+        button { cursor: pointer; padding: 8px 12px; border: none; border-radius: 4px; color: white; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.8; }
+        .btn-login { background: #ffce00; color: black; width: 270px; font-size: 1.1em; }
         .btn-refresh { background: #28a745; float: right; }
         .btn-save { background: #007bff; margin-left: 5px; }
         .btn-del { background: #dc3545; }
@@ -61,15 +62,16 @@
 <body>
 
     <div id="login-screen">
-        <h1 style="margin-bottom: 20px;">🔒 ADMIN ACCESS</h1>
-        <input type="password" id="admin-pass" placeholder="Mot de passe Admin">
+        <h1 style="margin-bottom: 30px;">🔒 ADMIN ACCESS</h1>
+        <input type="password" id="admin-pass" placeholder="Mot de passe Admin" onkeyup="if(event.key === 'Enter') login()">
         <button class="btn-login" onclick="login()">ENTRER</button>
+        <p id="login-msg" style="color: #ff5555; margin-top: 15px;"></p>
     </div>
 
     <div id="dashboard" class="container">
-        <div style="overflow: hidden; margin-bottom: 20px;">
+        <div style="overflow: hidden; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 15px;">
             <h1 style="float: left; margin: 0;">🛠️ Panneau de Contrôle</h1>
-            <button class="btn-refresh" onclick="loadData()">Actualiser</button>
+            <button class="btn-refresh" onclick="loadData()">🔄 Actualiser</button>
         </div>
 
         <div class="stats-row">
@@ -83,7 +85,7 @@
             </div>
             <div class="card">
                 <div class="card-val" id="val-cpu">--%</div>
-                <div class="card-label">CPU Pi</div>
+                <div class="card-label">CPU Serveur</div>
             </div>
             <div class="card">
                 <div class="card-val" id="val-disk">-- GB</div>
@@ -92,21 +94,22 @@
         </div>
 
         <h2>Gestion Utilisateurs</h2>
-        <div style="overflow-x: auto;">
+        <div class="table-container">
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Pseudo</th>
                         <th>Tag</th>
-                        <th>Grade Actuel</th>
-                        <th>Changer Grade</th>
-                        <th>Intervalle</th>
-                        <th>Actions</th>
+                        <th>Grade</th>
+                        <th>Action Rapide</th>
+                        <th>Fréquence</th>
+                        <th>Supprimer</th>
                     </tr>
                 </thead>
                 <tbody id="users-table">
-                    </tbody>
+                    <tr><td colspan="7" style="text-align:center; color:#888;">Chargement...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -115,63 +118,79 @@
         const API_URL = "https://api.brawl-track.com"; 
         let ADMIN_KEY = "";
 
-        // 1. LOGIN
+        // 1. CONNEXION SÉCURISÉE
         async function login() {
             const pass = document.getElementById('admin-pass').value;
-            if(!pass) return alert("Mot de passe requis");
-            
+            const msg = document.getElementById('login-msg');
+            if(!pass) return;
+
+            msg.innerText = "Vérification...";
             ADMIN_KEY = pass;
-            
-            // Test de connexion
+
             try {
-                const res = await fetch(`${API_URL}/api/admin/stats`, {
+                // On tente de récupérer la liste des users (requête légère) pour vérifier le mdp
+                const res = await fetch(`${API_URL}/api/admin/users`, {
                     headers: { 'X-Admin-Pass': ADMIN_KEY }
                 });
-                
-                if(res.status === 403) return alert("Mot de passe incorrect !");
-                if(!res.ok) return alert("Erreur serveur");
 
+                if(res.status === 403) {
+                    msg.innerText = "❌ Mot de passe incorrect !";
+                    return;
+                }
+
+                if(!res.ok) throw new Error("Erreur serveur");
+
+                // Si OK, on affiche le dash
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
-                
-                const stats = await res.json();
-                renderStats(stats);
-                loadUsers();
 
-            } catch(e) { alert("Impossible de joindre l'API"); console.error(e); }
-        }
-
-        // 2. LOAD DATA
-        async function loadData() {
-            try {
-                const [resStats, resUsers] = await Promise.all([
-                    fetch(`${API_URL}/api/admin/stats`, { headers: { 'X-Admin-Pass': ADMIN_KEY } }),
-                    fetch(`${API_URL}/api/admin/users`, { headers: { 'X-Admin-Pass': ADMIN_KEY } })
-                ]);
-
-                const stats = await resStats.json();
-                const users = await resUsers.json();
-
-                renderStats(stats);
+                // On charge les données (users déjà récupérés + stats)
+                const users = await res.json();
                 renderUsers(users);
-            } catch(e) { console.error(e); }
+                loadStats(); // Chargement asynchrone pour ne pas bloquer
+
+            } catch(e) {
+                console.error(e);
+                msg.innerText = "❌ Impossible de joindre l'API. Vérifiez votre connexion.";
+            }
         }
 
-        // 3. RENDER STATS
-        function renderStats(s) {
-            document.getElementById('val-users').innerText = s.users;
-            document.getElementById('val-archives').innerText = s.total_archives;
-            document.getElementById('val-cpu').innerText = s.cpu_percent + '%';
-            document.getElementById('val-disk').innerText = s.disk_used_gb + ' GB';
+        // 2. CHARGEMENT GLOBAL
+        function loadData() {
+            loadStats();
+            loadUsersList();
         }
 
-        // 4. RENDER USERS
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                const s = await res.json();
+                document.getElementById('val-users').innerText = s.users;
+                document.getElementById('val-archives').innerText = s.total_archives;
+                document.getElementById('val-cpu').innerText = s.cpu_percent + '%';
+                document.getElementById('val-disk').innerText = s.disk_used_gb + ' GB';
+            } catch(e) { console.warn("Erreur stats", e); }
+        }
+
+        async function loadUsersList() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                const users = await res.json();
+                renderUsers(users);
+            } catch(e) { console.error("Erreur users", e); }
+        }
+
+        // 3. AFFICHAGE
         function renderUsers(users) {
             const tbody = document.getElementById('users-table');
             tbody.innerHTML = '';
             
+            if(users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Aucun utilisateur.</td></tr>';
+                return;
+            }
+
             users.forEach(u => {
-                // Determine badge class
                 let badgeClass = 'badge-basic';
                 if(u.tier === 'subscriber') badgeClass = 'badge-subscriber';
                 if(u.tier === 'premium') badgeClass = 'badge-premium';
@@ -183,55 +202,53 @@
                     <td>${u.brawl_tag}</td>
                     <td><span class="badge ${badgeClass}">${u.tier}</span></td>
                     <td>
-                        <div style="display:flex; align-items:center;">
-                            <select id="select-tier-${u.id}">
-                                <option value="basic" ${u.tier === 'basic' ? 'selected' : ''}>Basic</option>
-                                <option value="subscriber" ${u.tier === 'subscriber' ? 'selected' : ''}>Abonné</option>
-                                <option value="premium" ${u.tier === 'premium' ? 'selected' : ''}>Premium</option>
-                            </select>
-                            <button class="btn-save" onclick="changeTier(${u.id})">OK</button>
-                        </div>
+                        <select id="select-tier-${u.id}" onchange="changeTier(${u.id})">
+                            <option value="basic" ${u.tier === 'basic' ? 'selected' : ''}>Mettre Basic</option>
+                            <option value="subscriber" ${u.tier === 'subscriber' ? 'selected' : ''}>Mettre Abonné</option>
+                            <option value="premium" ${u.tier === 'premium' ? 'selected' : ''}>Mettre Premium</option>
+                        </select>
                     </td>
-                    <td>${u.update_interval} min</td>
+                    <td style="color:#aaa;">${u.update_interval} min</td>
                     <td>
-                        <button class="btn-del" onclick="deleteUser(${u.id})">Suppr.</button>
+                        <button class="btn-del" onclick="deleteUser(${u.id})">🗑️</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // 5. ACTIONS
+        // 4. ACTIONS
         async function changeTier(userId) {
             const newTier = document.getElementById(`select-tier-${userId}`).value;
+            // Petit délai pour l'UX
+            document.body.style.cursor = 'wait';
             
             try {
                 const res = await fetch(`${API_URL}/api/admin/set-tier`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-Admin-Pass': ADMIN_KEY 
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
                     body: JSON.stringify({ user_id: userId, tier: newTier })
                 });
-                
                 const data = await res.json();
                 if(res.ok) {
-                    alert("✅ Succès : " + data.message);
-                    loadData(); // Recharger la table pour voir le badge changer
+                    loadUsersList(); // Recharger pour voir le badge changer
                 } else {
-                    alert("❌ Erreur : " + data.message);
+                    alert("Erreur: " + data.message);
                 }
-            } catch(e) { alert("Erreur de connexion"); }
+            } catch(e) { alert("Erreur réseau"); }
+            document.body.style.cursor = 'default';
         }
 
         async function deleteUser(id) {
             if(!confirm("Supprimer DEFINITIVEMENT cet utilisateur ?")) return;
-            await fetch(`${API_URL}/api/admin/user/${id}`, {
-                method: 'DELETE',
-                headers: { 'X-Admin-Pass': ADMIN_KEY }
-            });
-            loadData();
+            try {
+                await fetch(`${API_URL}/api/admin/user/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Pass': ADMIN_KEY }
+                });
+                loadUsersList();
+                loadStats();
+            } catch(e) { alert("Erreur serveur"); }
         }
     </script>
 </body>
