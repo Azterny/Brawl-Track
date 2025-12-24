@@ -140,6 +140,7 @@ function renderProfile(data) {
 }
 
 // --- LOGIQUE BRAWLERS ---
+
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center;">Chargement collection...</p>';
@@ -159,16 +160,21 @@ async function loadBrawlersGrid(playerBrawlers) {
         globalBrawlersList = allBrawlers.map(brawler => {
             const ownedStats = playerBrawlers.find(pb => pb.id === brawler.id);
             
-            // Formatage du nom pour l'URL Image
-            let formattedName = brawler.name.toLowerCase(); 
-            formattedName = formattedName.replace(/\b\w/g, l => l.toUpperCase()); 
-            if(formattedName === "8-bit") formattedName = "8-Bit";
-            formattedName = formattedName.replace(/\./g, '').replace(/\s+/g, '-'); 
+            // --- CORRECTION "LOWER" (Minuscules) ---
+            // Ex: "EL PRIMO" -> "el-primo"
+            // Ex: "MR. P"    -> "mr-p"
+            // Ex: "R-T"      -> "r-t"
+            
+            const formattedName = brawler.name
+                .toLowerCase()          // 1. Tout en minuscule
+                .replace(/\./g, '')     // 2. Enlever les points
+                .replace(/\s+/g, '-');  // 3. Remplacer les espaces par des tirets
 
             return {
                 id: brawler.id,
                 name: brawler.name, 
-                imageUrl: `https://cdn-old.brawlify.com/brawler/${formattedName}.png`, 
+                // URL basée sur le nom formaté en minuscule
+                imageUrl: `https://cdn.brawlify.com/brawlers/${formattedName}.png`, 
                 owned: !!ownedStats,
                 trophies: ownedStats ? ownedStats.trophies : 0
             };
