@@ -1,1 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brawl Track - App</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
 
+    <div class="container wide">
+        
+        <div class="header-bar">
+            <div style="text-align: left;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h1 id="player-name" style="margin: 0;">Chargement...</h1>
+                    <span id="tier-badge" class="badge badge-basic">Basic</span>
+                </div>
+                <div id="player-tag" style="color: #888; font-size: 0.9em; margin-top: 5px;">#...</div>
+            </div>
+
+            <div id="burger-menu" class="hidden" style="position: relative;">
+                <div class="burger-icon" onclick="toggleMenu()">☰</div>
+                <div class="menu-overlay" id="menu-dropdown">
+                    <div class="menu-item" onclick="switchView('dashboard')">🏠 Accueil</div>
+                    <div class="menu-item" onclick="switchView('data')">💾 Données</div>
+                    <div class="menu-item" onclick="switchView('settings')">⚙️ Paramètres</div>
+                    <div class="menu-item-divider"></div>
+                    <div class="menu-item" onclick="loadMyStats()">🔄 Actualiser</div>
+                    <div class="menu-item logout" onclick="logout()">🚪 Déconnexion</div>
+                </div>
+            </div>
+
+            <div id="public-actions" class="hidden">
+                <button onclick="window.location.href='index.html'" style="width: auto; background: #444; padding: 5px 15px;">⬅ Retour</button>
+            </div>
+        </div>
+
+        <div id="view-dashboard" class="view-section active">
+            <div id="stats-area" class="stats-grid"></div>
+
+            <div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px;">
+                <h3 style="margin:0 0 15px 0;">📈 Progression</h3>
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="trophyChart"></canvas>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 20px;">
+                <h3 style="margin: 0;">🤖 Brawlers</h3>
+                <select id="sort-brawlers" onchange="sortBrawlers()" style="width: auto; padding: 5px; background: #333; color: white; border: 1px solid #555;">
+                    <option value="trophies">▼ Trophées</option>
+                    <option value="name">A-Z Nom</option>
+                    <option value="id">Base (ID)</option>
+                </select>
+            </div>
+            <div id="brawlers-grid" style="margin-top: 15px;"></div>
+        </div>
+
+        <div id="view-data" class="view-section">
+            <h2>💾 Données</h2>
+            
+            <div style="background: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: left; border-left: 4px solid #007bff;">
+                <h3 style="margin-top: 0;">⏱️ Auto-Update</h3>
+                
+                <div id="interval-basic" class="hidden">
+                    <select id="select-interval-basic">
+                        <option value="2880">48H</option><option value="1440">24H</option><option value="720">12H</option>
+                    </select>
+                </div>
+
+                <div id="interval-custom" class="hidden">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" id="input-hours" placeholder="H" min="0" max="48">
+                        <input type="number" id="input-minutes" placeholder="Min" min="0" max="59">
+                    </div>
+                    <p style="font-size: 0.8em; color: #ffce00;" id="interval-limit-msg"></p>
+                </div>
+                <button class="btn-save" onclick="saveInterval()">Enregistrer</button>
+            </div>
+
+            <div style="background: #2a2a2a; padding: 20px; border-radius: 10px; text-align: left;">
+                <h3 style="margin-top: 0;">Actions</h3>
+                <button onclick="manualArchive()" style="background: #17a2b8; margin-bottom: 10px;">➕ Sauvegarde</button>
+                <div style="display: flex; gap: 10px;">
+                    <select id="delete-select"><option value="7">7 Jours</option><option value="all">Tout</option></select>
+                    <button onclick="deleteArchives()" class="btn-danger">Suppr.</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-settings" class="view-section">
+            <h2>⚙️ Paramètres</h2>
+            <div style="background: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <input type="text" id="new-username" placeholder="Nouveau pseudo">
+                <input type="password" id="new-password" placeholder="Nouveau mot de passe">
+                <button class="btn-save" onclick="updateProfile()">Valider</button>
+            </div>
+            <button class="btn-danger" onclick="deleteAccount()">SUPPRIMER COMPTE</button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/dashboard.js"></script>
+    
+    <script>
+        // Point d'entrée
+        const urlParams = new URLSearchParams(window.location.search);
+        const publicTag = urlParams.get('tag');
+        if (publicTag) loadPublicProfile(publicTag);
+        else checkAuth();
+    </script>
+</body>
+</html>
