@@ -285,6 +285,7 @@
                     <td><span class="badge ${badgeClass}">${u.tier}</span></td>
                     <td style="color:#ddd;">${lastLogin}</td>
                     <td style="text-align: right;">
+                        <button class="btn-save" style="background:#17a2b8; margin-right:5px;" onclick="window.location.href='admin_edit.html?id=${u.id}'">✏️</button>
                         <button class="btn-del" onclick="deleteUser(${u.id})">🗑️</button>
                     </td>
                 `;
