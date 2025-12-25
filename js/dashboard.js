@@ -108,10 +108,8 @@ function unlockChart() {
 
 // --- GRAPHIQUE & LOGIQUE AVANCÉE ---
 async function loadHistoryChart(token, liveTrophies) {
-    // Si pas de token (vue publique), on affiche le Lock Screen et on s'arrête
     if (!token) {
         lockChart();
-        // On charge un dummy chart vide juste pour l'esthétique du fond (optionnel)
         fullHistoryData = [];
         return;
     }
@@ -123,11 +121,22 @@ async function loadHistoryChart(token, liveTrophies) {
         else fullHistoryData = [];
     } catch(e) { fullHistoryData = []; }
     
-    // On gère la visibilité des boutons AVANT d'afficher le graph
     manageFilterButtons();
-    
-    // Par défaut : Tout afficher
     updateChartFilter(0);
+
+    // --- MISE A JOUR DU TIMER ---
+    // On prend la dernière date connue dans l'historique
+    let lastDate = null;
+    if (fullHistoryData.length > 0) {
+        // Le tableau est souvent trié ASC (le plus vieux en premier), donc le dernier est à la fin
+        // Mais vérifions ton API : ORDER BY recorded_at ASC
+        lastDate = fullHistoryData[fullHistoryData.length - 1].date;
+    }
+    
+    // On appelle la fonction du fichier settings.js
+    if(typeof updateNextArchiveTimer === 'function' && window.currentUpdateInterval) {
+        updateNextArchiveTimer(lastDate, window.currentUpdateInterval);
+    }
 }
 
 function manageFilterButtons() {
