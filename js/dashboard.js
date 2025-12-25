@@ -11,13 +11,16 @@ async function loadMyStats() {
         const data = await res.json();
         currentUserTier = data.internal_tier || 'basic';
 
+        // 1. On s'assure que le badge est VISIBLE pour le propriétaire
+        document.getElementById('tier-badge').classList.remove('hidden');
+
         renderProfile(data);
         
         if(typeof setupIntervalUI === 'function') setupIntervalUI(data.internal_tier, data.internal_interval);
         
         loadBrawlersGrid(data.brawlers);
         
-        // On charge le graph en mode "Connecté"
+        // On déverrouille le graph
         unlockChart();
         loadHistoryChart(token, data.trophies);
 
@@ -286,12 +289,15 @@ async function loadPublicProfile(tag) {
         const res = await fetch(`${API_URL}/api/public/player/${tag}`);
         const data = await res.json();
         
-        // Mode public = Grade Basic par défaut pour l'affichage
         currentUserTier = 'basic'; 
+        
+        // 2. On MASQUE le badge pour les visiteurs
+        document.getElementById('tier-badge').classList.add('hidden');
+
         renderProfile(data);
         loadBrawlersGrid(data.brawlers);
         
-        // Pas de token -> loadHistoryChart(null) -> Graphique verrouillé
+        // Graphique verrouillé
         loadHistoryChart(null, data.trophies);
 
     } catch (e) { alert("Joueur introuvable"); }
