@@ -10,8 +10,10 @@ async function loadMyStats() {
         
         const data = await res.json();
         currentUserTier = data.internal_tier || 'basic';
+        
+        // ON SAUVEGARDE L'INTERVALLE GLOBALEMENT
+        window.currentUpdateInterval = data.internal_interval; 
 
-        // 1. On s'assure que le badge est VISIBLE pour le propriétaire
         document.getElementById('tier-badge').classList.remove('hidden');
 
         renderProfile(data);
@@ -20,7 +22,6 @@ async function loadMyStats() {
         
         loadBrawlersGrid(data.brawlers);
         
-        // On déverrouille le graph
         unlockChart();
         loadHistoryChart(token, data.trophies);
 
