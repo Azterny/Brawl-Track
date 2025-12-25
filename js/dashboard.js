@@ -16,6 +16,9 @@ async function loadMyStats() {
         if(typeof setupIntervalUI === 'function') setupIntervalUI(data.internal_tier, data.internal_interval);
         
         loadBrawlersGrid(data.brawlers);
+        
+        // On charge le graph en mode "Connecté"
+        unlockChart();
         loadHistoryChart(token, data.trophies);
 
     } catch (e) { 
@@ -63,21 +66,11 @@ function sortBrawlers() {
     const criteria = document.getElementById('sort-brawlers').value;
     
     globalBrawlersList.sort((a, b) => {
-        // 1. TRI PRIMAIRE : Possession (Les possédés d'abord)
-        if (a.owned !== b.owned) {
-            return a.owned ? -1 : 1; 
-        }
-
-        // 2. TRI SECONDAIRE
-        if (criteria === 'trophies') {
-            return b.trophies - a.trophies;
-        } else if (criteria === 'name') {
-            return a.name.localeCompare(b.name);
-        } else {
-            return a.id - b.id; 
-        }
+        if (a.owned !== b.owned) return a.owned ? -1 : 1; 
+        if (criteria === 'trophies') return b.trophies - a.trophies;
+        else if (criteria === 'name') return a.name.localeCompare(b.name);
+        else return a.id - b.id; 
     });
-    
     renderBrawlersGrid();
 }
 
@@ -98,8 +91,27 @@ function renderBrawlersGrid() {
     });
 }
 
+// --- GESTION GRAPHIQUE (LOCK / UNLOCK) ---
+function lockChart() {
+    document.getElementById('chart-content-wrapper').classList.add('blur-content');
+    document.getElementById('chart-lock-overlay').classList.remove('hidden');
+}
+
+function unlockChart() {
+    document.getElementById('chart-content-wrapper').classList.remove('blur-content');
+    document.getElementById('chart-lock-overlay').classList.add('hidden');
+}
+
 // --- GRAPHIQUE & LOGIQUE AVANCÉE ---
 async function loadHistoryChart(token, liveTrophies) {
+    // Si pas de token (vue publique), on affiche le Lock Screen et on s'arrête
+    if (!token) {
+        lockChart();
+        // On charge un dummy chart vide juste pour l'esthétique du fond (optionnel)
+        fullHistoryData = [];
+        return;
+    }
+
     currentLiveTrophies = liveTrophies;
     try {
         const res = await fetch(`${API_URL}/api/history`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -107,8 +119,47 @@ async function loadHistoryChart(token, liveTrophies) {
         else fullHistoryData = [];
     } catch(e) { fullHistoryData = []; }
     
+    // On gère la visibilité des boutons AVANT d'afficher le graph
+    manageFilterButtons();
+    
     // Par défaut : Tout afficher
     updateChartFilter(0);
+}
+
+function manageFilterButtons() {
+    // 1. Gestion du bouton 1H (Premium uniquement)
+    const btn1h = document.getElementById('btn-1h');
+    if (currentUserTier === 'premium') btn1h.classList.remove('hidden');
+    else btn1h.classList.add('hidden');
+
+    // 2. Gestion des boutons temporels (Basé sur l'ancienneté des données)
+    // On cherche la date la plus vieille
+    let oldestDate = new Date();
+    if (fullHistoryData.length > 0) {
+        oldestDate = new Date(fullHistoryData[0].date);
+    }
+    
+    const now = new Date();
+    const diffHours = (now - oldestDate) / (1000 * 60 * 60);
+    const diffDays = diffHours / 24;
+
+    // Logique demandée :
+    // "7J" dispo si archive > 24H (mesure inférieure)
+    // "Mois" dispo si archive > 7J
+    // "Année" dispo si archive > 1 Mois (31J)
+    
+    const btn7d = document.getElementById('btn-7d');
+    const btn31d = document.getElementById('btn-31d');
+    const btn365d = document.getElementById('btn-365d');
+
+    if (diffHours > 24) btn7d.classList.remove('hidden');
+    else btn7d.classList.add('hidden');
+
+    if (diffDays > 7) btn31d.classList.remove('hidden');
+    else btn31d.classList.add('hidden');
+
+    if (diffDays > 31) btn365d.classList.remove('hidden');
+    else btn365d.classList.add('hidden');
 }
 
 function updateChartFilter(days) {
@@ -117,78 +168,76 @@ function updateChartFilter(days) {
 
     // 1. GESTION DES BOUTONS ACTIFS
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // Mapping ID boutons (0.042 = 1H environ)
     let btnId = 'btn-all';
-    if(days === 1) btnId = 'btn-24h';
-    if(days === 7) btnId = 'btn-7d';
-    if(days === 31) btnId = 'btn-31d';
-    if(days === 365) btnId = 'btn-365d';
+    if(days < 0.1) btnId = 'btn-1h';
+    else if(days === 1) btnId = 'btn-24h';
+    else if(days === 7) btnId = 'btn-7d';
+    else if(days === 31) btnId = 'btn-31d';
+    else if(days === 365) btnId = 'btn-365d';
+    
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // 2. FILTRAGE DES DONNÉES
+    // 2. FILTRAGE
     let data = [];
-    
-    // On clone les données pour ne pas toucher à l'original
     let rawData = [...fullHistoryData];
 
-    // Ajout du point "LIVE" actuel à la fin de la liste brute
     if (currentLiveTrophies) {
         rawData.push({ date: new Date().toISOString(), trophies: currentLiveTrophies });
     }
 
-    // Filtrage Temporel
     if (days > 0) {
         const limit = new Date(); 
-        limit.setDate(new Date().getDate() - days); // Recule de X jours
-        // Pour 24h (days=1), on peut être plus précis et reculer de 24h exactes
-        if(days === 1) limit.setHours(new Date().getHours() - 24);
-
+        if (days < 0.1) {
+            // Cas spécial 1H
+            limit.setMinutes(new Date().getMinutes() - 60);
+        } else if (days === 1) {
+            // Cas 24H
+            limit.setHours(new Date().getHours() - 24);
+        } else {
+            // Cas Jours classiques
+            limit.setDate(new Date().getDate() - days);
+        }
         data = rawData.filter(i => new Date(i.date) >= limit);
     } else {
-        data = rawData; // Tout
+        data = rawData; 
     }
 
     const dataset = data.map(h => ({ x: h.date, y: h.trophies }));
-    
     if(dataset.length === 0) return;
 
-    // 3. CALCUL DE LA VARIATION (+/-)
+    // 3. VARIATION
     const startVal = dataset[0].y;
     const endVal = dataset[dataset.length - 1].y;
     const diff = endVal - startVal;
     
     const varElem = document.getElementById('trophy-variation');
-    if (diff > 0) {
-        varElem.innerHTML = `<span style="color:#28a745">▲ +${diff}</span>`;
-    } else if (diff < 0) {
-        varElem.innerHTML = `<span style="color:#dc3545">▼ ${diff}</span>`;
-    } else {
-        varElem.innerHTML = `<span style="color:#888">= 0</span>`;
-    }
+    if (diff > 0) varElem.innerHTML = `<span style="color:#28a745">▲ +${diff}</span>`;
+    else if (diff < 0) varElem.innerHTML = `<span style="color:#dc3545">▼ ${diff}</span>`;
+    else varElem.innerHTML = `<span style="color:#888">= 0</span>`;
 
-    // 4. CONFIGURATION DU GRAPHIQUE (UNITÉS & COULEURS)
-    
-    // Unité de temps dynamique
+    // 4. CONFIG
     let timeUnit = 'day';
-    let timeFormat = 'dd/MM';
-    
-    if (days === 1) {
-        timeUnit = 'hour';
-        timeFormat = 'HH:mm';
-    } else if (days === 365 || days === 0) {
-        timeUnit = 'month';
-        timeFormat = 'MMM yy'; // Ex: "Dec 24"
+    let displayFmt = 'dd/MM';
+
+    // Ajustement précision selon la plage
+    if (days < 0.1) { 
+        timeUnit = 'minute'; // Très précis pour 1H
+        displayFmt = 'HH:mm';
+    } 
+    else if (days === 1) { 
+        timeUnit = 'hour'; 
+        displayFmt = 'HH:mm';
+    } 
+    else if (days === 365 || days === 0) { 
+        timeUnit = 'month'; 
+        displayFmt = 'MMM yy'; 
     }
 
-    // Couleurs des points : Tout Jaune, sauf le dernier en ROUGE
-    const pointColors = dataset.map((_, index) => {
-        return index === dataset.length - 1 ? '#ff5555' : '#ffce00';
-    });
-    
-    // Tailles des points : Le dernier un peu plus gros
-    const pointRadiuses = dataset.map((_, index) => {
-        return index === dataset.length - 1 ? 5 : 3;
-    });
+    const pointColors = dataset.map((_, i) => i === dataset.length - 1 ? '#ff5555' : '#ffce00');
+    const pointRadiuses = dataset.map((_, i) => i === dataset.length - 1 ? 5 : 3);
 
     const ctx = canvas.getContext('2d');
     if(window.myChart) window.myChart.destroy();
@@ -204,8 +253,6 @@ function updateChartFilter(days) {
                 borderWidth: 2, 
                 tension: 0.2, 
                 fill: true, 
-                
-                // Configuration dynamique des points
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointColors,
                 pointRadius: pointRadiuses,
@@ -215,41 +262,17 @@ function updateChartFilter(days) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { 
-                legend: {display:false},
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: function(context) {
-                            return '🏆 ' + context.parsed.y;
-                        }
-                    }
-                }
-            },
+            plugins: { legend: {display:false} },
             scales: { 
                 x: { 
                     type: 'time', 
                     time: { 
                         unit: timeUnit, 
-                        displayFormats: { 
-                            hour: 'HH:mm',
-                            day: 'dd/MM',
-                            month: 'MMM yyyy'
-                        },
-                        tooltipFormat: 'dd/MM/yyyy HH:mm' // Format complet au survol
+                        displayFormats: { minute: 'HH:mm', hour: 'HH:mm', day: 'dd/MM', month: 'MMM yy' } 
                     }, 
                     grid: {color:'#333'} 
                 }, 
-                y: { 
-                    grid: {color:'#333'},
-                    ticks: { color: '#888' }
-                } 
-            },
-            interaction: {
-                mode: 'nearest',
-                axis: 'x',
-                intersect: false
+                y: { grid: {color:'#333'}, ticks: { color: '#888' } } 
             }
         }
     });
@@ -262,8 +285,15 @@ async function loadPublicProfile(tag) {
     try {
         const res = await fetch(`${API_URL}/api/public/player/${tag}`);
         const data = await res.json();
+        
+        // Mode public = Grade Basic par défaut pour l'affichage
+        currentUserTier = 'basic'; 
         renderProfile(data);
         loadBrawlersGrid(data.brawlers);
+        
+        // Pas de token -> loadHistoryChart(null) -> Graphique verrouillé
+        loadHistoryChart(null, data.trophies);
+
     } catch (e) { alert("Joueur introuvable"); }
 }
 
