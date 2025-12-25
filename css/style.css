@@ -390,3 +390,66 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
     .header-bar { padding-bottom: 10px; margin-bottom: 15px; }
     .landing-column { min-width: 100%; } /* Force pleine largeur sur petit mobile */
 }
+
+/* =========================================
+   8. PAGE D'ACCUEIL (SPLIT LAYOUT)
+   ========================================= */
+
+/* Conteneur global qui englobe Login + Events */
+.landing-wrapper {
+    display: flex;
+    flex-wrap: wrap; /* Permet de passer à la ligne sur mobile */
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 10px;
+}
+
+/* Les deux colonnes (Login & Events) */
+.landing-column {
+    flex: 1;
+    min-width: 300px; /* Largeur min avant de passer en dessous */
+    
+    /* On réutilise le style .container mais on gère les marges ici */
+    background: #1e1e1e;
+    border-radius: 20px;
+    border: 1px solid #333;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    padding: 25px;
+    text-align: center;
+}
+
+/* CARTE ÉVÉNEMENT */
+.event-card {
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    position: relative;
+    text-align: left;
+    transition: transform 0.2s;
+}
+.event-card:hover { transform: scale(1.02); border-color: #555; }
+
+/* Bandeau couleur du mode */
+.event-header {
+    padding: 8px 12px;
+    background: linear-gradient(90deg, #333, #222);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    color: #ffce00;
+}
+
+/* Détails Map */
+.event-body {
+    padding: 12px;
+}
+.map-name { font-size: 1.1em; font-weight: bold; color: white; }
+.event-timer { font-size: 0.8em; color: #888; margin-top: 5px; }
