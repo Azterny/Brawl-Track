@@ -46,24 +46,39 @@
             
             <div id="stats-area" class="stats-grid"></div>
 
-            <div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <h3 style="margin: 0;">📈 Progression</h3>
-                        <span id="trophy-variation" style="font-weight: bold; font-size: 1em;"></span>
+            <div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px; position: relative;">
+                
+                <div id="chart-lock-overlay" class="hidden">
+                    <div class="lock-overlay">
+                        <div class="lock-message">
+                            <h3>📊 Statistiques Détaillées</h3>
+                            <p>Connecte-toi pour accéder à l'historique et aux graphiques.</p>
+                            <button onclick="window.location.href='index.html'" style="width: auto; background: #ffce00; color: black; margin:0;">Se Connecter</button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="chart-filters">
-                    <button id="btn-24h" onclick="updateChartFilter(1)" class="filter-btn">24H</button>
-                    <button id="btn-7d" onclick="updateChartFilter(7)" class="filter-btn">7J</button>
-                    <button id="btn-31d" onclick="updateChartFilter(31)" class="filter-btn">Mois</button>
-                    <button id="btn-365d" onclick="updateChartFilter(365)" class="filter-btn">1 An</button>
-                    <button id="btn-all" onclick="updateChartFilter(0)" class="filter-btn active">Tout</button>
-                </div>
+                <div id="chart-content-wrapper">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <h3 style="margin: 0;">📈 Progression</h3>
+                            <span id="trophy-variation" style="font-weight: bold; font-size: 1em;"></span>
+                        </div>
+                    </div>
 
-                <div style="position: relative; height: 300px; width: 100%;">
-                    <canvas id="trophyChart"></canvas>
+                    <div class="chart-filters">
+                        <button id="btn-1h" onclick="updateChartFilter(0.042)" class="filter-btn hidden">1H</button>
+                        
+                        <button id="btn-24h" onclick="updateChartFilter(1)" class="filter-btn">24H</button>
+                        <button id="btn-7d" onclick="updateChartFilter(7)" class="filter-btn hidden">7J</button>
+                        <button id="btn-31d" onclick="updateChartFilter(31)" class="filter-btn hidden">Mois</button>
+                        <button id="btn-365d" onclick="updateChartFilter(365)" class="filter-btn hidden">1 An</button>
+                        <button id="btn-all" onclick="updateChartFilter(0)" class="filter-btn active">Tout</button>
+                    </div>
+
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="trophyChart"></canvas>
+                    </div>
                 </div>
             </div>
 
