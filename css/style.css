@@ -34,7 +34,7 @@ h1, h2, h3 {
 }
 
 /* =========================================
-   2. EN-TÊTE & MENU BURGER
+   2. EN-TÊTE & MENU BURGER (OPTIMISÉ MOBILE)
    ========================================= */
 .header-bar { 
     display: flex; 
@@ -46,6 +46,39 @@ h1, h2, h3 {
     position: relative;
 }
 
+/* Conteneur du nom et du badge (Gestion de l'espace) */
+.header-bar > div:first-child {
+    min-width: 0; /* Permet au texte de rétrécir dans un Flexbox */
+    flex: 1;      /* Prend tout l'espace disponible à gauche */
+    margin-right: 15px; /* Espace avant le menu burger */
+}
+
+/* Ligne flex contenant H1 + Badge */
+.header-bar > div:first-child > div {
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    flex-wrap: nowrap; /* Interdit le retour à la ligne */
+}
+
+/* Le Nom du Joueur : Police Fluide */
+#player-name {
+    margin: 0;
+    /* Min: 1.2rem | Idéal: 5% de la largeur d'écran | Max: 2.2rem */
+    font-size: clamp(1.2rem, 5vw, 2.2rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+    line-height: 1.2;
+}
+
+/* Le Badge ne doit pas être écrasé */
+#tier-badge {
+    flex-shrink: 0; 
+}
+
+/* Menu Burger */
 .burger-icon { 
     font-size: 2rem; 
     cursor: pointer; 
@@ -97,6 +130,14 @@ h1, h2, h3 {
 .menu-item.logout:hover { background: #3a1a1a; }
 .menu-item-divider { height: 5px; background: #1a1a1a; }
 
+/* Ajustement spécifique très petits écrans */
+@media (max-width: 480px) {
+    .header-bar {
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+}
+
 /* =========================================
    3. ÉLÉMENTS UI (Badges, Inputs, Boutons)
    ========================================= */
@@ -141,7 +182,6 @@ input:focus, select:focus {
 }
 
 /* BOUTONS GENERIQUES (Style 3D) */
-/* ATTENTION : C'est cette règle qui causait le bug, nous allons l'écraser plus bas pour les filtres */
 button { 
     width: 100%; 
     padding: 12px; 
@@ -177,7 +217,7 @@ button:active {
 .btn-danger:active { box-shadow: 0 0 0 #bd2130; }
 
 /* =========================================
-   4. FILTRES GRAPHIQUE (CORRECTION MOBILE)
+   4. FILTRES GRAPHIQUE (SCROLL MOBILE)
    ========================================= */
 .chart-filters {
     display: flex !important;        /* Force le Flexbox */
@@ -304,7 +344,7 @@ button:active {
 .hidden { display: none !important; }
 
 /* =========================================
-   7. OVERLAYS & LOCKS
+   7. OVERLAYS & VERROUILLAGE GRAPHIQUE
    ========================================= */
 .chart-locked-container {
     position: relative;
