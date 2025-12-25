@@ -59,23 +59,22 @@ async function loadBrawlersGrid(playerBrawlers) {
     sortBrawlers();
 }
 
-// === C'EST ICI QUE LA MAGIE OPÈRE ===
 function sortBrawlers() {
     const criteria = document.getElementById('sort-brawlers').value;
     
     globalBrawlersList.sort((a, b) => {
         // 1. TRI PRIMAIRE : Possession (Les possédés d'abord)
         if (a.owned !== b.owned) {
-            return a.owned ? -1 : 1; // Si a est possédé, il passe devant b
+            return a.owned ? -1 : 1; 
         }
 
-        // 2. TRI SECONDAIRE : Critère choisi (si statut de possession identique)
+        // 2. TRI SECONDAIRE
         if (criteria === 'trophies') {
             return b.trophies - a.trophies;
         } else if (criteria === 'name') {
             return a.name.localeCompare(b.name);
         } else {
-            return a.id - b.id; // Par défaut : ID
+            return a.id - b.id; 
         }
     });
     
@@ -99,7 +98,7 @@ function renderBrawlersGrid() {
     });
 }
 
-// --- GRAPHIQUE ---
+// --- GRAPHIQUE & LOGIQUE AVANCÉE ---
 async function loadHistoryChart(token, liveTrophies) {
     currentLiveTrophies = liveTrophies;
     try {
@@ -107,6 +106,8 @@ async function loadHistoryChart(token, liveTrophies) {
         if(res.ok) fullHistoryData = await res.json();
         else fullHistoryData = [];
     } catch(e) { fullHistoryData = []; }
+    
+    // Par défaut : Tout afficher
     updateChartFilter(0);
 }
 
@@ -114,17 +115,80 @@ function updateChartFilter(days) {
     const canvas = document.getElementById('trophyChart');
     if (!canvas) return;
 
-    let data = [...fullHistoryData];
+    // 1. GESTION DES BOUTONS ACTIFS
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    let btnId = 'btn-all';
+    if(days === 1) btnId = 'btn-24h';
+    if(days === 7) btnId = 'btn-7d';
+    if(days === 31) btnId = 'btn-31d';
+    if(days === 365) btnId = 'btn-365d';
+    const activeBtn = document.getElementById(btnId);
+    if(activeBtn) activeBtn.classList.add('active');
+
+    // 2. FILTRAGE DES DONNÉES
+    let data = [];
+    
+    // On clone les données pour ne pas toucher à l'original
+    let rawData = [...fullHistoryData];
+
+    // Ajout du point "LIVE" actuel à la fin de la liste brute
+    if (currentLiveTrophies) {
+        rawData.push({ date: new Date().toISOString(), trophies: currentLiveTrophies });
+    }
+
+    // Filtrage Temporel
     if (days > 0) {
         const limit = new Date(); 
-        limit.setDate(new Date().getDate() - days);
-        data = fullHistoryData.filter(i => new Date(i.date) >= limit);
+        limit.setDate(new Date().getDate() - days); // Recule de X jours
+        // Pour 24h (days=1), on peut être plus précis et reculer de 24h exactes
+        if(days === 1) limit.setHours(new Date().getHours() - 24);
+
+        data = rawData.filter(i => new Date(i.date) >= limit);
+    } else {
+        data = rawData; // Tout
     }
 
     const dataset = data.map(h => ({ x: h.date, y: h.trophies }));
-    if (currentLiveTrophies) dataset.push({ x: new Date().toISOString(), y: currentLiveTrophies });
     
     if(dataset.length === 0) return;
+
+    // 3. CALCUL DE LA VARIATION (+/-)
+    const startVal = dataset[0].y;
+    const endVal = dataset[dataset.length - 1].y;
+    const diff = endVal - startVal;
+    
+    const varElem = document.getElementById('trophy-variation');
+    if (diff > 0) {
+        varElem.innerHTML = `<span style="color:#28a745">▲ +${diff}</span>`;
+    } else if (diff < 0) {
+        varElem.innerHTML = `<span style="color:#dc3545">▼ ${diff}</span>`;
+    } else {
+        varElem.innerHTML = `<span style="color:#888">= 0</span>`;
+    }
+
+    // 4. CONFIGURATION DU GRAPHIQUE (UNITÉS & COULEURS)
+    
+    // Unité de temps dynamique
+    let timeUnit = 'day';
+    let timeFormat = 'dd/MM';
+    
+    if (days === 1) {
+        timeUnit = 'hour';
+        timeFormat = 'HH:mm';
+    } else if (days === 365 || days === 0) {
+        timeUnit = 'month';
+        timeFormat = 'MMM yy'; // Ex: "Dec 24"
+    }
+
+    // Couleurs des points : Tout Jaune, sauf le dernier en ROUGE
+    const pointColors = dataset.map((_, index) => {
+        return index === dataset.length - 1 ? '#ff5555' : '#ffce00';
+    });
+    
+    // Tailles des points : Le dernier un peu plus gros
+    const pointRadiuses = dataset.map((_, index) => {
+        return index === dataset.length - 1 ? 5 : 3;
+    });
 
     const ctx = canvas.getContext('2d');
     if(window.myChart) window.myChart.destroy();
@@ -133,18 +197,59 @@ function updateChartFilter(days) {
         type: 'line',
         data: { 
             datasets: [{ 
-                label: 'Trophées', data: dataset, 
-                borderColor: '#ffce00', backgroundColor: 'rgba(255, 206, 0, 0.1)', 
-                borderWidth: 2, tension: 0.1, fill: true, pointRadius: 3 
+                label: 'Trophées', 
+                data: dataset, 
+                borderColor: '#ffce00', 
+                backgroundColor: 'rgba(255, 206, 0, 0.1)', 
+                borderWidth: 2, 
+                tension: 0.2, 
+                fill: true, 
+                
+                // Configuration dynamique des points
+                pointBackgroundColor: pointColors,
+                pointBorderColor: pointColors,
+                pointRadius: pointRadiuses,
+                pointHoverRadius: 7
             }] 
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: {display:false} },
+            plugins: { 
+                legend: {display:false},
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return '🏆 ' + context.parsed.y;
+                        }
+                    }
+                }
+            },
             scales: { 
-                x: { type: 'time', time: { unit: 'day', displayFormats: { day: 'dd/MM' } }, grid: {color:'#333'} }, 
-                y: { grid: {color:'#333'} } 
+                x: { 
+                    type: 'time', 
+                    time: { 
+                        unit: timeUnit, 
+                        displayFormats: { 
+                            hour: 'HH:mm',
+                            day: 'dd/MM',
+                            month: 'MMM yyyy'
+                        },
+                        tooltipFormat: 'dd/MM/yyyy HH:mm' // Format complet au survol
+                    }, 
+                    grid: {color:'#333'} 
+                }, 
+                y: { 
+                    grid: {color:'#333'},
+                    ticks: { color: '#888' }
+                } 
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
             }
         }
     });
