@@ -11,12 +11,14 @@ async function loadMyStats() {
         const data = await res.json();
         currentUserTier = data.internal_tier || 'basic';
         
-        // ON SAUVEGARDE L'INTERVALLE GLOBALEMENT
+        // Sauvegarde intervalle pour le timer
         window.currentUpdateInterval = data.internal_interval; 
 
-        document.getElementById('tier-badge').classList.remove('hidden');
-
         renderProfile(data);
+        
+        // MODE CONNECTÉ : On affiche le badge
+        const badge = document.getElementById('tier-badge');
+        if(badge) badge.classList.remove('hidden');
         
         if(typeof setupIntervalUI === 'function') setupIntervalUI(data.internal_tier, data.internal_interval);
         
@@ -32,9 +34,34 @@ async function loadMyStats() {
 }
 
 function renderProfile(data) {
-    document.getElementById('player-name').innerText = data.name;
+    const nameElem = document.getElementById('player-name');
+    nameElem.innerText = data.name;
+
+    // --- GESTION COULEUR PSEUDO ---
+    if (data.nameColor) {
+        // Format reçu API : "0xFF123456" (ARGB)
+        // On veut CSS : "#123456"
+        let color = data.nameColor;
+        if (color.startsWith('0x')) {
+            // On retire '0x' (2 chars) + 'FF' (2 chars d'opacité) = 4 chars
+            // Si la chaîne est assez longue (ex: 0xFFRRGGBB)
+            if (color.length >= 10) {
+                color = '#' + color.slice(4);
+            } else {
+                color = '#' + color.slice(2); // Cas rare sans alpha
+            }
+        }
+        nameElem.style.color = color;
+        // Petit effet néon avec la couleur du joueur
+        nameElem.style.textShadow = `0 0 15px ${color}66`; 
+    } else {
+        nameElem.style.color = '#ffffff';
+        nameElem.style.textShadow = 'none';
+    }
+
     document.getElementById('player-tag').innerText = data.tag;
     
+    // Note : Le badge est recréé ici, mais masqué/affiché ensuite par la fonction appelante
     const badge = document.getElementById('tier-badge');
     badge.className = `badge badge-${currentUserTier}`;
     badge.innerText = currentUserTier === 'subscriber' ? 'Abonné' : currentUserTier;
@@ -75,6 +102,7 @@ function sortBrawlers() {
         else if (criteria === 'name') return a.name.localeCompare(b.name);
         else return a.id - b.id; 
     });
+    
     renderBrawlersGrid();
 }
 
@@ -97,13 +125,17 @@ function renderBrawlersGrid() {
 
 // --- GESTION GRAPHIQUE (LOCK / UNLOCK) ---
 function lockChart() {
-    document.getElementById('chart-content-wrapper').classList.add('blur-content');
-    document.getElementById('chart-lock-overlay').classList.remove('hidden');
+    const content = document.getElementById('chart-content-wrapper');
+    const overlay = document.getElementById('chart-lock-overlay');
+    if(content) content.classList.add('blur-content');
+    if(overlay) overlay.classList.remove('hidden');
 }
 
 function unlockChart() {
-    document.getElementById('chart-content-wrapper').classList.remove('blur-content');
-    document.getElementById('chart-lock-overlay').classList.add('hidden');
+    const content = document.getElementById('chart-content-wrapper');
+    const overlay = document.getElementById('chart-lock-overlay');
+    if(content) content.classList.remove('blur-content');
+    if(overlay) overlay.classList.add('hidden');
 }
 
 // --- GRAPHIQUE & LOGIQUE AVANCÉE ---
@@ -124,29 +156,21 @@ async function loadHistoryChart(token, liveTrophies) {
     manageFilterButtons();
     updateChartFilter(0);
 
-    // --- MISE A JOUR DU TIMER ---
-    // On prend la dernière date connue dans l'historique
     let lastDate = null;
     if (fullHistoryData.length > 0) {
-        // Le tableau est souvent trié ASC (le plus vieux en premier), donc le dernier est à la fin
-        // Mais vérifions ton API : ORDER BY recorded_at ASC
         lastDate = fullHistoryData[fullHistoryData.length - 1].date;
     }
     
-    // On appelle la fonction du fichier settings.js
     if(typeof updateNextArchiveTimer === 'function' && window.currentUpdateInterval) {
         updateNextArchiveTimer(lastDate, window.currentUpdateInterval);
     }
 }
 
 function manageFilterButtons() {
-    // 1. Gestion du bouton 1H (Premium uniquement)
     const btn1h = document.getElementById('btn-1h');
     if (currentUserTier === 'premium') btn1h.classList.remove('hidden');
     else btn1h.classList.add('hidden');
 
-    // 2. Gestion des boutons temporels (Basé sur l'ancienneté des données)
-    // On cherche la date la plus vieille
     let oldestDate = new Date();
     if (fullHistoryData.length > 0) {
         oldestDate = new Date(fullHistoryData[0].date);
@@ -156,11 +180,6 @@ function manageFilterButtons() {
     const diffHours = (now - oldestDate) / (1000 * 60 * 60);
     const diffDays = diffHours / 24;
 
-    // Logique demandée :
-    // "7J" dispo si archive > 24H (mesure inférieure)
-    // "Mois" dispo si archive > 7J
-    // "Année" dispo si archive > 1 Mois (31J)
-    
     const btn7d = document.getElementById('btn-7d');
     const btn31d = document.getElementById('btn-31d');
     const btn365d = document.getElementById('btn-365d');
@@ -179,10 +198,8 @@ function updateChartFilter(days) {
     const canvas = document.getElementById('trophyChart');
     if (!canvas) return;
 
-    // 1. GESTION DES BOUTONS ACTIFS
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     
-    // Mapping ID boutons (0.042 = 1H environ)
     let btnId = 'btn-all';
     if(days < 0.1) btnId = 'btn-1h';
     else if(days === 1) btnId = 'btn-24h';
@@ -193,7 +210,6 @@ function updateChartFilter(days) {
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // 2. FILTRAGE
     let data = [];
     let rawData = [...fullHistoryData];
 
@@ -204,13 +220,10 @@ function updateChartFilter(days) {
     if (days > 0) {
         const limit = new Date(); 
         if (days < 0.1) {
-            // Cas spécial 1H
             limit.setMinutes(new Date().getMinutes() - 60);
         } else if (days === 1) {
-            // Cas 24H
             limit.setHours(new Date().getHours() - 24);
         } else {
-            // Cas Jours classiques
             limit.setDate(new Date().getDate() - days);
         }
         data = rawData.filter(i => new Date(i.date) >= limit);
@@ -221,33 +234,23 @@ function updateChartFilter(days) {
     const dataset = data.map(h => ({ x: h.date, y: h.trophies }));
     if(dataset.length === 0) return;
 
-    // 3. VARIATION
     const startVal = dataset[0].y;
     const endVal = dataset[dataset.length - 1].y;
     const diff = endVal - startVal;
     
     const varElem = document.getElementById('trophy-variation');
-    if (diff > 0) varElem.innerHTML = `<span style="color:#28a745">▲ +${diff}</span>`;
-    else if (diff < 0) varElem.innerHTML = `<span style="color:#dc3545">▼ ${diff}</span>`;
-    else varElem.innerHTML = `<span style="color:#888">= 0</span>`;
+    if(varElem) {
+        if (diff > 0) varElem.innerHTML = `<span style="color:#28a745">▲ +${diff}</span>`;
+        else if (diff < 0) varElem.innerHTML = `<span style="color:#dc3545">▼ ${diff}</span>`;
+        else varElem.innerHTML = `<span style="color:#888">= 0</span>`;
+    }
 
-    // 4. CONFIG
     let timeUnit = 'day';
     let displayFmt = 'dd/MM';
 
-    // Ajustement précision selon la plage
-    if (days < 0.1) { 
-        timeUnit = 'minute'; // Très précis pour 1H
-        displayFmt = 'HH:mm';
-    } 
-    else if (days === 1) { 
-        timeUnit = 'hour'; 
-        displayFmt = 'HH:mm';
-    } 
-    else if (days === 365 || days === 0) { 
-        timeUnit = 'month'; 
-        displayFmt = 'MMM yy'; 
-    }
+    if (days < 0.1) { timeUnit = 'minute'; displayFmt = 'HH:mm'; } 
+    else if (days === 1) { timeUnit = 'hour'; displayFmt = 'HH:mm'; } 
+    else if (days === 365 || days === 0) { timeUnit = 'month'; displayFmt = 'MMM yy'; }
 
     const pointColors = dataset.map((_, i) => i === dataset.length - 1 ? '#ff5555' : '#ffce00');
     const pointRadiuses = dataset.map((_, i) => i === dataset.length - 1 ? 5 : 3);
@@ -299,12 +302,14 @@ async function loadPublicProfile(tag) {
         const res = await fetch(`${API_URL}/api/public/player/${tag}`);
         const data = await res.json();
         
+        // Mode public = Grade Basic par défaut pour le style, mais on va le cacher
         currentUserTier = 'basic'; 
-        
-        // 2. On MASQUE le badge pour les visiteurs
-        document.getElementById('tier-badge').classList.add('hidden');
-
         renderProfile(data);
+
+        // MODE PUBLIC : On FORCE le masquage du grade (overwrite le renderProfile)
+        const badge = document.getElementById('tier-badge');
+        if(badge) badge.classList.add('hidden');
+        
         loadBrawlersGrid(data.brawlers);
         
         // Graphique verrouillé
