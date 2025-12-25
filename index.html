@@ -9,44 +9,131 @@
 </head>
 <body>
 
-    <div class="container">
-        <h1 style="font-size: 3em; margin-bottom: 10px;">BRAWL TRACK</h1>
-        <p style="color: #888; margin-bottom: 30px;">Suivi de statistiques & Historique</p>
-        
-        <div style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 25px;">
-            <h3 style="margin-top: 0; color: #fff;">🔎 Recherche Rapide</h3>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="public-tag" placeholder="#TAG du joueur">
-                <button onclick="publicSearch()" style="width: auto; margin:0; background: #444; color: white;">Go</button>
+    <div style="text-align: center; margin-top: 40px;">
+        <h1 style="font-size: 3em; margin-bottom: 10px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">BRAWL TRACK</h1>
+        <p style="color: #888;">Suivi de statistiques & Historique</p>
+    </div>
+
+    <div class="landing-wrapper">
+
+        <div class="landing-column">
+            
+            <div style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 25px;">
+                <h3 style="margin-top: 0; color: #fff;">🔎 Recherche Rapide</h3>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="public-tag" placeholder="#TAG du joueur">
+                    <button onclick="publicSearch()" style="width: auto; margin:0; background: #444; color: white;">Go</button>
+                </div>
+            </div>
+
+            <div id="login-form">
+                <h2 style="color: #ffce00;">Connexion</h2>
+                <input type="text" id="login-username" placeholder="Nom d'utilisateur">
+                <input type="password" id="login-password" placeholder="Mot de passe" onkeyup="if(event.key === 'Enter') login()">
+                <button onclick="login()">SE CONNECTER</button>
+                <p style="margin-top: 15px; color: #888;">
+                    Pas de compte ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Créer un compte</a>
+                </p>
+            </div>
+
+            <div id="register-form" class="hidden">
+                <h2 style="color: #ffce00;">Créer un compte</h2>
+                <input type="text" id="reg-username" placeholder="Pseudo">
+                <input type="text" id="reg-tag" placeholder="Ton Tag Brawl Stars (#...)" style="border: 1px solid #ffce00;">
+                <input type="password" id="reg-password" placeholder="Mot de passe">
+                <button onclick="register()" style="background: #28a745;">S'INSCRIRE</button>
+                <p style="margin-top: 15px; color: #888;">
+                    Déjà inscrit ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Se connecter</a>
+                </p>
+            </div>
+
+            <p id="message" style="color: #ff5555; margin-top: 15px; font-weight: bold;"></p>
+        </div>
+
+        <div class="landing-column">
+            <h3 style="margin-top: 0; margin-bottom: 20px;">🔥 En Rotation</h3>
+            <div id="events-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                <div style="color: #888; padding: 20px;">Chargement des événements...</div>
             </div>
         </div>
 
-        <div id="login-form">
-            <h2 style="color: #ffce00;">Connexion</h2>
-            <input type="text" id="login-username" placeholder="Nom d'utilisateur">
-            <input type="password" id="login-password" placeholder="Mot de passe">
-            <button onclick="login()">SE CONNECTER</button>
-            <p style="margin-top: 15px; color: #888;">
-                Pas de compte ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Créer un compte</a>
-            </p>
-        </div>
-
-        <div id="register-form" class="hidden">
-            <h2 style="color: #ffce00;">Créer un compte</h2>
-            <input type="text" id="reg-username" placeholder="Pseudo">
-            <input type="text" id="reg-tag" placeholder="Ton Tag Brawl Stars (#...)" style="border: 1px solid #ffce00;">
-            <input type="password" id="reg-password" placeholder="Mot de passe">
-            <button onclick="register()" style="background: #28a745;">S'INSCRIRE</button>
-            <p style="margin-top: 15px; color: #888;">
-                Déjà inscrit ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Se connecter</a>
-            </p>
-        </div>
-
-        <p id="message" style="color: #ff5555; margin-top: 15px; font-weight: bold;"></p>
     </div>
 
     <script src="js/config.js"></script>
-    <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script> </body>
+    
+    <script>
+        // --- LOGIQUE SPECIFIQUE ACCUEIL ---
+
+        // 1. Recherche Publique
+        function publicSearch() {
+            const tag = document.getElementById('public-tag').value.trim().replace('#', '');
+            if(tag) window.location.href = `dashboard.html?tag=${tag}`;
+        }
+
+        // 2. Vérif si déjà connecté
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Optionnel : Redirection auto ou juste afficher un bouton "Accéder au Dashboard"
+                document.getElementById('login-form').innerHTML = `
+                    <h2 style="color: #28a745;">Bon retour !</h2>
+                    <p>Tu es déjà connecté.</p>
+                    <button onclick="window.location.href='dashboard.html'">ACCÉDER AU DASHBOARD</button>
+                    <button onclick="logout()" style="background: #444; margin-top: 10px;">Se Déconnecter</button>
+                `;
+            }
+            loadEvents();
+        };
+
+        // 3. Charger les événements
+        async function loadEvents() {
+            const container = document.getElementById('events-list');
+            try {
+                const res = await fetch(`${API_URL}/api/events`);
+                if(!res.ok) throw new Error("Erreur API");
+                const events = await res.json();
+
+                container.innerHTML = '';
+
+                // On prend les 5 premiers événements pour ne pas surcharger
+                events.slice(0, 6).forEach(evt => {
+                    const mode = evt.event.mode;
+                    const map = evt.event.map;
+                    const endTime = new Date(evt.endTime);
+                    const now = new Date();
+                    
+                    // Calcul temps restant
+                    const diffMs = endTime - now;
+                    const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+                    // Traduction (Simplifiée)
+                    const modeName = mode.charAt(0).toUpperCase() + mode.slice(1).replace(/([A-Z])/g, ' $1').trim();
+
+                    const html = `
+                        <div class="event-card">
+                            <div class="event-header">
+                                <span>${modeName}</span>
+                                <span style="font-size:0.8em; opacity:0.8;">Fin : ${diffHrs}h ${diffMins}m</span>
+                            </div>
+                            <div class="event-body">
+                                <div class="map-name">${map}</div>
+                                <div class="event-timer">
+                                    <span style="color:${diffHrs < 1 ? '#ff5555' : '#28a745'}">
+                                        ● ${diffHrs < 1 ? 'Bientôt terminé' : 'Actif'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += html;
+                });
+
+            } catch(e) {
+                container.innerHTML = `<div style="color:#ff5555">Impossible de charger les événements.</div>`;
+            }
+        }
+    </script>
+</body>
 </html>
