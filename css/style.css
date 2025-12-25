@@ -8,6 +8,7 @@ body {
     margin: 0; 
     padding: 0;
     min-height: 100vh;
+    overflow-x: hidden; /* Évite le scroll horizontal indésirable */
 }
 
 h1, h2, h3 { 
@@ -17,21 +18,30 @@ h1, h2, h3 {
     letter-spacing: 1px;
 }
 
+/* Liens */
+a { text-decoration: none; transition: 0.2s; }
+a:hover { text-decoration: underline; }
+
+/* Conteneur Standard (Login / Petit Format) */
 .container {
     padding: 25px;
-    max-width: 400px; /* Login size */
+    max-width: 400px; 
     margin: 40px auto;
     background: #1e1e1e;
     border-radius: 20px;
     text-align: center;
     border: 1px solid #333;
     box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-    transition: transform 0.3s ease;
 }
 
+/* Conteneur Large (Dashboard) */
 .container.wide { 
-    max-width: 900px; /* Dashboard size */
+    max-width: 900px; 
 }
+
+/* Utilitaires */
+.hidden { display: none !important; }
+
 
 /* =========================================
    2. EN-TÊTE & MENU BURGER (OPTIMISÉ MOBILE)
@@ -46,26 +56,25 @@ h1, h2, h3 {
     position: relative;
 }
 
-/* Conteneur du nom et du badge (Gestion de l'espace) */
+/* Gestion de l'espace Nom + Badge */
 .header-bar > div:first-child {
-    min-width: 0; /* Permet au texte de rétrécir dans un Flexbox */
-    flex: 1;      /* Prend tout l'espace disponible à gauche */
-    margin-right: 15px; /* Espace avant le menu burger */
+    min-width: 0; 
+    flex: 1;      
+    margin-right: 15px; 
 }
 
-/* Ligne flex contenant H1 + Badge */
+/* Ligne flex Nom + Badge */
 .header-bar > div:first-child > div {
     display: flex; 
     align-items: center; 
     gap: 10px;
-    flex-wrap: nowrap; /* Interdit le retour à la ligne */
+    flex-wrap: nowrap; 
 }
 
-/* Le Nom du Joueur : Police Fluide */
+/* Nom du Joueur : Police Fluide (Responsive) */
 #player-name {
     margin: 0;
-    /* Min: 1.2rem | Idéal: 5% de la largeur d'écran | Max: 2.2rem */
-    font-size: clamp(1.2rem, 5vw, 2.2rem);
+    font-size: clamp(1.2rem, 5vw, 2.2rem); /* S'adapte à la largeur d'écran */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -73,9 +82,8 @@ h1, h2, h3 {
     line-height: 1.2;
 }
 
-/* Le Badge ne doit pas être écrasé */
 #tier-badge {
-    flex-shrink: 0; 
+    flex-shrink: 0; /* Le badge ne s'écrase jamais */
 }
 
 /* Menu Burger */
@@ -86,14 +94,10 @@ h1, h2, h3 {
     padding: 5px 10px; 
     transition: transform 0.2s ease, color 0.2s ease;
 }
-.burger-icon:hover { 
-    color: #ffce00; 
-    transform: scale(1.1); 
-}
-.burger-icon:active { 
-    transform: scale(0.95); 
-}
+.burger-icon:hover { color: #ffce00; transform: scale(1.1); }
+.burger-icon:active { transform: scale(0.95); }
 
+/* Menu Déroulant */
 .menu-overlay {
     position: absolute; 
     top: 60px; right: 0; 
@@ -106,7 +110,6 @@ h1, h2, h3 {
     z-index: 1000; 
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     overflow: hidden;
-    transform-origin: top right;
 }
 .menu-overlay.active { 
     display: flex; 
@@ -121,34 +124,22 @@ h1, h2, h3 {
     font-weight: bold; 
     transition: background 0.2s, padding-left 0.2s;
 }
-.menu-item:hover { 
-    background: #333; 
-    color: #ffce00; 
-    padding-left: 20px; 
-}
+.menu-item:hover { background: #333; color: #ffce00; padding-left: 20px; }
 .menu-item.logout { color: #ff5555; }
 .menu-item.logout:hover { background: #3a1a1a; }
 .menu-item-divider { height: 5px; background: #1a1a1a; }
 
-/* Ajustement spécifique très petits écrans */
-@media (max-width: 480px) {
-    .header-bar {
-        padding-bottom: 10px;
-        margin-bottom: 15px;
-    }
-}
 
 /* =========================================
    3. ÉLÉMENTS UI (Badges, Inputs, Boutons)
    ========================================= */
-/* BADGES */
+/* Badges */
 .badge { 
     padding: 4px 10px; 
     border-radius: 6px; 
     font-size: 0.75em; 
     font-weight: bold; 
     text-transform: uppercase; 
-    vertical-align: middle; 
     display: inline-block;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
@@ -161,7 +152,7 @@ h1, h2, h3 {
     box-shadow: 0 0 10px rgba(255, 206, 0, 0.3);
 }
 
-/* FORMULAIRES */
+/* Inputs & Selects */
 input, select { 
     width: 100%; 
     padding: 12px; 
@@ -178,10 +169,9 @@ input:focus, select:focus {
     outline: none; 
     border-color: #ffce00; 
     background: #333;
-    box-shadow: 0 0 0 3px rgba(255, 206, 0, 0.1);
 }
 
-/* BOUTONS GENERIQUES (Style 3D) */
+/* Boutons Style 3D */
 button { 
     width: 100%; 
     padding: 12px; 
@@ -194,18 +184,11 @@ button {
     margin-top: 10px; 
     position: relative;
     font-size: 1rem;
-    transition: all 0.1s ease;
     box-shadow: 0 4px 0 #b38f00; 
+    transition: all 0.1s ease;
 }
-button:hover { 
-    filter: brightness(1.1); 
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #b38f00;
-}
-button:active { 
-    transform: translateY(2px);
-    box-shadow: 0 0 0 #b38f00;
-}
+button:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 6px 0 #b38f00; }
+button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
 
 /* Variantes Boutons */
 .btn-save { background: linear-gradient(to bottom, #28a745, #218838); color: white; box-shadow: 0 4px 0 #1e7e34; }
@@ -216,22 +199,23 @@ button:active {
 .btn-danger:hover { box-shadow: 0 6px 0 #bd2130; }
 .btn-danger:active { box-shadow: 0 0 0 #bd2130; }
 
+
 /* =========================================
    4. FILTRES GRAPHIQUE (SCROLL MOBILE)
    ========================================= */
 .chart-filters {
-    display: flex !important;        /* Force le Flexbox */
-    flex-direction: row !important;  /* Force la ligne */
-    flex-wrap: nowrap !important;    /* INTERDIT le passage à la ligne */
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
     gap: 8px;
     margin-bottom: 15px;
     width: 100%;
     
-    /* Active le scroll horizontal */
+    /* Scroll Horizontal sur mobile */
     overflow-x: auto;
     -webkit-overflow-scrolling: touch; 
     
-    /* Masquer scrollbar */
+    /* Cache Scrollbar */
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding-bottom: 5px;
@@ -239,31 +223,18 @@ button:active {
 .chart-filters::-webkit-scrollbar { display: none; }
 
 .filter-btn {
-    /* ÉCRASEMENT DU STYLE BOUTON GLOBAL */
-    width: auto !important;          /* Force la largeur naturelle */
-    margin-top: 0 !important;        /* Supprime la marge haut */
-    flex: 0 0 auto;                  /* Interdit le rétrécissement */
-    
+    width: auto !important;
+    margin-top: 0 !important;
+    flex: 0 0 auto; /* Empêche rétrécissement */
     background: #333;
     color: #ccc;
     border: 1px solid #444;
     padding: 8px 16px;
     font-size: 0.85em;
     border-radius: 20px;
-    box-shadow: none !important;     /* Pas d'ombre 3D */
-    
-    white-space: nowrap;
-    transition: all 0.2s ease;
+    box-shadow: none !important;
 }
-
-.filter-btn:hover {
-    background: #444;
-    color: white;
-    transform: translateY(-1px);
-}
-
-.filter-btn:active { transform: translateY(0); }
-
+.filter-btn:hover { background: #444; color: white; transform: translateY(-1px); }
 .filter-btn.active {
     background: #ffce00;
     color: black;
@@ -272,91 +243,111 @@ button:active {
     box-shadow: 0 0 10px rgba(255, 206, 0, 0.4) !important;
 }
 
+
 /* =========================================
-   5. SECTIONS & GRILLES
+   5. SECTIONS & GRILLES DASHBOARD
    ========================================= */
 .view-section { display: none; }
 .view-section.active { display: block; animation: slideUpFade 0.4s ease-out; }
 
-/* STATS */
+/* Stats Grid */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
-
 .stat-card { 
     background: #252525; 
     padding: 15px; 
     border-radius: 12px; 
     border: 1px solid #333; 
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s;
 }
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-    border-color: #444;
-}
+.stat-card:hover { transform: translateY(-5px); border-color: #444; }
 .stat-value { font-size: 1.6em; font-weight: bold; margin-top: 5px; }
 
-/* BRAWLERS */
+/* Brawlers Grid */
 #brawlers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-
 .brawler-card { 
     background: #222; 
     border-radius: 8px; 
     padding: 6px; 
     text-align: center; 
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    position: relative;
     border: 1px solid transparent;
+    transition: all 0.3s;
 }
-.brawler-card:hover { 
-    transform: scale(1.1) translateY(-5px); 
-    z-index: 10; 
-    background: #333;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
-    border-color: #ffce00;
-}
+.brawler-card:hover { transform: scale(1.1) translateY(-5px); z-index: 10; background: #333; border-color: #ffce00; }
+.brawler-card[style*="grayscale"] { opacity: 0.5; filter: grayscale(100%); }
+.brawler-card[style*="grayscale"]:hover { filter: grayscale(0%); opacity: 1; }
 
-/* Brawlers Gris (Non possédés) */
-.brawler-card[style*="grayscale"] {
-    opacity: 0.5;
-    filter: grayscale(100%);
-    transition: all 0.3s ease;
-}
-.brawler-card[style*="grayscale"]:hover {
-    filter: grayscale(0%);
-    opacity: 1;
-    transform: scale(1.1);
-    z-index: 10;
-}
 
 /* =========================================
-   6. ANIMATIONS & UTILITAIRES
+   6. PAGE D'ACCUEIL (SPLIT LAYOUT)
    ========================================= */
-@keyframes slideUpFade {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Wrapper Global Flexbox */
+.landing-wrapper {
+    display: flex;
+    flex-wrap: wrap; /* Important pour le mobile */
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 10px;
 }
 
-@keyframes menuPop {
-    from { opacity: 0; transform: scale(0.8) translateY(-10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+/* Colonnes (Login & Events) */
+.landing-column {
+    flex: 1;
+    min-width: 300px; /* Si < 300px, ça passe à la ligne */
+    
+    background: #1e1e1e;
+    border-radius: 20px;
+    border: 1px solid #333;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+    padding: 25px;
+    text-align: center;
 }
 
-.hidden { display: none !important; }
+/* Carte Événement */
+.event-card {
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    position: relative;
+    text-align: left;
+    transition: transform 0.2s;
+}
+.event-card:hover { transform: scale(1.02); border-color: #555; }
+
+.event-header {
+    padding: 8px 12px;
+    background: linear-gradient(90deg, #333, #222);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    color: #ffce00;
+}
+
+.event-body { padding: 12px; }
+.map-name { font-size: 1.1em; font-weight: bold; color: white; }
+.event-timer { font-size: 0.8em; color: #888; margin-top: 5px; }
+
 
 /* =========================================
    7. OVERLAYS & VERROUILLAGE GRAPHIQUE
    ========================================= */
-.chart-locked-container {
-    position: relative;
-    overflow: hidden;
-}
+.chart-locked-container { position: relative; overflow: hidden; }
 
+/* Contenu flouté */
 .blur-content {
     filter: blur(5px);
-    pointer-events: none; /* Empêche de cliquer sur les boutons floutés */
+    pointer-events: none;
     user-select: none;
 }
 
+/* Message de verrouillage par dessus */
 .lock-overlay {
     position: absolute;
     top: 0; left: 0;
@@ -377,78 +368,25 @@ button:active {
     border-radius: 10px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
-
 .lock-message h3 { margin: 0 0 10px 0; color: white; }
 .lock-message p { margin: 0 0 15px 0; color: #aaa; }
 
 
 /* =========================================
-   8. PAGE D'ACCUEIL (SPLIT LAYOUT)
+   8. ANIMATIONS & MEDIA QUERIES
    ========================================= */
-
-/* Conteneur global qui englobe Login + Events */
-.landing-wrapper {
-    display: flex;
-    flex-wrap: wrap; /* Permet de passer à la ligne sur mobile */
-    justify-content: center;
-    align-items: flex-start;
-    gap: 20px;
-    max-width: 900px;
-    margin: 40px auto;
-    padding: 0 10px;
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Les deux colonnes (Login & Events) */
-.landing-column {
-    flex: 1;
-    min-width: 300px; /* Largeur min avant de passer en dessous */
-    
-    /* On réutilise le style .container mais on gère les marges ici */
-    background: #1e1e1e;
-    border-radius: 20px;
-    border: 1px solid #333;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-    padding: 25px;
-    text-align: center;
+@keyframes menuPop {
+    from { opacity: 0; transform: scale(0.8) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* CARTE ÉVÉNEMENT */
-.event-card {
-    background: #252525;
-    border: 1px solid #333;
-    border-radius: 10px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    position: relative;
-    text-align: left;
-    transition: transform 0.2s;
-}
-.event-card:hover { transform: scale(1.02); border-color: #555; }
-
-/* Bandeau couleur du mode */
-.event-header {
-    padding: 8px 12px;
-    background: linear-gradient(90deg, #333, #222);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: bold;
-    font-size: 0.9em;
-    text-transform: uppercase;
-    color: #ffce00;
-}
-
-.event-body {
-    padding: 12px;
-}
-.map-name { font-size: 1.1em; font-weight: bold; color: white; }
-.event-timer { font-size: 0.8em; color: #888; margin-top: 5px; }
-
-.new-event-badge {
-    background: #dc3545;
-    color: white;
-    font-size: 0.6em;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 5px;
+/* Ajustements Mobile Fins */
+@media (max-width: 480px) {
+    .header-bar { padding-bottom: 10px; margin-bottom: 15px; }
+    .landing-column { min-width: 100%; } /* Force pleine largeur sur petit mobile */
 }
