@@ -46,7 +46,7 @@
             
             <div id="stats-area" class="stats-grid"></div>
 
-<div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px; position: relative;">
+            <div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px; position: relative;">
                 
                 <div id="chart-lock-overlay" class="hidden">
                     <div class="lock-overlay">
@@ -73,6 +73,12 @@
                         <button id="btn-31d" onclick="setChartMode(31)" class="filter-btn hidden">Mois</button>
                         <button id="btn-365d" onclick="setChartMode(365)" class="filter-btn hidden">Année</button>
                         <button id="btn-all" onclick="setChartMode(0)" class="filter-btn active">Tout</button>
+                    </div>
+
+                    <div id="chart-nav-month" class="chart-nav-bar hidden" style="margin-bottom: 5px; background: #222; border:none; padding: 5px;">
+                        <button class="nav-arrow" onclick="navigateMonth(1)">❮❮</button>
+                        <span id="chart-month-label" style="color:#aaa; font-size:0.9em;">Mois</span>
+                        <button class="nav-arrow" onclick="navigateMonth(-1)">❯❯</button>
                     </div>
 
                     <div id="chart-navigation" class="chart-nav-bar hidden">
