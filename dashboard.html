@@ -75,15 +75,15 @@
                         <button id="btn-all" onclick="setChartMode(0)" class="filter-btn active">Tout</button>
                     </div>
 
-                    <div id="chart-nav-month" class="chart-nav-bar hidden" style="margin-bottom: 5px; background: #222; border:none; padding: 5px;">
-                        <button class="nav-arrow" onclick="navigateMonth(1)">❮❮</button>
-                        <span id="chart-month-label" style="color:#aaa; font-size:0.9em;">Mois</span>
-                        <button class="nav-arrow" onclick="navigateMonth(-1)">❯❯</button>
+                    <div id="chart-nav-upper" class="chart-nav-bar hidden" style="margin-bottom: 5px; background: #222; border:none; padding: 5px;">
+                        <button class="nav-arrow" onclick="navigateUpper(1)">❮❮</button>
+                        <span id="chart-upper-label" style="color:#aaa; font-size:0.9em;">Macro Période</span>
+                        <button class="nav-arrow" onclick="navigateUpper(-1)">❯❯</button>
                     </div>
 
                     <div id="chart-navigation" class="chart-nav-bar hidden">
                         <button class="nav-arrow" onclick="navigateChart(1)">❮</button>
-                        <span id="chart-period-label">Aujourd'hui</span>
+                        <span id="chart-period-label">Période</span>
                         <button class="nav-arrow" id="btn-nav-next" onclick="navigateChart(-1)">❯</button>
                     </div>
 
