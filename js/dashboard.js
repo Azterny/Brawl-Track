@@ -318,12 +318,9 @@ function renderChart() {
         // Si la période affichée englobe le début absolu, on désactive le bouton Précédent
         if (absoluteStartDate && startDate <= absoluteStartDate) {
             prevBtn.disabled = true;
-            prevBtn.style.opacity = "0.3";
-            prevBtn.style.cursor = "not-allowed";
+            // Plus besoin de toucher au style ici, le CSS le fait !
         } else {
             prevBtn.disabled = false;
-            prevBtn.style.opacity = "1";
-            prevBtn.style.cursor = "pointer";
         }
     }
 
