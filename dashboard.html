@@ -182,18 +182,37 @@
     <script src="js/dashboard.js"></script>
     
     <script>
-        // On attend que la page soit chargée
         document.addEventListener('DOMContentLoaded', () => {
+            console.log("🚀 Démarrage du Dashboard...");
             const urlParams = new URLSearchParams(window.location.search);
             const publicTag = urlParams.get('tag');
             
             if (publicTag) {
-                // Mode Visiteur
-                loadPublicProfile(publicTag);
+                console.log("Mode Visiteur détecté");
+                if (typeof loadPublicProfile === 'function') {
+                    loadPublicProfile(publicTag);
+                } else {
+                    console.error("❌ Erreur : loadPublicProfile introuvable. Vérifiez dashboard.js");
+                }
             } else {
-                // Mode Connecté
-                checkAuth();
-                loadMyStats();
+                console.log("Mode Connecté détecté");
+                
+                // 1. Vérification Auth
+                try {
+                    if (typeof checkAuth === 'function') checkAuth();
+                } catch (e) {
+                    console.error("⚠️ Erreur dans checkAuth (non bloquant) :", e);
+                }
+
+                // 2. Lancement des Stats
+                if (typeof loadMyStats === 'function') {
+                    console.log("Chargement des stats...");
+                    loadMyStats();
+                } else {
+                    console.error("❌ ERREUR CRITIQUE : loadMyStats est introuvable !");
+                    console.error("Cela signifie qu'il y a une erreur de syntaxe dans le fichier dashboard.js qui empêche sa lecture.");
+                    alert("Erreur technique : Le fichier dashboard.js ne s'est pas chargé correctement. Vérifiez la console (F12).");
+                }
             }
         });
     </script>
