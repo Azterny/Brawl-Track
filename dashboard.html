@@ -188,14 +188,12 @@
             const publicTag = urlParams.get('tag');
             
             if (publicTag) {
-                // Mode Visiteur (Profil Public)
+                // Mode Visiteur
                 loadPublicProfile(publicTag);
             } else {
                 // Mode Connecté
-                // On appelle checkAuth pour vérifier le token
-                // MAIS on lance surtout loadMyStats pour récupérer les données !
-                checkAuth(); 
-                loadMyStats(); 
+                checkAuth();
+                loadMyStats();
             }
         });
     </script>
