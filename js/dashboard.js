@@ -1,6 +1,6 @@
 // --- VARIABLES GLOBALES CHART ---
 let currentChartMode = 0; // 0=Tout, 1=Jour, 7=Semaine...
-let currentChartOffset = 0; // 0=Actuel, 1=Précédent...
+let currentChartOffset = 0; // Décalage temporel
 
 // --- CHARGEMENT PRINCIPAL ---
 async function loadMyStats() {
@@ -14,10 +14,13 @@ async function loadMyStats() {
         
         const data = await res.json();
         currentUserTier = data.internal_tier || 'basic';
+        
+        // Sauvegarde intervalle pour le timer (settings.js)
         window.currentUpdateInterval = data.internal_interval; 
 
         renderProfile(data);
         
+        // MODE CONNECTÉ : On affiche le badge
         const badge = document.getElementById('tier-badge');
         if(badge) badge.classList.remove('hidden');
         
@@ -38,19 +41,22 @@ function renderProfile(data) {
     const nameElem = document.getElementById('player-name');
     nameElem.innerText = data.name;
 
+    // --- GESTION COULEUR PSEUDO ---
     if (data.nameColor) {
         let color = data.nameColor;
         if (color.startsWith('0x')) {
+            // Conversion ARGB (0xFF...) -> RGB (#...)
             color = '#' + (color.length >= 10 ? color.slice(4) : color.slice(2));
         }
         nameElem.style.color = color;
-        nameElem.style.textShadow = `0 0 15px ${color}66`; 
+        nameElem.style.textShadow = `0 0 15px ${color}66`; // Effet Néon
     } else {
         nameElem.style.color = '#ffffff';
         nameElem.style.textShadow = 'none';
     }
 
     document.getElementById('player-tag').innerText = data.tag;
+    
     const badge = document.getElementById('tier-badge');
     badge.className = `badge badge-${currentUserTier}`;
     badge.innerText = currentUserTier === 'subscriber' ? 'Abonné' : currentUserTier;
@@ -67,8 +73,10 @@ function renderProfile(data) {
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     if(!grid) return;
+    
     const res = await fetch(`${API_URL}/api/brawlers`);
     const data = await res.json();
+    
     globalBrawlersList = (data.items || []).map(b => {
         const owned = playerBrawlers.find(pb => pb.id === b.id);
         return { 
@@ -82,12 +90,14 @@ async function loadBrawlersGrid(playerBrawlers) {
 
 function sortBrawlers() {
     const criteria = document.getElementById('sort-brawlers').value;
+    
     globalBrawlersList.sort((a, b) => {
         if (a.owned !== b.owned) return a.owned ? -1 : 1; 
         if (criteria === 'trophies') return b.trophies - a.trophies;
         else if (criteria === 'name') return a.name.localeCompare(b.name);
         else return a.id - b.id; 
     });
+    
     renderBrawlersGrid();
 }
 
@@ -108,8 +118,7 @@ function renderBrawlersGrid() {
     });
 }
 
-// --- GRAPHIQUE : UTILITAIRES ---
-
+// --- UTILITAIRES CHART ---
 function lockChart() {
     const content = document.getElementById('chart-content-wrapper');
     const overlay = document.getElementById('chart-lock-overlay');
@@ -127,48 +136,87 @@ function unlockChart() {
 // === MATHS : INTERPOLATION LINÉAIRE ===
 function getInterpolatedValue(targetDate, allData) {
     const targetTs = targetDate.getTime();
-    
-    // Trouver les points bornes (Avant et Après)
     let prev = null;
     let next = null;
 
-    // allData est supposé trié par date croissante
     for (let pt of allData) {
         let ptTs = new Date(pt.date).getTime();
-        if (ptTs <= targetTs) prev = pt; // Le dernier point passé
+        if (ptTs <= targetTs) prev = pt;
         if (ptTs >= targetTs && !next) { 
-            next = pt; // Le premier point futur
-            break; // On a trouvé nos deux bornes, on arrête
+            next = pt;
+            break;
         }
     }
 
-    // Cas 1 : Exactement sur un point
     if (prev && prev === next) return prev.trophies;
 
-    // Cas 2 : Entre deux points -> Calcul proportionnel
     if (prev && next) {
         const prevTs = new Date(prev.date).getTime();
         const nextTs = new Date(next.date).getTime();
         const totalDiff = nextTs - prevTs;
         const targetDiff = targetTs - prevTs;
         
-        if (totalDiff === 0) return prev.trophies; // Sécurité
+        if (totalDiff === 0) return prev.trophies;
 
         const factor = targetDiff / totalDiff;
-        // Formule : Valeur = Dep + (Différence * facteur)
         return prev.trophies + (next.trophies - prev.trophies) * factor;
     }
 
-    // Cas 3 : Hors limites (Pas de point avant ou pas de point après)
-    // On renvoie la valeur la plus proche connue sans inventer
     if (prev) return prev.trophies; 
     if (next) return next.trophies;
     
-    return null; // Aucune donnée
+    return null;
+}
+
+// === OPTIMISATION : DÉCIMATION ===
+function decimateDataPoints(points) {
+    // Ne garde qu'un point par jour (le dernier enregistré) pour alléger le graph
+    const grouped = {};
+    points.forEach(p => {
+        const dayKey = p.x.split('T')[0]; 
+        grouped[dayKey] = p; // Écrase les précédents du même jour
+    });
+    return Object.values(grouped).sort((a,b) => new Date(a.x) - new Date(b.x));
 }
 
 
-// --- LOGIQUE GRAPHIQUE ---
+// --- LOGIQUE NAVIGATION CHART ---
+
+function navigateChart(direction) {
+    currentChartOffset += direction;
+    if (currentChartOffset < 0) currentChartOffset = 0;
+    renderChart();
+}
+
+function navigateMonth(direction) {
+    // Navigue par mois entier au dessus des jours
+    if (currentChartMode !== 1) return; // Uniquement en mode Jour
+
+    const now = new Date();
+    const currentDate = new Date();
+    currentDate.setDate(now.getDate() - currentChartOffset);
+
+    const targetDate = new Date(currentDate);
+    targetDate.setMonth(targetDate.getMonth() - direction); 
+
+    // Recalcul de l'offset en jours
+    if (direction === 1) { // Reculer
+        currentChartOffset = Math.floor((now - targetDate) / (1000 * 60 * 60 * 24));
+    } else { // Avancer
+        currentChartOffset = Math.floor((now - targetDate) / (1000 * 60 * 60 * 24));
+        if (currentChartOffset < 0) currentChartOffset = 0;
+    }
+    renderChart();
+}
+
+function setChartMode(mode) {
+    currentChartMode = mode;
+    currentChartOffset = 0;
+    renderChart();
+}
+
+
+// --- CHARGEMENT DONNÉES GRAPHIQUE ---
 
 async function loadHistoryChart(token, liveTrophies) {
     if (!token) {
@@ -187,6 +235,7 @@ async function loadHistoryChart(token, liveTrophies) {
     manageFilterButtons();
     setChartMode(0); // Vue par défaut : Tout
 
+    // Mise à jour du Timer (Next Archive)
     let lastDate = null;
     if (fullHistoryData.length > 0) lastDate = fullHistoryData[fullHistoryData.length - 1].date;
     if(typeof updateNextArchiveTimer === 'function' && window.currentUpdateInterval) {
@@ -205,28 +254,17 @@ function manageFilterButtons() {
 
     if (diffDays > 1) document.getElementById('btn-7d').classList.remove('hidden');
     else document.getElementById('btn-7d').classList.add('hidden');
-
     if (diffDays > 7) document.getElementById('btn-31d').classList.remove('hidden');
     else document.getElementById('btn-31d').classList.add('hidden');
-
     if (diffDays > 31) document.getElementById('btn-365d').classList.remove('hidden');
     else document.getElementById('btn-365d').classList.add('hidden');
 }
 
-function setChartMode(mode) {
-    currentChartMode = mode;
-    currentChartOffset = 0;
-    renderChart();
-}
 
-function navigateChart(direction) {
-    currentChartOffset += direction;
-    if (currentChartOffset < 0) currentChartOffset = 0;
-    renderChart();
-}
+// --- RENDU FINAL GRAPHIQUE ---
 
 function renderChart() {
-    // 1. Mise à jour UI Boutons
+    // 1. UI Boutons
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     let btnId = 'btn-all';
     if(currentChartMode < 0.1 && currentChartMode > 0) btnId = 'btn-1h';
@@ -237,21 +275,19 @@ function renderChart() {
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // --- RECUPERATION DATE ABSOLUE DE DEBUT ---
+    // Récupération Start Absolu (Date de création du compte/première archive)
     let absoluteStartDate = null;
-    if (fullHistoryData.length > 0) {
-        absoluteStartDate = new Date(fullHistoryData[0].date);
-    }
+    if (fullHistoryData.length > 0) absoluteStartDate = new Date(fullHistoryData[0].date);
 
-    // 2. Calcul des Bornes Temporelles (Start / End)
+    // 2. Bornes Temporelles
     let startDate = null;
     let endDate = null;
     let label = "Tout l'historique";
+    let monthLabel = ""; // Pour le navigateur Mois
 
     if (currentChartMode > 0) {
         const now = new Date();
         
-        // ... (Logique 1H, 24H, 7J, Mois, Année identique à avant) ...
         if (currentChartMode < 0.1) { // 1H
             const target = new Date();
             target.setHours(now.getHours() - currentChartOffset);
@@ -265,9 +301,14 @@ function renderChart() {
             target.setDate(now.getDate() - currentChartOffset);
             startDate = new Date(target.setHours(0,0,0,0));
             endDate = new Date(target.setHours(23,59,59,999));
+            
             if (currentChartOffset === 0) label = "Aujourd'hui";
             else if (currentChartOffset === 1) label = "Hier";
-            else label = startDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+            else label = startDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' });
+
+            // Label Mois (Navigation supérieure)
+            let mLabel = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            monthLabel = mLabel.charAt(0).toUpperCase() + mLabel.slice(1);
         } 
         else if (currentChartMode === 7) { // Semaine
             const targetEnd = new Date();
@@ -296,71 +337,79 @@ function renderChart() {
     }
     
     document.getElementById('chart-period-label').innerText = label;
+    if(monthLabel) document.getElementById('chart-month-label').innerText = monthLabel;
 
-    // 3. GESTION NAVIGATION (Blocage bouton gauche)
-    const navBar = document.getElementById('chart-navigation');
-    const prevBtn = document.querySelector('.nav-arrow:first-child'); // Bouton <
-    const nextBtn = document.getElementById('btn-nav-next'); // Bouton >
-    
+    // 3. Gestion Visibilité des Barres de Navigation
+    const navBarMain = document.getElementById('chart-navigation');
+    const navBarMonth = document.getElementById('chart-nav-month');
+    const prevBtn = navBarMain.querySelector('.nav-arrow:first-child');
+    const nextBtn = document.getElementById('btn-nav-next');
+
     if (currentChartMode === 0) {
-        navBar.classList.add('hidden');
+        // Mode Tout : Aucune nav
+        navBarMain.classList.add('hidden');
+        navBarMonth.classList.add('hidden');
     } else {
-        navBar.classList.remove('hidden');
+        navBarMain.classList.remove('hidden');
         nextBtn.disabled = (currentChartOffset === 0);
         
-        // BLOQUER LA NAVIGATION ARRIÈRE SI ON EST AU DÉBUT
-        // Si la fin de la période affichée est AVANT le tout premier point enregistré
-        if (absoluteStartDate && endDate < absoluteStartDate) {
-             // On force l'affichage du début si on a trop reculé
-             // (Optionnel : ou on désactive juste le bouton)
-        }
-        
-        // Si la période affichée englobe le début absolu, on désactive le bouton Précédent
-        if (absoluteStartDate && startDate <= absoluteStartDate) {
-            prevBtn.disabled = true;
-            // Plus besoin de toucher au style ici, le CSS le fait !
-        } else {
-            prevBtn.disabled = false;
-        }
+        // Navigation Mois : Visible UNIQUEMENT en mode JOUR (1)
+        if (currentChartMode === 1) navBarMonth.classList.remove('hidden');
+        else navBarMonth.classList.add('hidden');
+
+        // Blocage bouton gauche (Début absolu)
+        // Le CSS gère l'apparence via :disabled
+        if (absoluteStartDate && startDate <= absoluteStartDate) prevBtn.disabled = true;
+        else prevBtn.disabled = false;
     }
 
     // 4. CONSTRUCTION DATASET
     let finalDataPoints = [];
 
+    // --- CONDITION POUR LISSAGE (Smart Points) ---
+    const shouldDecimate = (currentChartMode === 0 || currentChartMode === 365);
+    const shouldHidePoints = shouldDecimate;
+
     if (currentChartMode === 0) {
-        // Mode Tout
-        fullHistoryData.forEach((h, index) => {
-            // Le tout premier point est 'start'
-            let type = (index === 0) ? 'start' : 'real';
+        // --- MODE "TOUT" ---
+        let sourceData = fullHistoryData;
+        
+        if (shouldDecimate) {
+            sourceData = decimateDataPoints(fullHistoryData);
+        }
+
+        sourceData.forEach((h) => {
+            // Vérification Point Bleu (Start)
+            let type = 'real';
+            if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) type = 'start';
             finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
         });
+        
         if (currentLiveTrophies) finalDataPoints.push({ x: new Date().toISOString(), y: currentLiveTrophies, type: 'live' });
     
     } else {
-        // Mode Plages
+        // --- MODE PLAGES (Interpolation) ---
         
-        // A. Points RÉELS
-        const inRange = fullHistoryData.filter(i => {
+        // A. Points Réels (Filtrés)
+        let inRange = fullHistoryData.filter(i => {
             const d = new Date(i.date);
             return d >= startDate && d <= endDate;
         });
 
+        // Lissage si plage longue (ex: Année passée)
+        if (shouldDecimate) {
+            inRange = decimateDataPoints(inRange);
+        }
+
         inRange.forEach(h => {
-            // Vérifier si c'est le point absolu de début
             let type = 'real';
-            if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) {
-                type = 'start';
-            }
+            if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) type = 'start';
             finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
         });
 
-        // B. Fantôme ou Start DÉBUT
-        // Si on n'a pas inclus le point de départ absolu dans les points réels, on calcule un fantôme
-        // SAUF si la plage commence avant le début absolu (pas de données à inventer avant le Big Bang)
+        // B. Fantôme Début
         if (startDate > absoluteStartDate) {
-            // On vérifie si on n'a pas déjà un point au tout début
             const hasPointAtStart = finalDataPoints.some(p => new Date(p.x).getTime() === startDate.getTime());
-            
             if (!hasPointAtStart) {
                 const startVal = getInterpolatedValue(startDate, fullHistoryData);
                 if (startVal !== null) {
@@ -369,50 +418,46 @@ function renderChart() {
             }
         }
 
-        // C. Fantôme FIN ou LIVE
+        // C. Fantôme Fin ou Live
         if (currentChartOffset === 0) {
-            if (currentLiveTrophies) {
-                finalDataPoints.push({ x: new Date().toISOString(), y: currentLiveTrophies, type: 'live' });
-            }
+            if (currentLiveTrophies) finalDataPoints.push({ x: new Date().toISOString(), y: currentLiveTrophies, type: 'live' });
         } else {
             const endVal = getInterpolatedValue(endDate, fullHistoryData);
-            if (endVal !== null) {
-                finalDataPoints.push({ x: endDate.toISOString(), y: Math.round(endVal), type: 'ghost' });
-            }
+            if (endVal !== null) finalDataPoints.push({ x: endDate.toISOString(), y: Math.round(endVal), type: 'ghost' });
         }
     }
 
-    // Tri par sécurité pour que la ligne ne fasse pas d'allers-retours
     finalDataPoints.sort((a,b) => new Date(a.x) - new Date(b.x));
 
     // 5. Variation
     const varElem = document.getElementById('trophy-variation');
     if (finalDataPoints.length >= 2) {
-        const first = finalDataPoints[0];
-        const last = finalDataPoints[finalDataPoints.length - 1];
-        const diff = last.y - first.y;
+        const startVal = finalDataPoints[0].y;
+        const endVal = finalDataPoints[finalDataPoints.length - 1].y;
+        const diff = endVal - startVal;
         if (diff > 0) varElem.innerHTML = `<span style="color:#28a745">▲ +${diff}</span>`;
         else if (diff < 0) varElem.innerHTML = `<span style="color:#dc3545">▼ ${diff}</span>`;
         else varElem.innerHTML = `<span style="color:#888">= 0</span>`;
-    } else {
-        varElem.innerHTML = `<span style="color:#888">--</span>`;
-    }
+    } else varElem.innerHTML = `<span style="color:#888">--</span>`;
 
-    // 6. Styles
+    // 6. Styles Dynamiques
     const pointColors = finalDataPoints.map(p => {
         if (p.type === 'live') return '#ff5555'; // Rouge
-        if (p.type === 'start') return '#007bff'; // Bleu (NOUVEAU)
-        return '#ffce00'; // Jaune
+        if (p.type === 'start') return '#007bff'; // Bleu
+        return '#ffce00';
     });
 
     const pointRadiuses = finalDataPoints.map(p => {
         if (p.type === 'ghost') return 0;
-        if (p.type === 'live' || p.type === 'start') return 5; // Gros point pour Start et Live
-        return (currentChartMode <= 1) ? 3 : 0;
+        if (p.type === 'live' || p.type === 'start') return 5; 
+        
+        // Smart Points : On cache si vue large
+        if (shouldHidePoints) return 0;
+        return 3;
     });
 
     const hoverRadiuses = finalDataPoints.map(p => {
-        if (p.type === 'ghost') return 6; // Le fantôme devient "cliquable"
+        if (p.type === 'ghost') return 6;
         return 7;
     });
 
@@ -450,24 +495,14 @@ function renderChart() {
             maintainAspectRatio: false,
             plugins: { 
                 legend: {display:false},
-                // --- CUSTOM TOOLTIP ---
                 tooltip: {
                     callbacks: {
                         label: function(context) {
                             const point = context.raw;
-                            let val = point.y;
-                            
-                            // Logique texte fantôme
-                            if (point.type === 'ghost') {
-                                return `~ Environ : ${val}`;
-                            }
-                            if (point.type === 'start') {
-                                return `★ Début : ${val}`;
-                            }
-                            if (point.type === 'live') {
-                                return `🔴 Actuel : ${val}`;
-                            }
-                            return `🏆 ${val}`;
+                            if (point.type === 'ghost') return `~ Environ : ${point.y}`;
+                            if (point.type === 'start') return `★ Début : ${point.y}`;
+                            if (point.type === 'live') return `🔴 Actuel : ${point.y}`;
+                            return `🏆 ${point.y}`;
                         }
                     }
                 }
@@ -485,4 +520,32 @@ function renderChart() {
             }
         }
     });
+}
+
+// --- PUBLIC ---
+async function loadPublicProfile(tag) {
+    document.getElementById('public-actions').classList.remove('hidden');
+    document.getElementById('burger-menu').classList.add('hidden');
+    try {
+        const res = await fetch(`${API_URL}/api/public/player/${tag}`);
+        const data = await res.json();
+        
+        currentUserTier = 'basic'; 
+        renderProfile(data);
+
+        // MODE PUBLIC : Pas de badge grade
+        const badge = document.getElementById('tier-badge');
+        if(badge) badge.classList.add('hidden');
+        
+        loadBrawlersGrid(data.brawlers);
+        
+        // Graphique verrouillé
+        loadHistoryChart(null, data.trophies);
+
+    } catch (e) { alert("Joueur introuvable"); }
+}
+
+function publicSearch() {
+    const tag = document.getElementById('public-tag').value.trim().replace('#', '');
+    if(tag) window.location.href = `dashboard.html?tag=${tag}`;
 }
