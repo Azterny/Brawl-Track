@@ -182,14 +182,22 @@
     <script src="js/dashboard.js"></script>
     
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const publicTag = urlParams.get('tag');
-        
-        if (publicTag) {
-            loadPublicProfile(publicTag);
-        } else {
-            checkAuth();
-        }
+        // On attend que la page soit chargée
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const publicTag = urlParams.get('tag');
+            
+            if (publicTag) {
+                // Mode Visiteur (Profil Public)
+                loadPublicProfile(publicTag);
+            } else {
+                // Mode Connecté
+                // On appelle checkAuth pour vérifier le token
+                // MAIS on lance surtout loadMyStats pour récupérer les données !
+                checkAuth(); 
+                loadMyStats(); 
+            }
+        });
     </script>
 </body>
 </html>
