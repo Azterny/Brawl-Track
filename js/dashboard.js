@@ -168,15 +168,18 @@ function getInterpolatedValue(targetDate, allData) {
     return null;
 }
 
-// === OPTIMISATION : DÉCIMATION ===
+// === OPTIMISATION : DÉCIMATION (CORRIGÉE) ===
 function decimateDataPoints(points) {
-    // Ne garde qu'un point par jour (le dernier enregistré) pour alléger le graph
     const grouped = {};
     points.forEach(p => {
-        const dayKey = p.x.split('T')[0]; 
-        grouped[dayKey] = p; // Écrase les précédents du même jour
+        // CORRECTION ICI : On utilise p.date (format brut) car p.x n'existe pas encore
+        const d = p.date || p.x; 
+        if (!d) return; 
+        const dayKey = d.split('T')[0]; 
+        grouped[dayKey] = p; 
     });
-    return Object.values(grouped).sort((a,b) => new Date(a.x) - new Date(b.x));
+    // Tri basé sur la date
+    return Object.values(grouped).sort((a,b) => new Date(a.date || a.x) - new Date(b.date || b.x));
 }
 
 
@@ -275,7 +278,7 @@ function renderChart() {
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // Récupération Start Absolu (Date de création du compte/première archive)
+    // Récupération Start Absolu
     let absoluteStartDate = null;
     if (fullHistoryData.length > 0) absoluteStartDate = new Date(fullHistoryData[0].date);
 
@@ -306,7 +309,7 @@ function renderChart() {
             else if (currentChartOffset === 1) label = "Hier";
             else label = startDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' });
 
-            // Label Mois (Navigation supérieure)
+            // Label Mois
             let mLabel = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
             monthLabel = mLabel.charAt(0).toUpperCase() + mLabel.slice(1);
         } 
@@ -358,7 +361,6 @@ function renderChart() {
         else navBarMonth.classList.add('hidden');
 
         // Blocage bouton gauche (Début absolu)
-        // Le CSS gère l'apparence via :disabled
         if (absoluteStartDate && startDate <= absoluteStartDate) prevBtn.disabled = true;
         else prevBtn.disabled = false;
     }
