@@ -490,15 +490,26 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
     justify-content: center;
     border-radius: 50%;
     font-size: 1.2em;
+    cursor: pointer;
+    transition: all 0.2s ease;
     box-shadow: none !important;
 }
 
-.nav-arrow:hover { background: #333 !important; }
+.nav-arrow:hover { 
+    background: #333 !important; 
+    transform: scale(1.1);
+}
 
-/* Désactivé (Futur) */
+.nav-arrow:active {
+    transform: scale(0.9);
+}
+
+/* --- C'EST ICI QUE LA MAGIE OPÈRE --- */
 .nav-arrow:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    border-color: #222 !important;
-    color: #555 !important;
+    opacity: 0.3;              /* Rend le bouton transparent */
+    cursor: not-allowed;       /* Affiche un sens interdit à la souris */
+    border-color: #333 !important;
+    color: #888 !important;    /* Grise la flèche jaune */
+    transform: none !important; /* Empêche l'animation au clic */
+    pointer-events: none;      /* Bloque totalement les clics */
 }
