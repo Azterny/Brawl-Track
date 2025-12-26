@@ -240,10 +240,9 @@ function navigateUpper(direction) {
             }
             if(currentChartOffset < 0) currentChartOffset = 0;
         }
-    } // <--- CETTE ACCOLADE MANQUAIT
 
     // -- SI MODE MOIS -> Navigation par ANNÉE --
-    else if (currentChartMode === 31) {
+    } else if (currentChartMode === 31) {
         // Offset est en mois, on saute 12
         currentChartOffset += (direction * 12);
         if (currentChartOffset < 0) currentChartOffset = 0;
@@ -325,6 +324,7 @@ function manageFilterButtons() {
     showBtn('btn-31d', diffDays > 7);
     showBtn('btn-365d', diffDays > 31);
 }
+
 function renderChart() {
     const canvas = document.getElementById('trophyChart');
     if (!canvas) return;
