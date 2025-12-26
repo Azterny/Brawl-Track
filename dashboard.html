@@ -46,7 +46,7 @@
             
             <div id="stats-area" class="stats-grid"></div>
 
-            <div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px; position: relative;">
+<div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px; position: relative;">
                 
                 <div id="chart-lock-overlay" class="hidden">
                     <div class="lock-overlay">
@@ -67,13 +67,18 @@
                     </div>
 
                     <div class="chart-filters">
-                        <button id="btn-1h" onclick="updateChartFilter(0.042)" class="filter-btn hidden">1H</button>
-                        
-                        <button id="btn-24h" onclick="updateChartFilter(1)" class="filter-btn">24H</button>
-                        <button id="btn-7d" onclick="updateChartFilter(7)" class="filter-btn hidden">7J</button>
-                        <button id="btn-31d" onclick="updateChartFilter(31)" class="filter-btn hidden">Mois</button>
-                        <button id="btn-365d" onclick="updateChartFilter(365)" class="filter-btn hidden">1 An</button>
-                        <button id="btn-all" onclick="updateChartFilter(0)" class="filter-btn active">Tout</button>
+                        <button id="btn-1h" onclick="setChartMode(0.042)" class="filter-btn hidden">1H</button>
+                        <button id="btn-24h" onclick="setChartMode(1)" class="filter-btn">Jour</button>
+                        <button id="btn-7d" onclick="setChartMode(7)" class="filter-btn hidden">Semaine</button>
+                        <button id="btn-31d" onclick="setChartMode(31)" class="filter-btn hidden">Mois</button>
+                        <button id="btn-365d" onclick="setChartMode(365)" class="filter-btn hidden">Année</button>
+                        <button id="btn-all" onclick="setChartMode(0)" class="filter-btn active">Tout</button>
+                    </div>
+
+                    <div id="chart-navigation" class="chart-nav-bar hidden">
+                        <button class="nav-arrow" onclick="navigateChart(1)">❮</button>
+                        <span id="chart-period-label">Aujourd'hui</span>
+                        <button class="nav-arrow" id="btn-nav-next" onclick="navigateChart(-1)">❯</button>
                     </div>
 
                     <div style="position: relative; height: 300px; width: 100%;">
