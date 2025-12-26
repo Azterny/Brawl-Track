@@ -453,3 +453,52 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
 }
 .map-name { font-size: 1.1em; font-weight: bold; color: white; }
 .event-timer { font-size: 0.8em; color: #888; margin-top: 5px; }
+
+/* =========================================
+   9. NAVIGATION GRAPHIQUE
+   ========================================= */
+.chart-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    background: #181818;
+    margin: 10px 0 15px 0;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+
+#chart-period-label {
+    font-weight: bold;
+    color: #fff;
+    font-size: 0.95em;
+    min-width: 150px;
+    text-align: center;
+}
+
+.nav-arrow {
+    background: transparent !important;
+    border: 1px solid #444 !important;
+    color: #ffce00 !important;
+    width: 30px !important;
+    height: 30px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.2em;
+    box-shadow: none !important;
+}
+
+.nav-arrow:hover { background: #333 !important; }
+
+/* Désactivé (Futur) */
+.nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: #222 !important;
+    color: #555 !important;
+}
