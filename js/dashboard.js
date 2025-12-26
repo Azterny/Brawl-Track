@@ -1,3 +1,7 @@
+// --- VARIABLES GLOBALES CHART ---
+let currentChartMode = 0; // 0=Tout, 1=Jour, 7=Semaine...
+let currentChartOffset = 0; // 0=Actuel, 1=Précédent...
+
 // --- CHARGEMENT PRINCIPAL ---
 async function loadMyStats() {
     try {
@@ -10,13 +14,10 @@ async function loadMyStats() {
         
         const data = await res.json();
         currentUserTier = data.internal_tier || 'basic';
-        
-        // Sauvegarde intervalle pour le timer
         window.currentUpdateInterval = data.internal_interval; 
 
         renderProfile(data);
         
-        // MODE CONNECTÉ : On affiche le badge
         const badge = document.getElementById('tier-badge');
         if(badge) badge.classList.remove('hidden');
         
@@ -37,22 +38,12 @@ function renderProfile(data) {
     const nameElem = document.getElementById('player-name');
     nameElem.innerText = data.name;
 
-    // --- GESTION COULEUR PSEUDO ---
     if (data.nameColor) {
-        // Format reçu API : "0xFF123456" (ARGB)
-        // On veut CSS : "#123456"
         let color = data.nameColor;
         if (color.startsWith('0x')) {
-            // On retire '0x' (2 chars) + 'FF' (2 chars d'opacité) = 4 chars
-            // Si la chaîne est assez longue (ex: 0xFFRRGGBB)
-            if (color.length >= 10) {
-                color = '#' + color.slice(4);
-            } else {
-                color = '#' + color.slice(2); // Cas rare sans alpha
-            }
+            color = '#' + (color.length >= 10 ? color.slice(4) : color.slice(2));
         }
         nameElem.style.color = color;
-        // Petit effet néon avec la couleur du joueur
         nameElem.style.textShadow = `0 0 15px ${color}66`; 
     } else {
         nameElem.style.color = '#ffffff';
@@ -60,8 +51,6 @@ function renderProfile(data) {
     }
 
     document.getElementById('player-tag').innerText = data.tag;
-    
-    // Note : Le badge est recréé ici, mais masqué/affiché ensuite par la fonction appelante
     const badge = document.getElementById('tier-badge');
     badge.className = `badge badge-${currentUserTier}`;
     badge.innerText = currentUserTier === 'subscriber' ? 'Abonné' : currentUserTier;
@@ -74,14 +63,12 @@ function renderProfile(data) {
     `;
 }
 
-// --- BRAWLERS ---
+// ... (loadBrawlersGrid, sortBrawlers, renderBrawlersGrid restent IDENTIQUES) ...
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     if(!grid) return;
-    
     const res = await fetch(`${API_URL}/api/brawlers`);
     const data = await res.json();
-    
     globalBrawlersList = (data.items || []).map(b => {
         const owned = playerBrawlers.find(pb => pb.id === b.id);
         return { 
@@ -92,20 +79,16 @@ async function loadBrawlersGrid(playerBrawlers) {
     });
     sortBrawlers();
 }
-
 function sortBrawlers() {
     const criteria = document.getElementById('sort-brawlers').value;
-    
     globalBrawlersList.sort((a, b) => {
         if (a.owned !== b.owned) return a.owned ? -1 : 1; 
         if (criteria === 'trophies') return b.trophies - a.trophies;
         else if (criteria === 'name') return a.name.localeCompare(b.name);
         else return a.id - b.id; 
     });
-    
     renderBrawlersGrid();
 }
-
 function renderBrawlersGrid() {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '';
@@ -123,7 +106,7 @@ function renderBrawlersGrid() {
     });
 }
 
-// --- GESTION GRAPHIQUE (LOCK / UNLOCK) ---
+// --- LOCK CHART ---
 function lockChart() {
     const content = document.getElementById('chart-content-wrapper');
     const overlay = document.getElementById('chart-lock-overlay');
@@ -138,7 +121,7 @@ function unlockChart() {
     if(overlay) overlay.classList.add('hidden');
 }
 
-// --- GRAPHIQUE & LOGIQUE AVANCÉE ---
+// --- INITIALISATION CHART ---
 async function loadHistoryChart(token, liveTrophies) {
     if (!token) {
         lockChart();
@@ -154,13 +137,15 @@ async function loadHistoryChart(token, liveTrophies) {
     } catch(e) { fullHistoryData = []; }
     
     manageFilterButtons();
-    updateChartFilter(0);
+    
+    // Initialisation : Tout afficher
+    setChartMode(0);
 
+    // Timer Update
     let lastDate = null;
     if (fullHistoryData.length > 0) {
         lastDate = fullHistoryData[fullHistoryData.length - 1].date;
     }
-    
     if(typeof updateNextArchiveTimer === 'function' && window.currentUpdateInterval) {
         updateNextArchiveTimer(lastDate, window.currentUpdateInterval);
     }
@@ -172,90 +157,163 @@ function manageFilterButtons() {
     else btn1h.classList.add('hidden');
 
     let oldestDate = new Date();
-    if (fullHistoryData.length > 0) {
-        oldestDate = new Date(fullHistoryData[0].date);
-    }
-    
-    const now = new Date();
-    const diffHours = (now - oldestDate) / (1000 * 60 * 60);
-    const diffDays = diffHours / 24;
+    if (fullHistoryData.length > 0) oldestDate = new Date(fullHistoryData[0].date);
+    const diffDays = (new Date() - oldestDate) / (1000 * 60 * 60 * 24);
 
-    const btn7d = document.getElementById('btn-7d');
-    const btn31d = document.getElementById('btn-31d');
-    const btn365d = document.getElementById('btn-365d');
+    if (diffDays > 1) document.getElementById('btn-7d').classList.remove('hidden');
+    else document.getElementById('btn-7d').classList.add('hidden');
 
-    if (diffHours > 24) btn7d.classList.remove('hidden');
-    else btn7d.classList.add('hidden');
+    if (diffDays > 7) document.getElementById('btn-31d').classList.remove('hidden');
+    else document.getElementById('btn-31d').classList.add('hidden');
 
-    if (diffDays > 7) btn31d.classList.remove('hidden');
-    else btn31d.classList.add('hidden');
-
-    if (diffDays > 31) btn365d.classList.remove('hidden');
-    else btn365d.classList.add('hidden');
+    if (diffDays > 31) document.getElementById('btn-365d').classList.remove('hidden');
+    else document.getElementById('btn-365d').classList.add('hidden');
 }
 
-function updateChartFilter(days) {
-    const canvas = document.getElementById('trophyChart');
-    if (!canvas) return;
+// --- NOUVELLE LOGIQUE DE NAVIGATION ---
 
+// 1. Choix du Mode (Jour, Semaine...)
+function setChartMode(mode) {
+    currentChartMode = mode;
+    currentChartOffset = 0; // On revient à "Aujourd'hui" quand on change de mode
+    renderChart();
+}
+
+// 2. Navigation (< ou >)
+function navigateChart(direction) {
+    // direction: 1 pour reculer (<), -1 pour avancer (>)
+    currentChartOffset += direction;
+    if (currentChartOffset < 0) currentChartOffset = 0; // Bloquer le futur
+    renderChart();
+}
+
+// 3. Calculs et Rendu
+function renderChart() {
+    // A. Gestion des Boutons Actifs
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-    
     let btnId = 'btn-all';
-    if(days < 0.1) btnId = 'btn-1h';
-    else if(days === 1) btnId = 'btn-24h';
-    else if(days === 7) btnId = 'btn-7d';
-    else if(days === 31) btnId = 'btn-31d';
-    else if(days === 365) btnId = 'btn-365d';
+    if(currentChartMode < 0.1 && currentChartMode > 0) btnId = 'btn-1h';
+    else if(currentChartMode === 1) btnId = 'btn-24h';
+    else if(currentChartMode === 7) btnId = 'btn-7d';
+    else if(currentChartMode === 31) btnId = 'btn-31d';
+    else if(currentChartMode === 365) btnId = 'btn-365d';
     
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
-    let data = [];
-    let rawData = [...fullHistoryData];
+    // B. Gestion de la Barre de Navigation
+    const navBar = document.getElementById('chart-navigation');
+    const nextBtn = document.getElementById('btn-nav-next');
+    
+    if (currentChartMode === 0) {
+        navBar.classList.add('hidden'); // Pas de nav pour "Tout"
+    } else {
+        navBar.classList.remove('hidden');
+        // Désactiver bouton "Suivant" si on est à aujourd'hui (Offset 0)
+        nextBtn.disabled = (currentChartOffset === 0);
+    }
 
-    if (currentLiveTrophies) {
+    // C. Calcul des Dates Bornes (Start & End)
+    let startDate = new Date();
+    let endDate = new Date();
+    let label = "Tout l'historique";
+
+    if (currentChartMode > 0) {
+        const now = new Date();
+
+        if (currentChartMode === 1) { // MODE JOUR (00h00 -> 23h59)
+            // On recule de X jours
+            const targetDate = new Date();
+            targetDate.setDate(now.getDate() - currentChartOffset);
+            
+            startDate = new Date(targetDate.setHours(0,0,0,0));
+            endDate = new Date(targetDate.setHours(23,59,59,999));
+            
+            if (currentChartOffset === 0) label = "Aujourd'hui";
+            else if (currentChartOffset === 1) label = "Hier";
+            else label = startDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+        } else if (currentChartMode === 7) { // MODE SEMAINE
+            // Recule de X semaines
+            const targetEnd = new Date();
+            targetEnd.setDate(now.getDate() - (currentChartOffset * 7));
+            endDate = targetEnd;
+            
+            const targetStart = new Date(targetEnd);
+            targetStart.setDate(targetEnd.getDate() - 7);
+            startDate = targetStart;
+            
+            if(currentChartOffset === 0) label = "7 derniers jours";
+            else label = `Semaine du ${startDate.toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}`;
+
+        } else if (currentChartMode === 31) { // MODE MOIS
+            // Recule de X mois
+            const targetDate = new Date();
+            targetDate.setMonth(now.getMonth() - currentChartOffset);
+            
+            // 1er jour du mois
+            startDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+            // Dernier jour du mois
+            endDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59);
+
+            label = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            // Majuscule
+            label = label.charAt(0).toUpperCase() + label.slice(1);
+        }
+    }
+
+    document.getElementById('chart-period-label').innerText = label;
+
+    // D. Filtrage des Données
+    let rawData = [...fullHistoryData];
+    // Ajout du point LIVE seulement si on est sur la période actuelle (Offset 0)
+    if (currentLiveTrophies && currentChartOffset === 0) {
         rawData.push({ date: new Date().toISOString(), trophies: currentLiveTrophies });
     }
 
-    if (days > 0) {
-        const limit = new Date(); 
-        if (days < 0.1) {
-            limit.setMinutes(new Date().getMinutes() - 60);
-        } else if (days === 1) {
-            limit.setHours(new Date().getHours() - 24);
-        } else {
-            limit.setDate(new Date().getDate() - days);
-        }
-        data = rawData.filter(i => new Date(i.date) >= limit);
-    } else {
-        data = rawData; 
+    let data = rawData;
+    if (currentChartMode > 0) {
+        data = rawData.filter(i => {
+            const d = new Date(i.date);
+            return d >= startDate && d <= endDate;
+        });
     }
 
-    const dataset = data.map(h => ({ x: h.date, y: h.trophies }));
-    if(dataset.length === 0) return;
-
-    const startVal = dataset[0].y;
-    const endVal = dataset[dataset.length - 1].y;
-    const diff = endVal - startVal;
-    
+    // E. Variation sur la période affichée
     const varElem = document.getElementById('trophy-variation');
-    if(varElem) {
+    if (data.length > 0) {
+        const startVal = data[0].trophies || data[0].y; // Gestion double format
+        const endVal = data[data.length - 1].trophies || data[data.length - 1].y;
+        const diff = endVal - startVal;
+
         if (diff > 0) varElem.innerHTML = `<span style="color:#28a745">▲ +${diff}</span>`;
         else if (diff < 0) varElem.innerHTML = `<span style="color:#dc3545">▼ ${diff}</span>`;
         else varElem.innerHTML = `<span style="color:#888">= 0</span>`;
+    } else {
+        varElem.innerHTML = `<span style="color:#888">--</span>`;
     }
 
+    // F. Construction du Dataset Chart.js
+    const dataset = data.map(h => ({ x: h.date, y: h.trophies }));
+    
+    // Config Affichage
     let timeUnit = 'day';
     let displayFmt = 'dd/MM';
+    let pointRadiusBase = 0; // Par défaut, pas de points (Ligne pure)
+    
+    if (currentChartMode === 1) { // Jour : Précision max
+        timeUnit = 'hour'; 
+        displayFmt = 'HH:mm';
+        pointRadiusBase = 3; // On affiche les points en vue Journée
+    } else if (currentChartMode === 0 || currentChartMode === 365) {
+        timeUnit = 'month';
+        displayFmt = 'MMM yy';
+    }
 
-    if (days < 0.1) { timeUnit = 'minute'; displayFmt = 'HH:mm'; } 
-    else if (days === 1) { timeUnit = 'hour'; displayFmt = 'HH:mm'; } 
-    else if (days === 365 || days === 0) { timeUnit = 'month'; displayFmt = 'MMM yy'; }
-
-    const pointColors = dataset.map((_, i) => i === dataset.length - 1 ? '#ff5555' : '#ffce00');
-    const pointRadiuses = dataset.map((_, i) => i === dataset.length - 1 ? 5 : 3);
-
+    const canvas = document.getElementById('trophyChart');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    
     if(window.myChart) window.myChart.destroy();
     
     window.myChart = new Chart(ctx, {
@@ -269,22 +327,27 @@ function updateChartFilter(days) {
                 borderWidth: 2, 
                 tension: 0.2, 
                 fill: true, 
-                pointBackgroundColor: pointColors,
-                pointBorderColor: pointColors,
-                pointRadius: pointRadiuses,
-                pointHoverRadius: 7
+                
+                // Optimisation : Points visibles seulement en 24h ou au survol
+                pointRadius: pointRadiusBase,
+                pointHoverRadius: 6,
+                pointBackgroundColor: '#ffce00',
+                pointBorderColor: '#ffce00'
             }] 
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: { legend: {display:false} },
+            interaction: { mode: 'index', intersect: false },
             scales: { 
                 x: { 
                     type: 'time', 
+                    min: currentChartMode > 0 ? startDate : undefined, // Force les bornes X
+                    max: currentChartMode > 0 ? endDate : undefined,
                     time: { 
                         unit: timeUnit, 
-                        displayFormats: { minute: 'HH:mm', hour: 'HH:mm', day: 'dd/MM', month: 'MMM yy' } 
+                        displayFormats: { hour: 'HH:mm', day: 'dd/MM', month: 'MMM yy' } 
                     }, 
                     grid: {color:'#333'} 
                 }, 
@@ -292,33 +355,4 @@ function updateChartFilter(days) {
             }
         }
     });
-}
-
-// --- PUBLIC ---
-async function loadPublicProfile(tag) {
-    document.getElementById('public-actions').classList.remove('hidden');
-    document.getElementById('burger-menu').classList.add('hidden');
-    try {
-        const res = await fetch(`${API_URL}/api/public/player/${tag}`);
-        const data = await res.json();
-        
-        // Mode public = Grade Basic par défaut pour le style, mais on va le cacher
-        currentUserTier = 'basic'; 
-        renderProfile(data);
-
-        // MODE PUBLIC : On FORCE le masquage du grade (overwrite le renderProfile)
-        const badge = document.getElementById('tier-badge');
-        if(badge) badge.classList.add('hidden');
-        
-        loadBrawlersGrid(data.brawlers);
-        
-        // Graphique verrouillé
-        loadHistoryChart(null, data.trophies);
-
-    } catch (e) { alert("Joueur introuvable"); }
-}
-
-function publicSearch() {
-    const tag = document.getElementById('public-tag').value.trim().replace('#', '');
-    if(tag) window.location.href = `dashboard.html?tag=${tag}`;
 }
