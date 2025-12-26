@@ -1,26 +1,21 @@
 // --- VARIABLES GLOBALES CHART ---
-let currentChartMode = 0; // 0=Tout, 1=Jour, 7=Semaine...
-let currentChartOffset = 0; // Décalage temporel
+let currentChartMode = 0; // 0=Tout, 1=Jour, 31=Mois...
+let currentChartOffset = 0; // Décalage temporel (Unité dépend du mode)
 
 // --- CHARGEMENT PRINCIPAL ---
 async function loadMyStats() {
     try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${API_URL}/api/my-stats`, { 
-            headers: { 'Authorization': `Bearer ${token}` } 
-        });
+        const res = await fetch(`${API_URL}/api/my-stats`, { headers: { 'Authorization': `Bearer ${token}` } });
         
         if (!res.ok) throw new Error("Session invalide");
         
         const data = await res.json();
         currentUserTier = data.internal_tier || 'basic';
-        
-        // Sauvegarde intervalle pour le timer (settings.js)
         window.currentUpdateInterval = data.internal_interval; 
 
         renderProfile(data);
         
-        // MODE CONNECTÉ : On affiche le badge
         const badge = document.getElementById('tier-badge');
         if(badge) badge.classList.remove('hidden');
         
@@ -41,22 +36,17 @@ function renderProfile(data) {
     const nameElem = document.getElementById('player-name');
     nameElem.innerText = data.name;
 
-    // --- GESTION COULEUR PSEUDO ---
     if (data.nameColor) {
         let color = data.nameColor;
-        if (color.startsWith('0x')) {
-            // Conversion ARGB (0xFF...) -> RGB (#...)
-            color = '#' + (color.length >= 10 ? color.slice(4) : color.slice(2));
-        }
+        if (color.startsWith('0x')) color = '#' + (color.length >= 10 ? color.slice(4) : color.slice(2));
         nameElem.style.color = color;
-        nameElem.style.textShadow = `0 0 15px ${color}66`; // Effet Néon
+        nameElem.style.textShadow = `0 0 15px ${color}66`;
     } else {
         nameElem.style.color = '#ffffff';
         nameElem.style.textShadow = 'none';
     }
 
     document.getElementById('player-tag').innerText = data.tag;
-    
     const badge = document.getElementById('tier-badge');
     badge.className = `badge badge-${currentUserTier}`;
     badge.innerText = currentUserTier === 'subscriber' ? 'Abonné' : currentUserTier;
@@ -73,10 +63,8 @@ function renderProfile(data) {
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     if(!grid) return;
-    
     const res = await fetch(`${API_URL}/api/brawlers`);
     const data = await res.json();
-    
     globalBrawlersList = (data.items || []).map(b => {
         const owned = playerBrawlers.find(pb => pb.id === b.id);
         return { 
@@ -90,14 +78,12 @@ async function loadBrawlersGrid(playerBrawlers) {
 
 function sortBrawlers() {
     const criteria = document.getElementById('sort-brawlers').value;
-    
     globalBrawlersList.sort((a, b) => {
         if (a.owned !== b.owned) return a.owned ? -1 : 1; 
         if (criteria === 'trophies') return b.trophies - a.trophies;
         else if (criteria === 'name') return a.name.localeCompare(b.name);
         else return a.id - b.id; 
     });
-    
     renderBrawlersGrid();
 }
 
@@ -133,57 +119,37 @@ function unlockChart() {
     if(overlay) overlay.classList.add('hidden');
 }
 
-// === MATHS : INTERPOLATION LINÉAIRE ===
 function getInterpolatedValue(targetDate, allData) {
     const targetTs = targetDate.getTime();
-    let prev = null;
-    let next = null;
-
+    let prev = null, next = null;
     for (let pt of allData) {
         let ptTs = new Date(pt.date).getTime();
         if (ptTs <= targetTs) prev = pt;
-        if (ptTs >= targetTs && !next) { 
-            next = pt;
-            break;
-        }
+        if (ptTs >= targetTs && !next) { next = pt; break; }
     }
-
     if (prev && prev === next) return prev.trophies;
-
     if (prev && next) {
-        const prevTs = new Date(prev.date).getTime();
-        const nextTs = new Date(next.date).getTime();
-        const totalDiff = nextTs - prevTs;
-        const targetDiff = targetTs - prevTs;
-        
+        const totalDiff = new Date(next.date).getTime() - new Date(prev.date).getTime();
         if (totalDiff === 0) return prev.trophies;
-
-        const factor = targetDiff / totalDiff;
-        return prev.trophies + (next.trophies - prev.trophies) * factor;
+        return prev.trophies + (next.trophies - prev.trophies) * ((targetTs - new Date(prev.date).getTime()) / totalDiff);
     }
-
     if (prev) return prev.trophies; 
     if (next) return next.trophies;
-    
     return null;
 }
 
-// === OPTIMISATION : DÉCIMATION (CORRIGÉE) ===
 function decimateDataPoints(points) {
     const grouped = {};
     points.forEach(p => {
-        // CORRECTION ICI : On utilise p.date (format brut) car p.x n'existe pas encore
         const d = p.date || p.x; 
         if (!d) return; 
         const dayKey = d.split('T')[0]; 
         grouped[dayKey] = p; 
     });
-    // Tri basé sur la date
     return Object.values(grouped).sort((a,b) => new Date(a.date || a.x) - new Date(b.date || b.x));
 }
 
-
-// --- LOGIQUE NAVIGATION CHART ---
+// --- NAVIGATION CHART ---
 
 function navigateChart(direction) {
     currentChartOffset += direction;
@@ -191,24 +157,56 @@ function navigateChart(direction) {
     renderChart();
 }
 
-function navigateMonth(direction) {
-    // Navigue par mois entier au dessus des jours
-    if (currentChartMode !== 1) return; // Uniquement en mode Jour
-
-    const now = new Date();
-    const currentDate = new Date();
-    currentDate.setDate(now.getDate() - currentChartOffset);
-
-    const targetDate = new Date(currentDate);
-    targetDate.setMonth(targetDate.getMonth() - direction); 
-
-    // Recalcul de l'offset en jours
-    if (direction === 1) { // Reculer
-        currentChartOffset = Math.floor((now - targetDate) / (1000 * 60 * 60 * 24));
-    } else { // Avancer
-        currentChartOffset = Math.floor((now - targetDate) / (1000 * 60 * 60 * 24));
-        if (currentChartOffset < 0) currentChartOffset = 0;
+function navigateUpper(direction) {
+    // direction: 1 (Reculer), -1 (Avancer)
+    
+    // Récupération de la limite absolue pour ne pas reculer trop loin
+    let absoluteStartDate = null;
+    if (typeof fullHistoryData !== 'undefined' && fullHistoryData.length > 0) {
+        absoluteStartDate = new Date(fullHistoryData[0].date);
     }
+    const now = new Date();
+
+    if (currentChartMode === 1) { 
+        // --- MODE JOUR : Upper = Mois ---
+        const currentDate = new Date();
+        currentDate.setDate(now.getDate() - currentChartOffset); // Date au centre de la vue actuelle
+
+        // Cible : Le même jour, 1 mois avant/après
+        const targetDate = new Date(currentDate);
+        targetDate.setMonth(targetDate.getMonth() - direction);
+
+        // Vérif Limite Futur
+        if (direction === -1 && targetDate > now) {
+            // On ne peut pas aller dans le futur, on remet à "Aujourd'hui"
+            currentChartOffset = 0;
+        } else {
+            // Calcul du nouvel offset en JOURS
+            const diffTime = Math.abs(now - targetDate);
+            const newOffset = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Si on recule et qu'on dépasse le début absolu, on bloque au début
+            if (direction === 1 && absoluteStartDate && targetDate < absoluteStartDate) {
+                // On pourrait calculer l'offset exact vers le start, mais ici on laisse faire la limite visuelle
+            }
+            
+            currentChartOffset = (direction === 1) ? Math.floor((now - targetDate) / (1000 * 60 * 60 * 24)) : newOffset;
+            if(currentChartOffset < 0) currentChartOffset = 0;
+        }
+
+    } else if (currentChartMode === 31) {
+        // --- MODE MOIS : Upper = Année ---
+        // Ici l'offset est en MOIS. Donc on saute de 12.
+        currentChartOffset += (direction * 12);
+        if (currentChartOffset < 0) currentChartOffset = 0;
+        
+        // Vérif Start (Approximative en mois)
+        if (direction === 1 && absoluteStartDate) {
+           // Si on est allé trop loin dans le passé, on peut ajuster, 
+           // mais le rendu gérera l'affichage "Fantôme".
+        }
+    }
+
     renderChart();
 }
 
@@ -219,15 +217,10 @@ function setChartMode(mode) {
 }
 
 
-// --- CHARGEMENT DONNÉES GRAPHIQUE ---
+// --- CHARGEMENT DONNÉES ---
 
 async function loadHistoryChart(token, liveTrophies) {
-    if (!token) {
-        lockChart();
-        fullHistoryData = [];
-        return;
-    }
-
+    if (!token) { lockChart(); fullHistoryData = []; return; }
     currentLiveTrophies = liveTrophies;
     try {
         const res = await fetch(`${API_URL}/api/history`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -236,9 +229,8 @@ async function loadHistoryChart(token, liveTrophies) {
     } catch(e) { fullHistoryData = []; }
     
     manageFilterButtons();
-    setChartMode(0); // Vue par défaut : Tout
+    setChartMode(0);
 
-    // Mise à jour du Timer (Next Archive)
     let lastDate = null;
     if (fullHistoryData.length > 0) lastDate = fullHistoryData[fullHistoryData.length - 1].date;
     if(typeof updateNextArchiveTimer === 'function' && window.currentUpdateInterval) {
@@ -248,26 +240,22 @@ async function loadHistoryChart(token, liveTrophies) {
 
 function manageFilterButtons() {
     const btn1h = document.getElementById('btn-1h');
-    if (currentUserTier === 'premium') btn1h.classList.remove('hidden');
-    else btn1h.classList.add('hidden');
-
+    if (currentUserTier === 'premium') btn1h.classList.remove('hidden'); else btn1h.classList.add('hidden');
     let oldestDate = new Date();
     if (fullHistoryData.length > 0) oldestDate = new Date(fullHistoryData[0].date);
     const diffDays = (new Date() - oldestDate) / (1000 * 60 * 60 * 24);
-
-    if (diffDays > 1) document.getElementById('btn-7d').classList.remove('hidden');
-    else document.getElementById('btn-7d').classList.add('hidden');
-    if (diffDays > 7) document.getElementById('btn-31d').classList.remove('hidden');
-    else document.getElementById('btn-31d').classList.add('hidden');
-    if (diffDays > 31) document.getElementById('btn-365d').classList.remove('hidden');
-    else document.getElementById('btn-365d').classList.add('hidden');
+    
+    const showBtn = (id, cond) => document.getElementById(id).classList[cond ? 'remove' : 'add']('hidden');
+    showBtn('btn-7d', diffDays > 1);
+    showBtn('btn-31d', diffDays > 7);
+    showBtn('btn-365d', diffDays > 31);
 }
 
 
-// --- RENDU FINAL GRAPHIQUE ---
+// --- RENDU CHART ---
 
 function renderChart() {
-    // 1. UI Boutons
+    // 1. Boutons UI
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     let btnId = 'btn-all';
     if(currentChartMode < 0.1 && currentChartMode > 0) btnId = 'btn-1h';
@@ -278,19 +266,18 @@ function renderChart() {
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // Récupération Start Absolu
+    // Start Absolu
     let absoluteStartDate = null;
     if (fullHistoryData.length > 0) absoluteStartDate = new Date(fullHistoryData[0].date);
+    const now = new Date();
 
     // 2. Bornes Temporelles
     let startDate = null;
     let endDate = null;
     let label = "Tout l'historique";
-    let monthLabel = ""; // Pour le navigateur Mois
+    let upperLabel = ""; // Label barre supérieure
 
     if (currentChartMode > 0) {
-        const now = new Date();
-        
         if (currentChartMode < 0.1) { // 1H
             const target = new Date();
             target.setHours(now.getHours() - currentChartOffset);
@@ -309,9 +296,9 @@ function renderChart() {
             else if (currentChartOffset === 1) label = "Hier";
             else label = startDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' });
 
-            // Label Mois
+            // UPPER LABEL (Mois)
             let mLabel = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-            monthLabel = mLabel.charAt(0).toUpperCase() + mLabel.slice(1);
+            upperLabel = mLabel.charAt(0).toUpperCase() + mLabel.slice(1);
         } 
         else if (currentChartMode === 7) { // Semaine
             const targetEnd = new Date();
@@ -328,8 +315,12 @@ function renderChart() {
             target.setMonth(now.getMonth() - currentChartOffset);
             startDate = new Date(target.getFullYear(), target.getMonth(), 1);
             endDate = new Date(target.getFullYear(), target.getMonth() + 1, 0, 23, 59, 59);
-            label = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-            label = label.charAt(0).toUpperCase() + label.slice(1);
+            
+            let mLabel = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            label = mLabel.charAt(0).toUpperCase() + mLabel.slice(1);
+
+            // UPPER LABEL (Année)
+            upperLabel = startDate.getFullYear().toString();
         }
         else if (currentChartMode === 365) { // Année
             const targetYear = now.getFullYear() - currentChartOffset;
@@ -340,68 +331,79 @@ function renderChart() {
     }
     
     document.getElementById('chart-period-label').innerText = label;
-    if(monthLabel) document.getElementById('chart-month-label').innerText = monthLabel;
+    if(upperLabel) document.getElementById('chart-upper-label').innerText = upperLabel;
 
-    // 3. Gestion Visibilité des Barres de Navigation
+    // 3. Gestion Visibilité Navigations
     const navBarMain = document.getElementById('chart-navigation');
-    const navBarMonth = document.getElementById('chart-nav-month');
+    const navBarUpper = document.getElementById('chart-nav-upper');
+    
+    // Boutons Main
     const prevBtn = navBarMain.querySelector('.nav-arrow:first-child');
     const nextBtn = document.getElementById('btn-nav-next');
+    
+    // Boutons Upper
+    const prevUpper = navBarUpper.querySelector('.nav-arrow:first-child');
+    const nextUpper = navBarUpper.querySelector('.nav-arrow:last-child');
 
     if (currentChartMode === 0) {
-        // Mode Tout : Aucune nav
         navBarMain.classList.add('hidden');
-        navBarMonth.classList.add('hidden');
+        navBarUpper.classList.add('hidden');
     } else {
         navBarMain.classList.remove('hidden');
         nextBtn.disabled = (currentChartOffset === 0);
         
-        // Navigation Mois : Visible UNIQUEMENT en mode JOUR (1)
-        if (currentChartMode === 1) navBarMonth.classList.remove('hidden');
-        else navBarMonth.classList.add('hidden');
-
-        // Blocage bouton gauche (Début absolu)
+        // Bloquage Micro (Si début absolu dépassé)
         if (absoluteStartDate && startDate <= absoluteStartDate) prevBtn.disabled = true;
         else prevBtn.disabled = false;
+
+        // Gestion Upper Nav
+        if (currentChartMode === 1 || currentChartMode === 31) {
+            navBarUpper.classList.remove('hidden');
+            
+            // Bloquage Upper Next (Futur)
+            nextUpper.disabled = (currentChartOffset === 0);
+
+            // Bloquage Upper Prev (Passé Absolu)
+            // On vérifie si la fin de la période Upper précédente est avant le début absolu
+            let checkDate = new Date(startDate);
+            if(currentChartMode === 1) checkDate.setMonth(checkDate.getMonth() - 1);
+            if(currentChartMode === 31) checkDate.setFullYear(checkDate.getFullYear() - 1);
+            
+            // Si la période ciblée finit avant le début de nos données, on désactive
+            // Note: C'est une vérif simplifiée. 
+            if (absoluteStartDate && checkDate < absoluteStartDate && startDate < absoluteStartDate) {
+                prevUpper.disabled = true;
+            } else {
+                prevUpper.disabled = false;
+            }
+
+        } else {
+            navBarUpper.classList.add('hidden');
+        }
     }
 
     // 4. CONSTRUCTION DATASET
     let finalDataPoints = [];
-
-    // --- CONDITION POUR LISSAGE (Smart Points) ---
     const shouldDecimate = (currentChartMode === 0 || currentChartMode === 365);
     const shouldHidePoints = shouldDecimate;
 
     if (currentChartMode === 0) {
-        // --- MODE "TOUT" ---
-        let sourceData = fullHistoryData;
-        
-        if (shouldDecimate) {
-            sourceData = decimateDataPoints(fullHistoryData);
-        }
-
+        // Mode TOUT
+        let sourceData = shouldDecimate ? decimateDataPoints(fullHistoryData) : fullHistoryData;
         sourceData.forEach((h) => {
-            // Vérification Point Bleu (Start)
             let type = 'real';
             if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) type = 'start';
             finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
         });
-        
         if (currentLiveTrophies) finalDataPoints.push({ x: new Date().toISOString(), y: currentLiveTrophies, type: 'live' });
     
     } else {
-        // --- MODE PLAGES (Interpolation) ---
-        
-        // A. Points Réels (Filtrés)
+        // Mode PLAGES
         let inRange = fullHistoryData.filter(i => {
             const d = new Date(i.date);
             return d >= startDate && d <= endDate;
         });
-
-        // Lissage si plage longue (ex: Année passée)
-        if (shouldDecimate) {
-            inRange = decimateDataPoints(inRange);
-        }
+        if (shouldDecimate) inRange = decimateDataPoints(inRange);
 
         inRange.forEach(h => {
             let type = 'real';
@@ -409,18 +411,15 @@ function renderChart() {
             finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
         });
 
-        // B. Fantôme Début
+        // Fantôme Début
         if (startDate > absoluteStartDate) {
             const hasPointAtStart = finalDataPoints.some(p => new Date(p.x).getTime() === startDate.getTime());
             if (!hasPointAtStart) {
                 const startVal = getInterpolatedValue(startDate, fullHistoryData);
-                if (startVal !== null) {
-                    finalDataPoints.unshift({ x: startDate.toISOString(), y: Math.round(startVal), type: 'ghost' });
-                }
+                if (startVal !== null) finalDataPoints.unshift({ x: startDate.toISOString(), y: Math.round(startVal), type: 'ghost' });
             }
         }
-
-        // C. Fantôme Fin ou Live
+        // Fantôme Fin
         if (currentChartOffset === 0) {
             if (currentLiveTrophies) finalDataPoints.push({ x: new Date().toISOString(), y: currentLiveTrophies, type: 'live' });
         } else {
@@ -428,7 +427,6 @@ function renderChart() {
             if (endVal !== null) finalDataPoints.push({ x: endDate.toISOString(), y: Math.round(endVal), type: 'ghost' });
         }
     }
-
     finalDataPoints.sort((a,b) => new Date(a.x) - new Date(b.x));
 
     // 5. Variation
@@ -442,28 +440,21 @@ function renderChart() {
         else varElem.innerHTML = `<span style="color:#888">= 0</span>`;
     } else varElem.innerHTML = `<span style="color:#888">--</span>`;
 
-    // 6. Styles Dynamiques
+    // 6. Styles
     const pointColors = finalDataPoints.map(p => {
-        if (p.type === 'live') return '#ff5555'; // Rouge
-        if (p.type === 'start') return '#007bff'; // Bleu
+        if (p.type === 'live') return '#ff5555';
+        if (p.type === 'start') return '#007bff';
         return '#ffce00';
     });
-
     const pointRadiuses = finalDataPoints.map(p => {
         if (p.type === 'ghost') return 0;
-        if (p.type === 'live' || p.type === 'start') return 5; 
-        
-        // Smart Points : On cache si vue large
+        if (p.type === 'live' || p.type === 'start') return 5;
         if (shouldHidePoints) return 0;
         return 3;
     });
+    const hoverRadiuses = finalDataPoints.map(p => (p.type === 'ghost') ? 6 : 7);
 
-    const hoverRadiuses = finalDataPoints.map(p => {
-        if (p.type === 'ghost') return 6;
-        return 7;
-    });
-
-    // 7. Rendu Chart
+    // 7. Rendu Canvas
     let timeUnit = 'day';
     if (currentChartMode < 0.1) timeUnit = 'minute';
     else if (currentChartMode === 1) timeUnit = 'hour';
@@ -472,7 +463,6 @@ function renderChart() {
     const canvas = document.getElementById('trophyChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    
     if(window.myChart) window.myChart.destroy();
     
     window.myChart = new Chart(ctx, {
@@ -518,36 +508,14 @@ function renderChart() {
                     time: { unit: timeUnit, displayFormats: { minute:'HH:mm', hour:'HH:mm', day:'dd/MM', month:'MMM yy' }}, 
                     grid: {color:'#333'} 
                 }, 
-                y: { grid: {color:'#333'}, ticks: { color: '#888' } } 
+                y: { 
+                    grid: {color:'#333'}, 
+                    ticks: { 
+                        color: '#888',
+                        precision: 0 // <--- ICI : Force les entiers sur l'axe Y
+                    } 
+                } 
             }
         }
     });
-}
-
-// --- PUBLIC ---
-async function loadPublicProfile(tag) {
-    document.getElementById('public-actions').classList.remove('hidden');
-    document.getElementById('burger-menu').classList.add('hidden');
-    try {
-        const res = await fetch(`${API_URL}/api/public/player/${tag}`);
-        const data = await res.json();
-        
-        currentUserTier = 'basic'; 
-        renderProfile(data);
-
-        // MODE PUBLIC : Pas de badge grade
-        const badge = document.getElementById('tier-badge');
-        if(badge) badge.classList.add('hidden');
-        
-        loadBrawlersGrid(data.brawlers);
-        
-        // Graphique verrouillé
-        loadHistoryChart(null, data.trophies);
-
-    } catch (e) { alert("Joueur introuvable"); }
-}
-
-function publicSearch() {
-    const tag = document.getElementById('public-tag').value.trim().replace('#', '');
-    if(tag) window.location.href = `dashboard.html?tag=${tag}`;
 }
