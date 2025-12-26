@@ -237,17 +237,13 @@ function renderChart() {
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // 2. Gestion Navigation
-    const navBar = document.getElementById('chart-navigation');
-    const nextBtn = document.getElementById('btn-nav-next');
-    if (currentChartMode === 0) {
-        navBar.classList.add('hidden');
-    } else {
-        navBar.classList.remove('hidden');
-        nextBtn.disabled = (currentChartOffset === 0);
+    // --- RECUPERATION DATE ABSOLUE DE DEBUT ---
+    let absoluteStartDate = null;
+    if (fullHistoryData.length > 0) {
+        absoluteStartDate = new Date(fullHistoryData[0].date);
     }
 
-    // 3. Calcul des Bornes Temporelles (Start / End)
+    // 2. Calcul des Bornes Temporelles (Start / End)
     let startDate = null;
     let endDate = null;
     let label = "Tout l'historique";
@@ -255,23 +251,16 @@ function renderChart() {
     if (currentChartMode > 0) {
         const now = new Date();
         
-        // --- CAS 1 HEURE (Nouveau) ---
-        if (currentChartMode < 0.1) { 
+        // ... (Logique 1H, 24H, 7J, Mois, Année identique à avant) ...
+        if (currentChartMode < 0.1) { // 1H
             const target = new Date();
-            // On recule de X heures
             target.setHours(now.getHours() - currentChartOffset);
-            
-            // On définit HH:00:00 à HH:59:59
             startDate = new Date(target.setMinutes(0, 0, 0));
             endDate = new Date(target.setMinutes(59, 59, 999));
-            
-            // Label ex: "14h00 - 15h00"
             const h = startDate.getHours();
             label = `${h}h00 - ${h}h59`;
         }
-        
-        // --- CAS 24H (Journée) ---
-        else if (currentChartMode === 1) { 
+        else if (currentChartMode === 1) { // 24H
             const target = new Date();
             target.setDate(now.getDate() - currentChartOffset);
             startDate = new Date(target.setHours(0,0,0,0));
@@ -280,9 +269,7 @@ function renderChart() {
             else if (currentChartOffset === 1) label = "Hier";
             else label = startDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
         } 
-        
-        // --- CAS SEMAINE ---
-        else if (currentChartMode === 7) { 
+        else if (currentChartMode === 7) { // Semaine
             const targetEnd = new Date();
             targetEnd.setDate(now.getDate() - (currentChartOffset * 7));
             endDate = targetEnd;
@@ -292,9 +279,7 @@ function renderChart() {
             if(currentChartOffset === 0) label = "7 derniers jours";
             else label = `Semaine du ${startDate.toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}`;
         } 
-        
-        // --- CAS MOIS ---
-        else if (currentChartMode === 31) { 
+        else if (currentChartMode === 31) { // Mois
             const target = new Date();
             target.setMonth(now.getMonth() - currentChartOffset);
             startDate = new Date(target.getFullYear(), target.getMonth(), 1);
@@ -302,50 +287,97 @@ function renderChart() {
             label = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
             label = label.charAt(0).toUpperCase() + label.slice(1);
         }
-
-        // --- CAS ANNÉE (Nouveau) ---
-        else if (currentChartMode === 365) {
+        else if (currentChartMode === 365) { // Année
             const targetYear = now.getFullYear() - currentChartOffset;
-            startDate = new Date(targetYear, 0, 1); // 1er Janvier
-            endDate = new Date(targetYear, 11, 31, 23, 59, 59); // 31 Décembre
+            startDate = new Date(targetYear, 0, 1);
+            endDate = new Date(targetYear, 11, 31, 23, 59, 59);
             label = targetYear.toString();
         }
     }
     
     document.getElementById('chart-period-label').innerText = label;
 
-    // 4. CONSTRUCTION DU DATASET AVEC POINTS FANTÔMES
+    // 3. GESTION NAVIGATION (Blocage bouton gauche)
+    const navBar = document.getElementById('chart-navigation');
+    const prevBtn = document.querySelector('.nav-arrow:first-child'); // Bouton <
+    const nextBtn = document.getElementById('btn-nav-next'); // Bouton >
+    
+    if (currentChartMode === 0) {
+        navBar.classList.add('hidden');
+    } else {
+        navBar.classList.remove('hidden');
+        nextBtn.disabled = (currentChartOffset === 0);
+        
+        // BLOQUER LA NAVIGATION ARRIÈRE SI ON EST AU DÉBUT
+        // Si la fin de la période affichée est AVANT le tout premier point enregistré
+        if (absoluteStartDate && endDate < absoluteStartDate) {
+             // On force l'affichage du début si on a trop reculé
+             // (Optionnel : ou on désactive juste le bouton)
+        }
+        
+        // Si la période affichée englobe le début absolu, on désactive le bouton Précédent
+        if (absoluteStartDate && startDate <= absoluteStartDate) {
+            prevBtn.disabled = true;
+            prevBtn.style.opacity = "0.3";
+            prevBtn.style.cursor = "not-allowed";
+        } else {
+            prevBtn.disabled = false;
+            prevBtn.style.opacity = "1";
+            prevBtn.style.cursor = "pointer";
+        }
+    }
+
+    // 4. CONSTRUCTION DATASET
     let finalDataPoints = [];
 
     if (currentChartMode === 0) {
-        // Mode "Tout"
-        fullHistoryData.forEach(h => finalDataPoints.push({ x: h.date, y: h.trophies, type: 'real' }));
+        // Mode Tout
+        fullHistoryData.forEach((h, index) => {
+            // Le tout premier point est 'start'
+            let type = (index === 0) ? 'start' : 'real';
+            finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
+        });
         if (currentLiveTrophies) finalDataPoints.push({ x: new Date().toISOString(), y: currentLiveTrophies, type: 'live' });
     
     } else {
         // Mode Plages
         
-        // A. Fantôme DÉBUT
-        const startVal = getInterpolatedValue(startDate, fullHistoryData);
-        if (startVal !== null) {
-            finalDataPoints.push({ x: startDate.toISOString(), y: Math.round(startVal), type: 'ghost' });
-        }
-
-        // B. Points RÉELS
+        // A. Points RÉELS
         const inRange = fullHistoryData.filter(i => {
             const d = new Date(i.date);
             return d >= startDate && d <= endDate;
         });
-        inRange.forEach(h => finalDataPoints.push({ x: h.date, y: h.trophies, type: 'real' }));
+
+        inRange.forEach(h => {
+            // Vérifier si c'est le point absolu de début
+            let type = 'real';
+            if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) {
+                type = 'start';
+            }
+            finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
+        });
+
+        // B. Fantôme ou Start DÉBUT
+        // Si on n'a pas inclus le point de départ absolu dans les points réels, on calcule un fantôme
+        // SAUF si la plage commence avant le début absolu (pas de données à inventer avant le Big Bang)
+        if (startDate > absoluteStartDate) {
+            // On vérifie si on n'a pas déjà un point au tout début
+            const hasPointAtStart = finalDataPoints.some(p => new Date(p.x).getTime() === startDate.getTime());
+            
+            if (!hasPointAtStart) {
+                const startVal = getInterpolatedValue(startDate, fullHistoryData);
+                if (startVal !== null) {
+                    finalDataPoints.unshift({ x: startDate.toISOString(), y: Math.round(startVal), type: 'ghost' });
+                }
+            }
+        }
 
         // C. Fantôme FIN ou LIVE
         if (currentChartOffset === 0) {
-            // C'est la période actuelle -> Point LIVE si dispo
             if (currentLiveTrophies) {
                 finalDataPoints.push({ x: new Date().toISOString(), y: currentLiveTrophies, type: 'live' });
             }
         } else {
-            // C'est du passé -> Point Fantôme interpolé
             const endVal = getInterpolatedValue(endDate, fullHistoryData);
             if (endVal !== null) {
                 finalDataPoints.push({ x: endDate.toISOString(), y: Math.round(endVal), type: 'ghost' });
@@ -353,13 +385,15 @@ function renderChart() {
         }
     }
 
-    // 5. Calcul Variation
+    // Tri par sécurité pour que la ligne ne fasse pas d'allers-retours
+    finalDataPoints.sort((a,b) => new Date(a.x) - new Date(b.x));
+
+    // 5. Variation
     const varElem = document.getElementById('trophy-variation');
     if (finalDataPoints.length >= 2) {
         const first = finalDataPoints[0];
         const last = finalDataPoints[finalDataPoints.length - 1];
         const diff = last.y - first.y;
-
         if (diff > 0) varElem.innerHTML = `<span style="color:#28a745">▲ +${diff}</span>`;
         else if (diff < 0) varElem.innerHTML = `<span style="color:#dc3545">▼ ${diff}</span>`;
         else varElem.innerHTML = `<span style="color:#888">= 0</span>`;
@@ -367,41 +401,29 @@ function renderChart() {
         varElem.innerHTML = `<span style="color:#888">--</span>`;
     }
 
-    // 6. Style Graphique
+    // 6. Styles
     const pointColors = finalDataPoints.map(p => {
-        if (p.type === 'live') return '#ff5555'; 
-        return '#ffce00';
+        if (p.type === 'live') return '#ff5555'; // Rouge
+        if (p.type === 'start') return '#007bff'; // Bleu (NOUVEAU)
+        return '#ffce00'; // Jaune
     });
 
     const pointRadiuses = finalDataPoints.map(p => {
         if (p.type === 'ghost') return 0;
-        if (p.type === 'live') return 5;
-        // Points réels visibles uniquement en mode 1H ou 24H pour la précision
-        return (currentChartMode <= 1) ? 3 : 0; 
+        if (p.type === 'live' || p.type === 'start') return 5; // Gros point pour Start et Live
+        return (currentChartMode <= 1) ? 3 : 0;
     });
 
     const hoverRadiuses = finalDataPoints.map(p => {
-        if (p.type === 'ghost') return 0;
-        return 6; 
+        if (p.type === 'ghost') return 6; // Le fantôme devient "cliquable"
+        return 7;
     });
 
-    // 7. Rendu Chart.js
+    // 7. Rendu Chart
     let timeUnit = 'day';
-    let displayFmt = 'dd/MM';
-    
-    // Ajustement de l'axe X selon le mode
-    if (currentChartMode < 0.1) { // 1H
-        timeUnit = 'minute'; 
-        displayFmt = 'HH:mm'; 
-    }
-    else if (currentChartMode === 1) { // 24H
-        timeUnit = 'hour'; 
-        displayFmt = 'HH:mm'; 
-    }
-    else if (currentChartMode === 0 || currentChartMode === 365) { 
-        timeUnit = 'month'; 
-        displayFmt = 'MMM yy'; 
-    }
+    if (currentChartMode < 0.1) timeUnit = 'minute';
+    else if (currentChartMode === 1) timeUnit = 'hour';
+    else if (currentChartMode === 0 || currentChartMode === 365) timeUnit = 'month';
 
     const canvas = document.getElementById('trophyChart');
     if (!canvas) return;
@@ -429,17 +451,37 @@ function renderChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: {display:false} },
-            interaction: { mode: 'index', intersect: false },
+            plugins: { 
+                legend: {display:false},
+                // --- CUSTOM TOOLTIP ---
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const point = context.raw;
+                            let val = point.y;
+                            
+                            // Logique texte fantôme
+                            if (point.type === 'ghost') {
+                                return `~ Environ : ${val}`;
+                            }
+                            if (point.type === 'start') {
+                                return `★ Début : ${val}`;
+                            }
+                            if (point.type === 'live') {
+                                return `🔴 Actuel : ${val}`;
+                            }
+                            return `🏆 ${val}`;
+                        }
+                    }
+                }
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
             scales: { 
                 x: { 
                     type: 'time', 
                     min: currentChartMode > 0 ? startDate : undefined,
                     max: currentChartMode > 0 ? endDate : undefined,
-                    time: { 
-                        unit: timeUnit, 
-                        displayFormats: { minute: 'HH:mm', hour: 'HH:mm', day: 'dd/MM', month: 'MMM yy' } 
-                    }, 
+                    time: { unit: timeUnit, displayFormats: { minute:'HH:mm', hour:'HH:mm', day:'dd/MM', month:'MMM yy' }}, 
                     grid: {color:'#333'} 
                 }, 
                 y: { grid: {color:'#333'}, ticks: { color: '#888' } } 
