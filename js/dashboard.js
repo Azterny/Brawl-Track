@@ -305,6 +305,9 @@ async function loadHistoryChart(token, liveTrophies) {
 
 function manageFilterButtons() {
     const btn1h = document.getElementById('btn-1h');
+    // Sécurité : si les boutons n'existent pas encore, on arrête
+    if (!btn1h) return;
+
     if (currentUserTier === 'premium') btn1h.classList.remove('hidden'); 
     else btn1h.classList.add('hidden');
 
@@ -312,12 +315,15 @@ function manageFilterButtons() {
     if (fullHistoryData.length > 0) oldestDate = new Date(fullHistoryData[0].date);
     const diffDays = (new Date() - oldestDate) / (1000 * 60 * 60 * 24);
 
-    const showBtn = (id, cond) => document.getElementById(id).classList[cond ? 'remove' : 'add']('hidden');
+    const showBtn = (id, cond) => {
+        const el = document.getElementById(id);
+        if(el) el.classList[cond ? 'remove' : 'add']('hidden');
+    };
+    
     showBtn('btn-7d', diffDays > 1);
     showBtn('btn-31d', diffDays > 7);
     showBtn('btn-365d', diffDays > 31);
 }
-
 function renderChart() {
     const canvas = document.getElementById('trophyChart');
     if (!canvas) return;
