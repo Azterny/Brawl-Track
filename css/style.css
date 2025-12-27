@@ -513,3 +513,22 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
     transform: none !important; /* Empêche l'animation au clic */
     pointer-events: none;      /* Bloque totalement les clics */
 }
+
+/* --- AJOUTS DANS css/style.css --- */
+
+/* Thème Bleu pour les filtres Brawlers */
+.filter-btn.blue-active.active {
+    background: #00d2ff !important;
+    border-color: #00d2ff !important;
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.5) !important;
+    color: black !important;
+}
+
+/* Hover léger en bleu */
+.filter-btn.blue-active:hover {
+    color: #00d2ff;
+    border-color: #00d2ff;
+}
+.filter-btn.blue-active:hover.active {
+    color: black;
+}
