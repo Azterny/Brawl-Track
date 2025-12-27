@@ -457,6 +457,7 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
 /* =========================================
    9. NAVIGATION GRAPHIQUE
    ========================================= */
+
 .chart-nav-bar {
     display: flex;
     align-items: center;
@@ -504,31 +505,28 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
     transform: scale(0.9);
 }
 
-/* --- C'EST ICI QUE LA MAGIE OPÈRE --- */
 .nav-arrow:disabled {
-    opacity: 0.3;              /* Rend le bouton transparent */
-    cursor: not-allowed;       /* Affiche un sens interdit à la souris */
+    opacity: 0.3;
+    cursor: not-allowed;
     border-color: #333 !important;
-    color: #888 !important;    /* Grise la flèche jaune */
-    transform: none !important; /* Empêche l'animation au clic */
-    pointer-events: none;      /* Bloque totalement les clics */
+    color: #888 !important;
+    transform: none !important;
+    pointer-events: none;
 }
 
-/* --- AJOUTS DANS css/style.css --- */
-
-/* Thème Bleu pour les filtres Brawlers */
-.filter-btn.blue-active.active {
-    background: #00d2ff !important;
+button.filter-btn.blue-active.active {
+    background-color: #00d2ff !important;
     border-color: #00d2ff !important;
-    box-shadow: 0 0 10px rgba(0, 210, 255, 0.5) !important;
-    color: black !important;
+    color: #000 !important;
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.6) !important;
 }
 
-/* Hover léger en bleu */
-.filter-btn.blue-active:hover {
+button.filter-btn.blue-active:hover {
     color: #00d2ff;
     border-color: #00d2ff;
 }
-.filter-btn.blue-active:hover.active {
-    color: black;
+
+button.filter-btn.blue-active.active:hover {
+    background-color: #33cfff !important;
+    color: #000 !important;
 }
