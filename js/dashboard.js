@@ -489,11 +489,13 @@ function renderMainChart() {
 
 function initBrawlerSelector() {
     const select = document.getElementById('brawler-select-dashboard');
-    if(!select) return; // Si on est pas sur la vue Brawlers
+    if(!select) return; 
     
     // Si la liste est vide mais qu'on a des brawlers globaux
     if (select.options.length <= 1 && typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
         select.innerHTML = "";
+        
+        // On garde uniquement ceux possédés
         const owned = globalBrawlersList.filter(b => b.owned).sort((a,b) => b.trophies - a.trophies);
         
         if(owned.length === 0) { select.innerHTML = "<option>Aucun brawler</option>"; return; }
@@ -501,7 +503,8 @@ function initBrawlerSelector() {
         owned.forEach(b => {
             const opt = document.createElement('option');
             opt.value = b.id;
-            opt.innerText = `${b.name} (🏆 ${b.trophies})`;
+            // CORRECTION : Afficher seulement le nom
+            opt.innerText = b.name; 
             select.appendChild(opt);
         });
         
