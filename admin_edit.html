@@ -136,7 +136,8 @@
         const k = document.getElementById('admin-key-input').value;
         if(k) {
             ADMIN_KEY = k;
-            sessionStorage.setItem('admin_key_temp', k);
+            sessionStorage.setItem('admin_key_temp', k); 
+            document.getElementById('login-overlay').style.display = 'none';
             initPage();
         }
     }
