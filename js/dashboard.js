@@ -8,38 +8,63 @@ let currentBrawlerMode = 0;
 let brawlerChartInstance = null; // Instance Chart.js Brawler
 
 // --- CHARGEMENT PRINCIPAL (DASHBOARD) ---
+// js/dashboard.js
+
 async function loadMyStats() {
+    const token = localStorage.getItem('token');
+    let data;
+
+    // --- BLOC 1 : CRITIQUE (Authentification & Données de base) ---
+    // Si ça échoue ici, c'est que le token est invalide -> Logout
     try {
-        const token = localStorage.getItem('token');
         const res = await fetch(`${API_URL}/api/my-stats`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
         
-        if (!res.ok) throw new Error("Session invalide");
+        if (!res.ok) throw new Error("Session invalide ou expirée");
         
-        const data = await res.json();
+        data = await res.json();
+        
+        // Configuration de base
         currentUserTier = data.internal_tier || 'basic';
         window.currentUpdateInterval = data.internal_interval; 
 
         renderProfile(data);
         
-        // Affichage Badge
         const badge = document.getElementById('tier-badge');
         if(badge) badge.classList.remove('hidden');
         
         if(typeof setupIntervalUI === 'function') setupIntervalUI(data.internal_tier, data.internal_interval);
 
+    } catch (e) { 
+        console.error("⛔ Erreur Critique (Auth):", e);
+        logout(); // On ne déconnecte QUE si l'API refuse l'accès
+        return;   // On arrête tout
+    }
+
+    // --- BLOC 2 : SECONDAIRE (Interface & Graphiques) ---
+    // Si ça échoue ici, on affiche une erreur dans la console MAIS ON NE DÉCONNECTE PAS
+    
+    // 2.1 Charger la grille des brawlers (et attendre la fin)
+    try {
         await loadBrawlersGrid(data.brawlers);
-        
+    } catch (e) {
+        console.warn("⚠️ Erreur chargement Grille Brawlers:", e);
+    }
+    
+    // 2.2 Charger le graphique historique
+    try {
         unlockChart();
         loadHistoryChart(token, data.trophies);
-        
-        // Initialisation du sélecteur Brawler si la vue est active
+    } catch (e) {
+        console.warn("⚠️ Erreur chargement Graphique:", e);
+    }
+    
+    // 2.3 Initialiser l'autocomplétion
+    try {
         initBrawlerSelector();
-
-    } catch (e) { 
-        console.error(e);
-        logout(); 
+    } catch (e) {
+        console.warn("⚠️ Erreur init Autocomplétion:", e);
     }
 }
 
