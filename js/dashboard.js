@@ -658,3 +658,10 @@ function publicSearch() {
     const tag = document.getElementById('public-tag').value.trim().replace('#', '');
     if(tag) window.location.href = `dashboard.html?tag=${tag}`;
 }
+
+function goToBrawlerStats(id, name) {
+    switchView('brawlers');
+    if (typeof selectBrawler === 'function') {
+        selectBrawler(id, name);
+    }
+}
