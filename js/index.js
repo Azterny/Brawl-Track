@@ -62,26 +62,45 @@ async function loadEvents() {
             if (diffHrs < 0) diffHrs = 0;
             if (diffMins < 0) diffMins = 0;
 
-            // Formatage du nom du mode
-            const modeName = mode.replace(/([A-Z])/g, ' $1').trim().toUpperCase();
+            const card = document.createElement('div');
+            card.className = 'event-card';
 
-            const html = `
-                <div class="event-card">
-                    <div class="event-header">
-                        <span>${modeName}</span>
-                        <span style="font-size:0.8em; opacity:0.8;">Fin : ${diffHrs}h ${diffMins}m</span>
-                    </div>
-                    <div class="event-body">
-                        <div class="map-name">${map}</div>
-                        <div class="event-timer">
-                            <span style="color:${diffHrs < 1 ? '#ff5555' : '#28a745'}">
-                                ● ${diffHrs < 1 ? 'Bientôt terminé' : 'Actif'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.innerHTML += html;
+            const header = document.createElement('div');
+            header.className = 'event-header';
+            
+            const modeSpan = document.createElement('span');
+            modeSpan.textContent = mode.replace(/([A-Z])/g, ' $1').trim().toUpperCase();
+            
+            const timerSpan = document.createElement('span');
+            timerSpan.style.fontSize = '0.8em';
+            timerSpan.style.opacity = '0.8';
+            timerSpan.textContent = `Fin : ${diffHrs}h ${diffMins}m`;
+
+            header.appendChild(modeSpan);
+            header.appendChild(timerSpan);
+
+            const body = document.createElement('div');
+            body.className = 'event-body';
+
+            const mapDiv = document.createElement('div');
+            mapDiv.className = 'map-name';
+            mapDiv.textContent = map;
+
+            const timerDiv = document.createElement('div');
+            timerDiv.className = 'event-timer';
+            
+            const statusSpan = document.createElement('span');
+            statusSpan.style.color = diffHrs < 1 ? '#ff5555' : '#28a745';
+            statusSpan.textContent = `● ${diffHrs < 1 ? 'Bientôt terminé' : 'Actif'}`;
+
+            timerDiv.appendChild(statusSpan);
+            body.appendChild(mapDiv);
+            body.appendChild(timerDiv);
+
+            card.appendChild(header);
+            card.appendChild(body);
+
+            container.appendChild(card);
         });
 
     } catch(e) {
