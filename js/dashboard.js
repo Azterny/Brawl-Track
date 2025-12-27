@@ -134,11 +134,9 @@ function unlockChart() {
 }
 
 function manageGenericFilters(data, idPrefix) {
-    // 1. Gestion du bouton 1H (Selon le grade, comme avant)
+    // 1. Gestion du bouton 1H (Premium uniquement)
     const btn1h = document.getElementById(`${idPrefix}-1h`);
     if(btn1h) {
-        // Pour les Brawlers, on autorise 1H pour tout le monde ou on garde la restriction tier ?
-        // Ici on garde la logique : visible seulement si Premium
         if (currentUserTier === 'premium') btn1h.classList.remove('hidden');
         else btn1h.classList.add('hidden');
     }
@@ -146,12 +144,16 @@ function manageGenericFilters(data, idPrefix) {
     // 2. Gestion Temporelle (Semaine, Mois, Année)
     let diffDays = 0;
     if (data && data.length > 0) {
-        const oldest = new Date(data[0].date);
+        // CORRECTION DATE : On remplace l'espace par T pour compatibilité iOS/Safari
+        const dateStr = data[0].date.replace(' ', 'T'); 
+        const oldest = new Date(dateStr);
         const now = new Date();
+        
+        // Calcul de la différence en jours
         diffDays = (now - oldest) / (1000 * 60 * 60 * 24);
     }
 
-    // Helper pour toggle
+    // Helper pour afficher/cacher
     const toggle = (suffix, condition) => {
         const el = document.getElementById(`${idPrefix}-${suffix}`);
         if(el) {
@@ -160,8 +162,8 @@ function manageGenericFilters(data, idPrefix) {
         }
     };
 
-    // Logique : Affiche 'Semaine' si on a > 1 jour de donnée, etc.
-    toggle('7d', diffDays > 1);
+    // Logique d'affichage (>= 1 jour pour afficher la semaine)
+    toggle('7d', diffDays >= 1);
     toggle('31d', diffDays > 7);
     toggle('365d', diffDays > 31);
 }
