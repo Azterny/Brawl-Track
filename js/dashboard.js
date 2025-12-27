@@ -33,9 +33,6 @@ async function loadMyStats() {
         
         unlockChart();
         loadHistoryChart(token, data.trophies);
-        
-        // Initialisation du sélecteur Brawler si la vue est active
-        initBrawlerSelector();
 
     } catch (e) { 
         console.error(e);
@@ -87,7 +84,6 @@ async function loadBrawlersGrid(playerBrawlers) {
         };
     });
     sortBrawlers();
-    initBrawlerSelector(); // Met à jour le menu déroulant si besoin
 }
 
 function sortBrawlers() {
@@ -502,93 +498,6 @@ function renderMainChart() {
 // === GESTION DU GRAPHIQUE BRAWLERS (NOUVEAU) ===
 // =========================================================
 
-function initBrawlerSelector() {
-    const input = document.getElementById('brawler-search-input');
-    const list = document.getElementById('brawler-dropdown-list');
-    
-    if(!input || !list) return;
-
-    // Vérifier si les données sont prêtes
-    if (!globalBrawlersList || globalBrawlersList.length === 0) {
-        input.placeholder = "Chargement des brawlers...";
-        input.disabled = true;
-        return;
-    } else {
-        input.placeholder = "🔍 Rechercher un Brawler...";
-        input.disabled = false;
-    }
-
-    // Filtrer et trier les brawlers possédés
-    const ownedBrawlers = globalBrawlersList.filter(b => b.owned);
-    ownedBrawlers.sort((a,b) => b.trophies - a.trophies); // Tri par trophées
-
-    // Initialisation : Sélectionner le premier par défaut si rien n'est sélectionné
-    if (!document.getElementById('selected-brawler-id').value && ownedBrawlers.length > 0) {
-        if(typeof selectBrawler === 'function') {
-            selectBrawler(ownedBrawlers[0].id, ownedBrawlers[0].name);
-        }
-    }
-
-    // Fonction utilitaire pour afficher une liste d'éléments
-    const renderList = (items) => {
-        list.innerHTML = ''; // Vider la liste actuelle
-        if (items.length > 0) {
-            list.classList.remove('hidden');
-            items.forEach(b => {
-                const item = document.createElement('div');
-                item.className = 'dropdown-item';
-                item.innerHTML = `
-                    <span>${b.name}</span>
-                    <span class="trophies">🏆 ${b.trophies}</span>
-                `;
-                // Au clic, on sélectionne et on cache la liste
-                item.onclick = () => selectBrawler(b.id, b.name);
-                list.appendChild(item);
-            });
-        } else {
-            list.classList.add('hidden');
-        }
-    };
-
-    // Événement : L'utilisateur tape (ou efface) du texte
-    input.addEventListener('input', function() {
-        const query = this.value.toLowerCase();
-        
-        if (query.length === 0) {
-            // MODIFICATION ICI : Si vide, on affiche TOUT au lieu de cacher
-            renderList(ownedBrawlers);
-        } else {
-            // Sinon, on filtre
-            const matches = ownedBrawlers.filter(b => b.name.toLowerCase().includes(query));
-            renderList(matches);
-        }
-    });
-
-    // Événement : Au clic (Focus), si vide, on affiche tout
-    input.addEventListener('focus', function() {
-        if(this.value.trim() === "") {
-            renderList(ownedBrawlers);
-        }
-    });
-
-    // Événement : Clic en dehors pour fermer
-    document.addEventListener('click', function(e) {
-        if (!input.contains(e.target) && !list.contains(e.target)) {
-            list.classList.add('hidden');
-        }
-    });
-}
-
-function selectBrawler(id, name) {
-    // Mise à jour de l'interface
-    document.getElementById('brawler-search-input').value = name;
-    document.getElementById('selected-brawler-id').value = id;
-    document.getElementById('brawler-dropdown-list').classList.add('hidden');
-
-    // Lancer le chargement des stats
-    loadSelectedBrawlerStats();
-}
-
 async function loadSelectedBrawlerStats() {
     // On récupère l'ID depuis le champ caché
     const brawlerId = document.getElementById('selected-brawler-id').value;
@@ -672,7 +581,9 @@ function publicSearch() {
 
 function goToBrawlerStats(id, name) {
     switchView('brawlers');
-    if (typeof selectBrawler === 'function') {
-        selectBrawler(id, name);
-    }
+    const hiddenInput = document.getElementById('selected-brawler-id');
+    if(hiddenInput) hiddenInput.value = id;
+    const title = document.getElementById('brawler-page-title');
+    if(title) title.innerText = name;
+    loadSelectedBrawlerStats();
 }
