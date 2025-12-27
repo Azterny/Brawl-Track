@@ -39,8 +39,8 @@ async function loadEvents() {
 
         container.innerHTML = '';
 
-        // On prend les 6 premiers événements
-        events.slice(0, 6).forEach(evt => {
+        // On prend tous les événements
+        events.forEach(evt => {
             const mode = evt.event.mode;
             const map = evt.event.map;
             
