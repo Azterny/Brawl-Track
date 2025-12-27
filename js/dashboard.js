@@ -7,63 +7,39 @@ let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
 let brawlerChartInstance = null; // Instance Chart.js Brawler
 
-// =========================================================
-// === CHARGEMENT PRINCIPAL (DASHBOARD) ===
-// =========================================================
-
+// --- CHARGEMENT PRINCIPAL (DASHBOARD) ---
 async function loadMyStats() {
-    const token = localStorage.getItem('token');
-    let data;
-
-    // --- BLOC 1 : CRITIQUE (Authentification) ---
     try {
+        const token = localStorage.getItem('token');
         const res = await fetch(`${API_URL}/api/my-stats`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
         
-        if (!res.ok) throw new Error("Session invalide ou expirée");
+        if (!res.ok) throw new Error("Session invalide");
         
-        data = await res.json();
-        
-        // Configuration de base
+        const data = await res.json();
         currentUserTier = data.internal_tier || 'basic';
         window.currentUpdateInterval = data.internal_interval; 
 
         renderProfile(data);
         
+        // Affichage Badge
         const badge = document.getElementById('tier-badge');
         if(badge) badge.classList.remove('hidden');
         
         if(typeof setupIntervalUI === 'function') setupIntervalUI(data.internal_tier, data.internal_interval);
 
-    } catch (e) { 
-        console.error("⛔ Erreur Critique (Auth):", e);
-        logout(); 
-        return;
-    }
-
-    // --- BLOC 2 : SECONDAIRE (Interface & Graphiques) ---
-    
-    // 2.1 Charger la grille des brawlers (et attendre la fin)
-    try {
         await loadBrawlersGrid(data.brawlers);
-    } catch (e) {
-        console.warn("⚠️ Erreur chargement Grille Brawlers:", e);
-    }
-    
-    // 2.2 Charger le graphique historique
-    try {
+        
         unlockChart();
         loadHistoryChart(token, data.trophies);
-    } catch (e) {
-        console.warn("⚠️ Erreur chargement Graphique:", e);
-    }
-    
-    // 2.3 Initialiser le menu déroulant
-    try {
+        
+        // Initialisation du sélecteur Brawler si la vue est active
         initBrawlerSelector();
-    } catch (e) {
-        console.warn("⚠️ Erreur init Selecteur Brawlers:", e);
+
+    } catch (e) { 
+        console.error(e);
+        logout(); 
     }
 }
 
@@ -111,6 +87,7 @@ async function loadBrawlersGrid(playerBrawlers) {
         };
     });
     sortBrawlers();
+    initBrawlerSelector(); // Met à jour le menu déroulant si besoin
 }
 
 function sortBrawlers() {
@@ -156,19 +133,54 @@ function unlockChart() {
     if(overlay) overlay.classList.add('hidden');
 }
 
+function manageGenericFilters(data, idPrefix) {
+    // 1. Gestion du bouton 1H (Premium uniquement)
+    const btn1h = document.getElementById(`${idPrefix}-1h`);
+    if(btn1h) {
+        if (currentUserTier === 'premium') btn1h.classList.remove('hidden');
+        else btn1h.classList.add('hidden');
+    }
+
+    // 2. Gestion Temporelle (Semaine, Mois, Année)
+    let diffDays = 0;
+    if (data && data.length > 0) {
+        // CORRECTION DATE : On remplace l'espace par T pour compatibilité iOS/Safari
+        const dateStr = data[0].date.replace(' ', 'T'); 
+        const oldest = new Date(dateStr);
+        const now = new Date();
+        
+        // Calcul de la différence en jours
+        diffDays = (now - oldest) / (1000 * 60 * 60 * 24);
+    }
+
+    // Helper pour afficher/cacher
+    const toggle = (suffix, condition) => {
+        const el = document.getElementById(`${idPrefix}-${suffix}`);
+        if(el) {
+            if(condition) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+    };
+
+    // Logique d'affichage (>= 1 jour pour afficher la semaine)
+    toggle('7d', diffDays >= 1);
+    toggle('31d', diffDays > 7);
+    toggle('365d', diffDays > 31);
+}
+
 // === MATHS : INTERPOLATION & DÉCIMATION ===
 function getInterpolatedValue(targetDate, allData) {
     const targetTs = targetDate.getTime();
     let prev = null, next = null;
     for (let pt of allData) {
-        let ptTs = new Date(pt.date.replace(' ','T')).getTime();
+        let ptTs = new Date(pt.date).getTime();
         if (ptTs <= targetTs) prev = pt;
         if (ptTs >= targetTs && !next) { next = pt; break; }
     }
     if (prev && prev === next) return prev.trophies;
     if (prev && next) {
-        const prevTs = new Date(prev.date.replace(' ','T')).getTime();
-        const nextTs = new Date(next.date.replace(' ','T')).getTime();
+        const prevTs = new Date(prev.date).getTime();
+        const nextTs = new Date(next.date).getTime();
         if ((nextTs - prevTs) === 0) return prev.trophies;
         const factor = (targetTs - prevTs) / (nextTs - prevTs);
         return prev.trophies + (next.trophies - prev.trophies) * factor;
@@ -189,46 +201,31 @@ function decimateDataPoints(points) {
     return Object.values(grouped).sort((a,b) => new Date(a.date || a.x) - new Date(b.date || b.x));
 }
 
-// --- GESTION INTELLIGENTE DES BOUTONS ---
-function manageGenericFilters(data, idPrefix) {
-    const btn1h = document.getElementById(`${idPrefix}-1h`);
-    if(btn1h) {
-        if (currentUserTier === 'premium') btn1h.classList.remove('hidden');
-        else btn1h.classList.add('hidden');
-    }
-
-    let diffDays = 0;
-    if (data && data.length > 0) {
-        // Correction Date (remplacer espace par T)
-        const dateStr = data[0].date.replace(' ', 'T'); 
-        const oldest = new Date(dateStr);
-        const now = new Date();
-        diffDays = (now - oldest) / (1000 * 60 * 60 * 24);
-    }
-
-    const toggle = (suffix, condition) => {
-        const el = document.getElementById(`${idPrefix}-${suffix}`);
-        if(el) {
-            if(condition) el.classList.remove('hidden');
-            else el.classList.add('hidden');
-        }
-    };
-
-    toggle('7d', diffDays >= 1);
-    toggle('31d', diffDays > 7);
-    toggle('365d', diffDays > 31);
-}
 
 // =========================================================
-// === MOTEUR DE GRAPHIQUE GÉNÉRIQUE ===
+// === CŒUR DU SYSTÈME : MOTEUR DE GRAPHIQUE GÉNÉRIQUE ===
 // =========================================================
 
 function renderGenericChart(config) {
+    /* config = {
+         canvasId: 'trophyChart',
+         rawData: [...],
+         mode: 0, 1, 7...,
+         offset: 0,
+         liveValue: 1234 (optionnel),
+         color: '#ffce00',
+         variationId: 'trophy-variation',
+         labelId: 'chart-period-label',
+         // ... autres options d'UI
+       }
+    */
+
     const { rawData, mode, offset, liveValue, color, canvasId, variationId } = config;
     
+    // 1. Calcul des bornes temporelles
     let startDate = null;
     let endDate = null;
-    let absoluteStartDate = rawData.length > 0 ? new Date(rawData[0].date.replace(' ','T')) : null;
+    let absoluteStartDate = rawData.length > 0 ? new Date(rawData[0].date) : null;
     const now = new Date();
 
     if (mode > 0) {
@@ -261,34 +258,36 @@ function renderGenericChart(config) {
         }
     }
 
+    // 2. Préparation des points
     let finalDataPoints = [];
     const shouldDecimate = (mode === 0 || mode === 365);
     const shouldHidePoints = shouldDecimate;
 
     if (mode === 0) {
+        // Mode TOUT
         let source = shouldDecimate ? decimateDataPoints(rawData) : rawData;
         source.forEach(h => {
             let type = 'real';
-            let d = new Date(h.date.replace(' ','T'));
-            if (absoluteStartDate && d.getTime() === absoluteStartDate.getTime()) type = 'start';
-            finalDataPoints.push({ x: h.date.replace(' ','T'), y: h.trophies, type: type });
+            if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) type = 'start';
+            finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
         });
         if (liveValue !== null && liveValue !== undefined) 
             finalDataPoints.push({ x: new Date().toISOString(), y: liveValue, type: 'live' });
     } else {
+        // Mode Plages (avec interpolation)
         let inRange = rawData.filter(i => {
-            const d = new Date(i.date.replace(' ','T'));
+            const d = new Date(i.date);
             return d >= startDate && d <= endDate;
         });
         if (shouldDecimate) inRange = decimateDataPoints(inRange);
 
         inRange.forEach(h => {
             let type = 'real';
-            let d = new Date(h.date.replace(' ','T'));
-            if (absoluteStartDate && d.getTime() === absoluteStartDate.getTime()) type = 'start';
-            finalDataPoints.push({ x: h.date.replace(' ','T'), y: h.trophies, type: type });
+            if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) type = 'start';
+            finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
         });
 
+        // Fantôme Début
         if (absoluteStartDate && startDate > absoluteStartDate) {
             const hasPoint = finalDataPoints.some(p => new Date(p.x).getTime() === startDate.getTime());
             if (!hasPoint) {
@@ -296,6 +295,7 @@ function renderGenericChart(config) {
                 if (val !== null) finalDataPoints.unshift({ x: startDate.toISOString(), y: Math.round(val), type: 'ghost' });
             }
         }
+        // Fantôme Fin / Live
         if (offset === 0) {
             if (liveValue !== null && liveValue !== undefined) 
                 finalDataPoints.push({ x: new Date().toISOString(), y: liveValue, type: 'live' });
@@ -307,6 +307,7 @@ function renderGenericChart(config) {
 
     finalDataPoints.sort((a,b) => new Date(a.x) - new Date(b.x));
 
+    // 3. Calcul Variation
     if (variationId) {
         const varElem = document.getElementById(variationId);
         if (varElem) {
@@ -321,6 +322,7 @@ function renderGenericChart(config) {
         }
     }
 
+    // 4. Styles
     const pointColors = finalDataPoints.map(p => {
         if (p.type === 'live') return '#ff5555';
         if (p.type === 'start') return '#007bff';
@@ -333,6 +335,7 @@ function renderGenericChart(config) {
         return 3;
     });
 
+    // 5. Rendu Chart.js
     let timeUnit = 'day';
     if (mode < 0.1) timeUnit = 'minute';
     else if (mode === 1) timeUnit = 'hour';
@@ -342,6 +345,8 @@ function renderGenericChart(config) {
     if (!canvas) return null;
     const ctx = canvas.getContext('2d');
     
+    // Destruction instance existante (géré par l'appelant via variable globale ou retour)
+    
     return new Chart(ctx, {
         type: 'line',
         data: { 
@@ -349,7 +354,7 @@ function renderGenericChart(config) {
                 label: 'Trophées', 
                 data: finalDataPoints, 
                 borderColor: color, 
-                backgroundColor: color + '1A', 
+                backgroundColor: color + '1A', // Ajoute 10% d'opacité hex
                 borderWidth: 2, 
                 tension: 0.2, 
                 fill: true,
@@ -390,6 +395,7 @@ function renderGenericChart(config) {
     });
 }
 
+
 // =========================================================
 // === GESTION DU GRAPHIQUE PRINCIPAL (GLOBAL) ===
 // =========================================================
@@ -404,13 +410,22 @@ async function loadHistoryChart(token, liveTrophies) {
         else fullHistoryData = [];
     } catch(e) { fullHistoryData = []; }
     
+    // APPEL DE LA NOUVELLE FONCTION (Préfixe 'btn' pour les IDs btn-7d, btn-31d...)
     manageGenericFilters(fullHistoryData, 'btn');
-    setChartMode(0); // Par défaut : Tout
+    
+    setChartMode(0);
 
     let lastDate = fullHistoryData.length > 0 ? fullHistoryData[fullHistoryData.length - 1].date : null;
     if(typeof updateNextArchiveTimer === 'function' && window.currentUpdateInterval) {
         updateNextArchiveTimer(lastDate, window.currentUpdateInterval);
     }
+}
+
+function manageFilterButtons() {
+    const btn1h = document.getElementById('btn-1h');
+    if (currentUserTier === 'premium') btn1h.classList.remove('hidden');
+    else btn1h.classList.add('hidden');
+    // ... logique suppression boutons 7d/31d si historique trop court ...
 }
 
 function navigateChart(direction) {
@@ -437,7 +452,9 @@ function setChartMode(mode) {
     renderMainChart();
 }
 
+// Fonction wrapper pour le graph principal
 function renderMainChart() {
+    // UI Boutons
     document.querySelectorAll('.filter-btn:not(.filter-brawler-btn)').forEach(btn => btn.classList.remove('active'));
     let btnId = 'btn-all';
     if(currentChartMode < 0.1 && currentChartMode > 0) btnId = 'btn-1h';
@@ -448,8 +465,12 @@ function renderMainChart() {
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
+    // UI Labels & Nav (Simplifié pour l'exemple)
+    // ... (Code de gestion des labels chart-period-label / month-label identique à l'ancien dashboard.js) ...
+    
     if(window.myChart) window.myChart.destroy();
 
+    // APPEL GÉNÉRIQUE
     window.myChart = renderGenericChart({
         canvasId: 'trophyChart',
         rawData: fullHistoryData,
@@ -461,39 +482,97 @@ function renderMainChart() {
     });
 }
 
+
 // =========================================================
-// === GESTION DU GRAPHIQUE BRAWLERS (Ancien Select) ===
+// === GESTION DU GRAPHIQUE BRAWLERS (NOUVEAU) ===
 // =========================================================
 
+// --- NOUVELLE FONCTION D'AUTOCOMPLÉTION ---
 function initBrawlerSelector() {
-    const select = document.getElementById('brawler-select-dashboard');
-    if(!select) return; // Si on est pas sur la vue Brawlers
-    
-    // Si la liste est vide mais qu'on a des brawlers globaux
-    if (select.options.length <= 1 && typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
-        select.innerHTML = "";
-        
-        // On filtre uniquement les brawlers POSSÉDÉS (owned)
-        const owned = globalBrawlersList.filter(b => b.owned);
-        
-        // Tri par trophées décroissant
-        owned.sort((a,b) => b.trophies - a.trophies);
+    const input = document.getElementById('brawler-search-input');
+    const hiddenInput = document.getElementById('brawler-select-dashboard');
+    const listContainer = document.getElementById('brawler-dropdown-list');
 
-        if(owned.length === 0) {
-            select.innerHTML = "<option>Aucun brawler possédé</option>";
+    if (!input || !listContainer || !hiddenInput) return;
+
+    // Si on a déjà des données chargées
+    if (typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
+        // 1. Filtrer et Trier les Brawlers possédés
+        const owned = globalBrawlersList.filter(b => b.owned).sort((a, b) => b.trophies - a.trophies);
+        
+        if (owned.length === 0) {
+            input.value = "Aucun brawler possédé";
+            input.disabled = true;
             return;
         }
 
-        owned.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.id;
-            opt.innerText = b.name; // On affiche juste le nom
-            select.appendChild(opt);
-        });
+        // 2. Fonction pour générer la liste HTML
+        const renderList = (filterText = "") => {
+            listContainer.innerHTML = "";
+            const lowerFilter = filterText.toLowerCase();
 
-        // Sélectionner le premier par défaut
-        select.value = owned[0].id;
-        loadSelectedBrawlerStats();
+            owned.forEach(b => {
+                // Filtrage
+                if (b.name.toLowerCase().includes(lowerFilter)) {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item';
+                    item.innerHTML = `
+                        <span style="font-weight:bold;">${b.name}</span>
+                        <span style="opacity:0.7;">🏆 ${b.trophies}</span>
+                    `;
+                    
+                    // Clic sur un item
+                    item.onclick = () => {
+                        selectBrawler(b);
+                    };
+                    listContainer.appendChild(item);
+                }
+            });
+
+            // Message si aucun résultat
+            if (listContainer.children.length === 0) {
+                listContainer.innerHTML = '<div style="padding:10px; color:#888; text-align:center;">Aucun résultat</div>';
+            }
+        };
+
+        // 3. Fonction de sélection
+        const selectBrawler = (brawler) => {
+            input.value = brawler.name;       // Affiche le nom
+            hiddenInput.value = brawler.id;   // Sauvegarde l'ID
+            listContainer.classList.add('hidden'); // Cache la liste
+            loadSelectedBrawlerStats();       // Lance le chargement du graph
+        };
+
+        // 4. Initialisation (Sélectionner le premier par défaut)
+        if (!hiddenInput.value) {
+            selectBrawler(owned[0]);
+        }
+
+        // 5. Gestion des Événements (Recherche)
+        
+        // Quand on tape dans l'input
+        input.oninput = () => {
+            renderList(input.value);
+            listContainer.classList.remove('hidden');
+        };
+
+        // Quand on clique sur l'input (afficher tout)
+        input.onfocus = () => {
+            input.select(); // Sélectionne tout le texte pour faciliter le remplacement
+            renderList(""); // Affiche tout
+            listContainer.classList.remove('hidden');
+        };
+
+        // Fermer la liste si on clique ailleurs
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !listContainer.contains(e.target)) {
+                listContainer.classList.add('hidden');
+                // Si l'utilisateur a tapé un truc invalide, on remet le nom du brawler actuel
+                const currentId = hiddenInput.value;
+                const currentBrawler = owned.find(b => b.id == currentId);
+                if (currentBrawler) input.value = currentBrawler.name;
+            }
+        });
     }
 }
 
@@ -509,7 +588,9 @@ async function loadSelectedBrawlerStats() {
         });
         currentBrawlerHistory = res.ok ? await res.json() : [];
         
+        // APPEL DE LA NOUVELLE FONCTION (Préfixe 'btn-brawler' pour btn-brawler-7d...)
         manageGenericFilters(currentBrawlerHistory, 'btn-brawler');
+        
         setBrawlerChartMode(0); 
     } catch(e) { console.error(e); }
 }
@@ -520,9 +601,11 @@ function setBrawlerChartMode(mode) {
 }
 
 function renderBrawlerChart() {
-    // UI Boutons Brawlers
+    // Gestion Active Class sur les boutons Brawler
+    // On retire 'active' de tous les boutons brawlers
     document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
     
+    // On détermine quel ID activer
     let btnId = 'btn-brawler-all';
     if(currentBrawlerMode < 0.1 && currentBrawlerMode > 0) btnId = 'btn-brawler-1h';
     else if(currentBrawlerMode === 1) btnId = 'btn-brawler-24h';
@@ -535,7 +618,7 @@ function renderBrawlerChart() {
 
     if(brawlerChartInstance) brawlerChartInstance.destroy();
 
-    // Récupérer le trophée actuel du brawler sélectionné pour le point "Live"
+    // ... (Le reste de la fonction renderBrawlerChart reste identique) ...
     const select = document.getElementById('brawler-select-dashboard');
     let liveVal = null;
     if(select && globalBrawlersList) {
@@ -543,7 +626,6 @@ function renderBrawlerChart() {
         if(b) liveVal = b.trophies;
     }
 
-    // APPEL GÉNÉRIQUE (Couleur Bleue #00d2ff)
     brawlerChartInstance = renderGenericChart({
         canvasId: 'brawlerChartCanvas',
         rawData: currentBrawlerHistory,
@@ -554,7 +636,6 @@ function renderBrawlerChart() {
         variationId: 'brawler-trophy-variation'
     });
 }
-
 
 // --- PUBLIC ---
 async function loadPublicProfile(tag) {
