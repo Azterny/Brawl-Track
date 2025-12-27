@@ -133,6 +133,39 @@ function unlockChart() {
     if(overlay) overlay.classList.add('hidden');
 }
 
+function manageGenericFilters(data, idPrefix) {
+    // 1. Gestion du bouton 1H (Selon le grade, comme avant)
+    const btn1h = document.getElementById(`${idPrefix}-1h`);
+    if(btn1h) {
+        // Pour les Brawlers, on autorise 1H pour tout le monde ou on garde la restriction tier ?
+        // Ici on garde la logique : visible seulement si Premium
+        if (currentUserTier === 'premium') btn1h.classList.remove('hidden');
+        else btn1h.classList.add('hidden');
+    }
+
+    // 2. Gestion Temporelle (Semaine, Mois, Année)
+    let diffDays = 0;
+    if (data && data.length > 0) {
+        const oldest = new Date(data[0].date);
+        const now = new Date();
+        diffDays = (now - oldest) / (1000 * 60 * 60 * 24);
+    }
+
+    // Helper pour toggle
+    const toggle = (suffix, condition) => {
+        const el = document.getElementById(`${idPrefix}-${suffix}`);
+        if(el) {
+            if(condition) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+    };
+
+    // Logique : Affiche 'Semaine' si on a > 1 jour de donnée, etc.
+    toggle('7d', diffDays > 1);
+    toggle('31d', diffDays > 7);
+    toggle('365d', diffDays > 31);
+}
+
 // === MATHS : INTERPOLATION & DÉCIMATION ===
 function getInterpolatedValue(targetDate, allData) {
     const targetTs = targetDate.getTime();
@@ -375,8 +408,10 @@ async function loadHistoryChart(token, liveTrophies) {
         else fullHistoryData = [];
     } catch(e) { fullHistoryData = []; }
     
-    manageFilterButtons();
-    setChartMode(0); // Par défaut : Tout
+    // APPEL DE LA NOUVELLE FONCTION (Préfixe 'btn' pour les IDs btn-7d, btn-31d...)
+    manageGenericFilters(fullHistoryData, 'btn');
+    
+    setChartMode(0);
 
     let lastDate = fullHistoryData.length > 0 ? fullHistoryData[fullHistoryData.length - 1].date : null;
     if(typeof updateNextArchiveTimer === 'function' && window.currentUpdateInterval) {
@@ -485,7 +520,11 @@ async function loadSelectedBrawlerStats() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         currentBrawlerHistory = res.ok ? await res.json() : [];
-        setBrawlerChartMode(0); // Reset vue 'Tout'
+        
+        // APPEL DE LA NOUVELLE FONCTION (Préfixe 'btn-brawler' pour btn-brawler-7d...)
+        manageGenericFilters(currentBrawlerHistory, 'btn-brawler');
+        
+        setBrawlerChartMode(0); 
     } catch(e) { console.error(e); }
 }
 
@@ -495,14 +534,24 @@ function setBrawlerChartMode(mode) {
 }
 
 function renderBrawlerChart() {
-    // UI Boutons Brawlers
+    // Gestion Active Class sur les boutons Brawler
+    // On retire 'active' de tous les boutons brawlers
     document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
-    // On peut ajouter des IDs aux boutons brawlers pour gérer l'active class, ou le faire via onclick(this)
-    // Ici on laisse simple
     
+    // On détermine quel ID activer
+    let btnId = 'btn-brawler-all';
+    if(currentBrawlerMode < 0.1 && currentBrawlerMode > 0) btnId = 'btn-brawler-1h';
+    else if(currentBrawlerMode === 1) btnId = 'btn-brawler-24h';
+    else if(currentBrawlerMode === 7) btnId = 'btn-brawler-7d';
+    else if(currentBrawlerMode === 31) btnId = 'btn-brawler-31d';
+    else if(currentBrawlerMode === 365) btnId = 'btn-brawler-365d';
+    
+    const activeBtn = document.getElementById(btnId);
+    if(activeBtn) activeBtn.classList.add('active');
+
     if(brawlerChartInstance) brawlerChartInstance.destroy();
 
-    // Récupérer le trophée actuel du brawler sélectionné pour le point "Live"
+    // ... (Le reste de la fonction renderBrawlerChart reste identique) ...
     const select = document.getElementById('brawler-select-dashboard');
     let liveVal = null;
     if(select && globalBrawlersList) {
@@ -510,18 +559,16 @@ function renderBrawlerChart() {
         if(b) liveVal = b.trophies;
     }
 
-    // APPEL GÉNÉRIQUE (Couleur Bleue #00d2ff)
     brawlerChartInstance = renderGenericChart({
         canvasId: 'brawlerChartCanvas',
         rawData: currentBrawlerHistory,
         mode: currentBrawlerMode,
-        offset: 0, // Pas de navigation complexe implémentée pour brawlers pour l'instant
+        offset: 0,
         liveValue: liveVal,
         color: '#00d2ff', 
         variationId: 'brawler-trophy-variation'
     });
 }
-
 
 // --- PUBLIC ---
 async function loadPublicProfile(tag) {
