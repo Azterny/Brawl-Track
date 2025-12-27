@@ -112,26 +112,26 @@
             
             <div style="background: #222; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333;">
                 <label style="color:#aaa; display:block; margin-bottom:5px;">Choisis un Brawler :</label>
-                <select id="brawler-select-dashboard" onchange="loadSelectedBrawlerStats()" style="width:100%; font-size:1.1em; border-color:#ffce00;">
+                <select id="brawler-select-dashboard" onchange="loadSelectedBrawlerStats()" style="width:100%; font-size:1.1em; border-color:#00d2ff; background:#333; color:white; padding:10px; border-radius:5px;">
                     <option value="">Chargement...</option>
                 </select>
             </div>
-
-            <div id="brawler-chart-container" style="background: #222; padding: 15px; border-radius: 10px; position: relative;">
+        
+            <div style="background: #222; padding: 15px; border-radius: 10px; position: relative;">
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin: 0;">📈 Progression</h3>
-                    <span id="brawler-trophy-variation" style="font-weight: bold; font-size: 1em;"></span>
+                    <span id="brawler-trophy-variation" style="font-weight: bold; font-size: 1em;">--</span>
                 </div>
-
+        
                 <div class="chart-filters">
                     <button onclick="setBrawlerChartMode(0.042)" class="filter-btn filter-brawler-btn">1H</button>
                     <button onclick="setBrawlerChartMode(1)" class="filter-btn filter-brawler-btn">Jour</button>
                     <button onclick="setBrawlerChartMode(7)" class="filter-btn filter-brawler-btn">Semaine</button>
                     <button onclick="setBrawlerChartMode(31)" class="filter-btn filter-brawler-btn">Mois</button>
-                    <button onclick="setBrawlerChartMode(0)" class="filter-btn filter-brawler-btn active" id="btn-brawler-all">Tout</button>
+                    <button onclick="setBrawlerChartMode(0)" class="filter-btn filter-brawler-btn active">Tout</button>
                 </div>
-
+        
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="brawlerChartCanvas"></canvas>
                 </div>
