@@ -490,9 +490,10 @@ function renderMainChart() {
 // --- NOUVELLE FONCTION D'AUTOCOMPLÉTION ---
 function initBrawlerSelector() {
     const select = document.getElementById('brawler-select-dashboard');
-    if(!select) return; // Si on est pas sur la vue Brawlers
-    
-    // Si la liste est vide (ou contient juste "Chargement...") mais qu'on a des brawlers globaux
+    if(!select) return; // Si on n'est pas sur la vue Brawlers ou élément introuvable
+
+    // On vérifie si la liste est vide ou ne contient que "Chargement..."
+    // et si on a bien récupéré la liste globale des brawlers
     if (select.options.length <= 1 && typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
         select.innerHTML = "";
         
@@ -510,11 +511,11 @@ function initBrawlerSelector() {
         owned.forEach(b => {
             const opt = document.createElement('option');
             opt.value = b.id;
-            opt.innerText = b.name; // On affiche juste le nom
+            opt.innerText = b.name; // On affiche le nom dans le menu
             select.appendChild(opt);
         });
 
-        // Sélectionner le premier par défaut pour charger le graph immédiatement
+        // Sélectionner le premier par défaut pour charger le graphique immédiatement
         select.value = owned[0].id;
         loadSelectedBrawlerStats();
     }
