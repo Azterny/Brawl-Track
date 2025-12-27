@@ -487,30 +487,92 @@ function renderMainChart() {
 // === GESTION DU GRAPHIQUE BRAWLERS (NOUVEAU) ===
 // =========================================================
 
+// --- NOUVELLE FONCTION D'AUTOCOMPLÉTION ---
 function initBrawlerSelector() {
-    const select = document.getElementById('brawler-select-dashboard');
-    if(!select) return; 
-    
-    // Si la liste est vide mais qu'on a des brawlers globaux
-    if (select.options.length <= 1 && typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
-        select.innerHTML = "";
-        
-        // On garde uniquement ceux possédés
-        const owned = globalBrawlersList.filter(b => b.owned).sort((a,b) => b.trophies - a.trophies);
-        
-        if(owned.length === 0) { select.innerHTML = "<option>Aucun brawler</option>"; return; }
+    const input = document.getElementById('brawler-search-input');
+    const hiddenInput = document.getElementById('brawler-select-dashboard');
+    const listContainer = document.getElementById('brawler-dropdown-list');
 
-        owned.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.id;
-            // CORRECTION : Afficher seulement le nom
-            opt.innerText = b.name; 
-            select.appendChild(opt);
-        });
+    if (!input || !listContainer) return;
+
+    // Si on a déjà des données chargées
+    if (typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
+        // 1. Filtrer et Trier les Brawlers possédés
+        const owned = globalBrawlersList.filter(b => b.owned).sort((a, b) => b.trophies - a.trophies);
         
-        // Sélectionne le premier par défaut
-        select.value = owned[0].id;
-        loadSelectedBrawlerStats();
+        if (owned.length === 0) {
+            input.value = "Aucun brawler possédé";
+            input.disabled = true;
+            return;
+        }
+
+        // 2. Fonction pour générer la liste HTML
+        const renderList = (filterText = "") => {
+            listContainer.innerHTML = "";
+            const lowerFilter = filterText.toLowerCase();
+
+            owned.forEach(b => {
+                // Filtrage
+                if (b.name.toLowerCase().includes(lowerFilter)) {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item';
+                    item.innerHTML = `
+                        <span style="font-weight:bold;">${b.name}</span>
+                        <span style="opacity:0.7;">🏆 ${b.trophies}</span>
+                    `;
+                    
+                    // Clic sur un item
+                    item.onclick = () => {
+                        selectBrawler(b);
+                    };
+                    listContainer.appendChild(item);
+                }
+            });
+
+            // Message si aucun résultat
+            if (listContainer.children.length === 0) {
+                listContainer.innerHTML = '<div style="padding:10px; color:#888; text-align:center;">Aucun résultat</div>';
+            }
+        };
+
+        // 3. Fonction de sélection
+        const selectBrawler = (brawler) => {
+            input.value = brawler.name;       // Affiche le nom
+            hiddenInput.value = brawler.id;   // Sauvegarde l'ID
+            listContainer.classList.add('hidden'); // Cache la liste
+            loadSelectedBrawlerStats();       // Lance le chargement du graph
+        };
+
+        // 4. Initialisation (Sélectionner le premier par défaut)
+        if (!hiddenInput.value) {
+            selectBrawler(owned[0]);
+        }
+
+        // 5. Gestion des Événements (Recherche)
+        
+        // Quand on tape dans l'input
+        input.oninput = () => {
+            renderList(input.value);
+            listContainer.classList.remove('hidden');
+        };
+
+        // Quand on clique sur l'input (afficher tout)
+        input.onfocus = () => {
+            input.select(); // Sélectionne tout le texte pour faciliter le remplacement
+            renderList(""); // Affiche tout
+            listContainer.classList.remove('hidden');
+        };
+
+        // Fermer la liste si on clique ailleurs
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !listContainer.contains(e.target)) {
+                listContainer.classList.add('hidden');
+                // Si l'utilisateur a tapé un truc invalide, on remet le nom du brawler actuel
+                const currentId = hiddenInput.value;
+                const currentBrawler = owned.find(b => b.id == currentId);
+                if (currentBrawler) input.value = currentBrawler.name;
+            }
+        });
     }
 }
 
