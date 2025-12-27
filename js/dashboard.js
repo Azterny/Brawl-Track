@@ -104,12 +104,27 @@ function sortBrawlers() {
 function renderBrawlersGrid() {
     const grid = document.getElementById('brawlers-grid');
     grid.innerHTML = '';
+    
     globalBrawlersList.forEach(b => {
         const d = document.createElement('div');
         d.className = 'brawler-card';
-        if (!b.owned) d.style.filter = "grayscale(100%) opacity(0.3)";
-        else d.style.border = "1px solid #ffce00";
-        d.innerHTML = `
+        
+        // Gestion de l'état "Possédé" ou "Non Possédé"
+        if (!b.owned) {
+            // Style pour les brawlers non débloqués
+            d.style.filter = "grayscale(100%) opacity(0.3)";
+            d.style.cursor = "default"; // Pas de main au survol
+        } else {
+            // Style pour les brawlers possédés
+            d.style.border = "1px solid #ffce00";
+            d.style.cursor = "pointer"; // Main au survol pour indiquer le clic
+            
+            // --- AJOUT : Événement Clic ---
+            // On utilise une fonction fléchée pour capturer proprement l'ID et le Nom
+            d.onclick = () => goToBrawlerStats(b.id, b.name);
+        }
+
+        d.innerHTML += `
             <img src="${b.imageUrl}" style="width:100%; aspect-ratio:1/1; object-fit:contain;" loading="lazy">
             <div style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${b.name}</div>
             ${b.owned ? `<div style="color:#ffce00;font-size:0.7em;">🏆 ${b.trophies}</div>` : ''}
