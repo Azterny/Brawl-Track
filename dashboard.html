@@ -112,9 +112,11 @@
             
             <div style="background: #222; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333;">
                 <label style="color:#aaa; display:block; margin-bottom:5px;">Choisis un Brawler :</label>
-                <select id="brawler-select-dashboard" onchange="loadSelectedBrawlerStats()" style="width:100%; font-size:1.1em; border-color:#00d2ff; background:#333; color:white; padding:10px; border-radius:5px;">
-                    <option value="">Chargement...</option>
-                </select>
+                <div class="custom-select-wrapper">
+                    <input type="text" id="brawler-search-input" placeholder="🔍 Rechercher un Brawler..." autocomplete="off">
+                    <input type="hidden" id="brawler-select-dashboard">
+                    <div id="brawler-dropdown-list" class="custom-dropdown-list hidden"></div>
+                </div>
             </div>
         
             <div style="background: #222; padding: 15px; border-radius: 10px; position: relative;">
