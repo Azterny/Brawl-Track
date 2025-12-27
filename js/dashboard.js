@@ -524,52 +524,50 @@ function initBrawlerSelector() {
 
     // Initialisation : Sélectionner le premier par défaut si rien n'est sélectionné
     if (!document.getElementById('selected-brawler-id').value && ownedBrawlers.length > 0) {
-        selectBrawler(ownedBrawlers[0].id, ownedBrawlers[0].name);
+        if(typeof selectBrawler === 'function') {
+            selectBrawler(ownedBrawlers[0].id, ownedBrawlers[0].name);
+        }
     }
 
-    // Événement : L'utilisateur tape quelque chose
-    input.addEventListener('input', function() {
-        const query = this.value.toLowerCase();
-        list.innerHTML = ''; // Vider la liste
-        
-        if (query.length === 0) {
-            list.classList.add('hidden');
-            return;
-        }
-
-        // Filtrer la liste
-        const matches = ownedBrawlers.filter(b => b.name.toLowerCase().includes(query));
-
-        if (matches.length > 0) {
+    // Fonction utilitaire pour afficher une liste d'éléments
+    const renderList = (items) => {
+        list.innerHTML = ''; // Vider la liste actuelle
+        if (items.length > 0) {
             list.classList.remove('hidden');
-            matches.forEach(b => {
+            items.forEach(b => {
                 const item = document.createElement('div');
                 item.className = 'dropdown-item';
                 item.innerHTML = `
                     <span>${b.name}</span>
                     <span class="trophies">🏆 ${b.trophies}</span>
                 `;
+                // Au clic, on sélectionne et on cache la liste
                 item.onclick = () => selectBrawler(b.id, b.name);
                 list.appendChild(item);
             });
         } else {
             list.classList.add('hidden');
         }
+    };
+
+    // Événement : L'utilisateur tape (ou efface) du texte
+    input.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        
+        if (query.length === 0) {
+            // MODIFICATION ICI : Si vide, on affiche TOUT au lieu de cacher
+            renderList(ownedBrawlers);
+        } else {
+            // Sinon, on filtre
+            const matches = ownedBrawlers.filter(b => b.name.toLowerCase().includes(query));
+            renderList(matches);
+        }
     });
 
-    // Événement : Afficher toute la liste au clic (focus)
+    // Événement : Au clic (Focus), si vide, on affiche tout
     input.addEventListener('focus', function() {
         if(this.value.trim() === "") {
-            // Afficher tout si le champ est vide
-            list.innerHTML = '';
-            ownedBrawlers.forEach(b => {
-                const item = document.createElement('div');
-                item.className = 'dropdown-item';
-                item.innerHTML = `<span>${b.name}</span><span class="trophies">🏆 ${b.trophies}</span>`;
-                item.onclick = () => selectBrawler(b.id, b.name);
-                list.appendChild(item);
-            });
-            list.classList.remove('hidden');
+            renderList(ownedBrawlers);
         }
     });
 
