@@ -487,43 +487,99 @@ function renderMainChart() {
 // === GESTION DU GRAPHIQUE BRAWLERS (NOUVEAU) ===
 // =========================================================
 
-// --- NOUVELLE FONCTION D'AUTOCOMPLÉTION ---
 function initBrawlerSelector() {
-    const select = document.getElementById('brawler-select-dashboard');
-    if(!select) return; // Si on n'est pas sur la vue Brawlers ou élément introuvable
+    const input = document.getElementById('brawler-search-input');
+    const list = document.getElementById('brawler-dropdown-list');
+    
+    if(!input || !list) return;
 
-    // On vérifie si la liste est vide ou ne contient que "Chargement..."
-    // et si on a bien récupéré la liste globale des brawlers
-    if (select.options.length <= 1 && typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
-        select.innerHTML = "";
-        
-        // On filtre uniquement les brawlers POSSÉDÉS (owned)
-        const owned = globalBrawlersList.filter(b => b.owned);
-        
-        // Tri par trophées décroissant
-        owned.sort((a,b) => b.trophies - a.trophies);
+    // Vérifier si les données sont prêtes
+    if (!globalBrawlersList || globalBrawlersList.length === 0) {
+        input.placeholder = "Chargement des brawlers...";
+        input.disabled = true;
+        return;
+    } else {
+        input.placeholder = "🔍 Rechercher un Brawler...";
+        input.disabled = false;
+    }
 
-        if(owned.length === 0) {
-            select.innerHTML = "<option>Aucun brawler possédé</option>";
+    // Filtrer et trier les brawlers possédés
+    const ownedBrawlers = globalBrawlersList.filter(b => b.owned);
+    ownedBrawlers.sort((a,b) => b.trophies - a.trophies); // Tri par trophées
+
+    // Initialisation : Sélectionner le premier par défaut si rien n'est sélectionné
+    if (!document.getElementById('selected-brawler-id').value && ownedBrawlers.length > 0) {
+        selectBrawler(ownedBrawlers[0].id, ownedBrawlers[0].name);
+    }
+
+    // Événement : L'utilisateur tape quelque chose
+    input.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        list.innerHTML = ''; // Vider la liste
+        
+        if (query.length === 0) {
+            list.classList.add('hidden');
             return;
         }
 
-        owned.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.id;
-            opt.innerText = b.name; // On affiche le nom dans le menu
-            select.appendChild(opt);
-        });
+        // Filtrer la liste
+        const matches = ownedBrawlers.filter(b => b.name.toLowerCase().includes(query));
 
-        // Sélectionner le premier par défaut pour charger le graphique immédiatement
-        select.value = owned[0].id;
-        loadSelectedBrawlerStats();
-    }
+        if (matches.length > 0) {
+            list.classList.remove('hidden');
+            matches.forEach(b => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.innerHTML = `
+                    <span>${b.name}</span>
+                    <span class="trophies">🏆 ${b.trophies}</span>
+                `;
+                item.onclick = () => selectBrawler(b.id, b.name);
+                list.appendChild(item);
+            });
+        } else {
+            list.classList.add('hidden');
+        }
+    });
+
+    // Événement : Afficher toute la liste au clic (focus)
+    input.addEventListener('focus', function() {
+        if(this.value.trim() === "") {
+            // Afficher tout si le champ est vide
+            list.innerHTML = '';
+            ownedBrawlers.forEach(b => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.innerHTML = `<span>${b.name}</span><span class="trophies">🏆 ${b.trophies}</span>`;
+                item.onclick = () => selectBrawler(b.id, b.name);
+                list.appendChild(item);
+            });
+            list.classList.remove('hidden');
+        }
+    });
+
+    // Événement : Clic en dehors pour fermer
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !list.contains(e.target)) {
+            list.classList.add('hidden');
+        }
+    });
+}
+
+function selectBrawler(id, name) {
+    // Mise à jour de l'interface
+    document.getElementById('brawler-search-input').value = name;
+    document.getElementById('selected-brawler-id').value = id;
+    document.getElementById('brawler-dropdown-list').classList.add('hidden');
+
+    // Lancer le chargement des stats
+    loadSelectedBrawlerStats();
 }
 
 async function loadSelectedBrawlerStats() {
-    const select = document.getElementById('brawler-select-dashboard');
-    const brawlerId = select.value;
+    // On récupère l'ID depuis le champ caché
+    const brawlerId = document.getElementById('selected-brawler-id').value;
+    
     if(!brawlerId) return;
 
     const token = localStorage.getItem('token');
@@ -533,10 +589,10 @@ async function loadSelectedBrawlerStats() {
         });
         currentBrawlerHistory = res.ok ? await res.json() : [];
         
-        // APPEL DE LA NOUVELLE FONCTION (Préfixe 'btn-brawler' pour btn-brawler-7d...)
+        // Mise à jour du graphique
         manageGenericFilters(currentBrawlerHistory, 'btn-brawler');
-        
         setBrawlerChartMode(0); 
+        
     } catch(e) { console.error(e); }
 }
 
