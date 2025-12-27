@@ -28,8 +28,8 @@ async function loadMyStats() {
         if(badge) badge.classList.remove('hidden');
         
         if(typeof setupIntervalUI === 'function') setupIntervalUI(data.internal_tier, data.internal_interval);
-        
-        loadBrawlersGrid(data.brawlers);
+
+        await loadBrawlersGrid(data.brawlers);
         
         unlockChart();
         loadHistoryChart(token, data.trophies);
@@ -493,7 +493,7 @@ function initBrawlerSelector() {
     const hiddenInput = document.getElementById('brawler-select-dashboard');
     const listContainer = document.getElementById('brawler-dropdown-list');
 
-    if (!input || !listContainer) return;
+    if (!input || !listContainer || !hiddenInput) return;
 
     // Si on a déjà des données chargées
     if (typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
