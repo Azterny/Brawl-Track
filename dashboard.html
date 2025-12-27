@@ -29,7 +29,6 @@
                 <div class="burger-icon" onclick="toggleMenu()">☰</div>
                 <div class="menu-overlay" id="menu-dropdown">
                     <div class="menu-item" onclick="switchView('dashboard')">🏠 Accueil</div>
-                    <div class="menu-item" onclick="switchView('brawlers')">🤖 Stats Brawlers</div>
                     <div class="menu-item-divider"></div>
                     <div class="menu-item" onclick="switchView('data')">💾 Données</div>
                     <div class="menu-item" onclick="switchView('settings')">⚙️ Paramètres</div>
@@ -108,18 +107,9 @@
         </div>
 
         <div id="view-brawlers" class="view-section">
-            <h2 style="margin-bottom: 20px;">🤖 Statistiques par Brawler</h2>
+            <h2 id="brawler-page-title" style="margin-bottom: 20px;">Détails Brawler</h2>
             
-            <div style="background: #222; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333;">
-                <label style="color:#aaa; display:block; margin-bottom:5px;">Choisis un Brawler :</label>
-                <div class="custom-select-wrapper">
-                    <input type="text" id="brawler-search-input" placeholder="🔍 Rechercher un Brawler..." autocomplete="off">
-                    
-                    <div id="brawler-dropdown-list" class="custom-dropdown-list hidden"></div>
-                    
-                    <input type="hidden" id="selected-brawler-id">
-                </div>
-            </div>
+            <input type="hidden" id="selected-brawler-id">
         
             <div style="background: #222; padding: 15px; border-radius: 10px; position: relative;">
                 
