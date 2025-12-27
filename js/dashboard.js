@@ -618,10 +618,8 @@ function setBrawlerChartMode(mode) {
 
 function renderBrawlerChart() {
     // Gestion Active Class sur les boutons Brawler
-    // On retire 'active' de tous les boutons brawlers
     document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
     
-    // On détermine quel ID activer
     let btnId = 'btn-brawler-all';
     if(currentBrawlerMode < 0.1 && currentBrawlerMode > 0) btnId = 'btn-brawler-1h';
     else if(currentBrawlerMode === 1) btnId = 'btn-brawler-24h';
@@ -634,11 +632,11 @@ function renderBrawlerChart() {
 
     if(brawlerChartInstance) brawlerChartInstance.destroy();
 
-    // ... (Le reste de la fonction renderBrawlerChart reste identique) ...
-    const select = document.getElementById('brawler-select-dashboard');
+    const hiddenInput = document.getElementById('selected-brawler-id');
     let liveVal = null;
-    if(select && globalBrawlersList) {
-        const b = globalBrawlersList.find(i => i.id == select.value);
+    
+    if(hiddenInput && globalBrawlersList) {
+        const b = globalBrawlersList.find(i => i.id == hiddenInput.value);
         if(b) liveVal = b.trophies;
     }
 
@@ -647,7 +645,7 @@ function renderBrawlerChart() {
         rawData: currentBrawlerHistory,
         mode: currentBrawlerMode,
         offset: 0,
-        liveValue: liveVal,
+        liveValue: liveVal, // C'est ici que le point rouge est généré
         color: '#00d2ff', 
         variationId: 'brawler-trophy-variation'
     });
