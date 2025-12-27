@@ -604,10 +604,31 @@ function publicSearch() {
 }
 
 function goToBrawlerStats(id, name) {
+    // 1. Changer la vue
     switchView('brawlers');
+    
+    // 2. Mettre à jour l'ID caché
     const hiddenInput = document.getElementById('selected-brawler-id');
     if(hiddenInput) hiddenInput.value = id;
-    const title = document.getElementById('brawler-page-title');
-    if(title) title.innerText = name;
+
+    // 3. Mettre à jour le NOM
+    const nameLabel = document.getElementById('selected-brawler-name');
+    if(nameLabel) nameLabel.textContent = name;
+
+    // 4. Mettre à jour l'IMAGE (Nouveau !)
+    const imgElement = document.getElementById('selected-brawler-img');
+    if(imgElement && globalBrawlersList) {
+        // On cherche le brawler dans la liste déjà chargée pour récupérer son URL d'image
+        // (Note: on utilise "==" car id peut être string ou number selon la source)
+        const brawlerObj = globalBrawlersList.find(b => b.id == id);
+        if(brawlerObj) {
+            imgElement.src = brawlerObj.imageUrl;
+        } else {
+            // Fallback si jamais on ne trouve pas l'image
+            imgElement.src = ''; 
+        }
+    }
+
+    // 5. Charger les statistiques
     loadSelectedBrawlerStats();
 }
