@@ -99,33 +99,57 @@ function sortBrawlers() {
 
 function renderBrawlersGrid() {
     const grid = document.getElementById('brawlers-grid');
-    grid.innerHTML = '';
+    if (!grid) return;
+    
+    grid.innerHTML = ''; // On vide proprement
     
     globalBrawlersList.forEach(b => {
-        const d = document.createElement('div');
-        d.className = 'brawler-card';
-        
-        // Gestion de l'état "Possédé" ou "Non Possédé"
+        // 1. Création du conteneur carte
+        const card = document.createElement('div');
+        card.className = 'brawler-card';
+
+        // Gestion de l'état (Possédé / Gris)
         if (!b.owned) {
-            // Style pour les brawlers non débloqués
-            d.style.filter = "grayscale(100%) opacity(0.3)";
-            d.style.cursor = "default"; // Pas de main au survol
+            card.style.filter = "grayscale(100%) opacity(0.3)";
+            card.style.cursor = "default";
         } else {
-            // Style pour les brawlers possédés
-            d.style.border = "1px solid #ffce00";
-            d.style.cursor = "pointer"; // Main au survol pour indiquer le clic
-            
-            // --- AJOUT : Événement Clic ---
-            // On utilise une fonction fléchée pour capturer proprement l'ID et le Nom
-            d.onclick = () => goToBrawlerStats(b.id, b.name);
+            card.style.border = "1px solid #ffce00";
+            card.style.cursor = "pointer";
+            card.onclick = () => goToBrawlerStats(b.id, b.name);
         }
 
-        d.innerHTML += `
-            <img src="${b.imageUrl}" style="width:100%; aspect-ratio:1/1; object-fit:contain;" loading="lazy">
-            <div style="font-size:0.8em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${b.name}</div>
-            ${b.owned ? `<div style="color:#ffce00;font-size:0.7em;">🏆 ${b.trophies}</div>` : ''}
-        `;
-        grid.appendChild(d);
+        // 2. Création de l'image (SÉCURISÉ : src est un attribut)
+        const img = document.createElement('img');
+        img.src = b.imageUrl;
+        img.style.width = '100%';
+        img.style.aspectRatio = '1/1';
+        img.style.objectFit = 'contain';
+        img.loading = 'lazy';
+        img.alt = b.name; // Bonne pratique accessibilité
+
+        // 3. Création du Nom (SÉCURISÉ : textContent empêche l'exécution de HTML)
+        const nameDiv = document.createElement('div');
+        nameDiv.style.fontSize = '0.8em';
+        nameDiv.style.overflow = 'hidden';
+        nameDiv.style.textOverflow = 'ellipsis';
+        nameDiv.style.whiteSpace = 'nowrap';
+        nameDiv.textContent = b.name; // <--- C'est ici que la magie opère
+
+        // 4. Ajout des éléments à la carte
+        card.appendChild(img);
+        card.appendChild(nameDiv);
+
+        // 5. Trophées (si possédé)
+        if (b.owned) {
+            const trophyDiv = document.createElement('div');
+            trophyDiv.style.color = '#ffce00';
+            trophyDiv.style.fontSize = '0.7em';
+            trophyDiv.textContent = `🏆 ${b.trophies}`;
+            card.appendChild(trophyDiv);
+        }
+
+        // Ajout final à la grille
+        grid.appendChild(card);
     });
 }
 
