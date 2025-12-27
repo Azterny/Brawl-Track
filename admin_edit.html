@@ -20,16 +20,15 @@
         .btn-edit { background: #17a2b8; padding: 4px 8px; font-size: 0.9em; margin-right: 5px; }
         .btn-del { background: #dc3545; padding: 4px 8px; font-size: 0.9em; }
 
-        /* CHART */
         .chart-box { background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 30px; height: 300px; }
 
-        /* SELECT */
+        /* SELECTOR AREA */
+        .selector-area { margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
         select.mode-selector {
-            padding: 10px; font-size: 1.1em; background: #333; color: white; border: 1px solid #ffce00; border-radius: 5px; margin-right: 15px;
+            padding: 10px; font-size: 1.1em; background: #333; color: white; border: 1px solid #ffce00; border-radius: 5px; min-width: 200px;
         }
 
-        /* TABLE */
-        table { width: 100%; border-collapse: collapse; background: #1e1e1e; margin-top: 20px; font-size: 0.9em; }
+        table { width: 100%; border-collapse: collapse; background: #1e1e1e; margin-top: 10px; font-size: 0.9em; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
         th { background: #252525; color: #ffce00; }
         tr:hover { background: #2a2a2a; }
@@ -60,11 +59,7 @@
             <h1 id="user-title" style="margin:0;">Édition Utilisateur</h1>
             <span id="user-tag" style="color:#888;">Chargement...</span>
         </div>
-        <div style="display:flex; align-items:center;">
-            <select id="view-selector" class="mode-selector" onchange="switchViewMode()">
-                <option value="player">👤 Joueur (Global)</option>
-                </select>
-
+        <div>
             <button class="btn btn-add" onclick="openModal()">➕ Ajouter un point</button>
             <a href="admin.html" class="btn btn-back" style="margin-left: 10px;">⬅ Retour</a>
         </div>
@@ -74,11 +69,17 @@
         <canvas id="editChart"></canvas>
     </div>
 
-    <h2>Historique <span id="history-type-label">Global</span></h2>
+    <div class="selector-area">
+        <select id="view-selector" class="mode-selector" onchange="switchViewMode()">
+            <option value="player">👤 Joueur (Global)</option>
+        </select>
+        <div style="color:#888; font-style: italic;">Sélectionnez une vue pour éditer l'historique</div>
+    </div>
+
+    <h2 style="margin-top: 0;">Historique <span id="history-type-label" style="color:#fff;">Global</span></h2>
     <table>
         <thead>
-            <tr id="table-headers">
-                </tr>
+            <tr id="table-headers"></tr>
         </thead>
         <tbody id="history-table"></tbody>
     </table>
@@ -127,15 +128,10 @@
     let ADMIN_KEY = localStorage.getItem('admin_key_temp') || "";
     
     let currentHistory = [];
-    let allBrawlersList = []; // Liste statique des brawlers (noms)
-    let myChart = null;
-    let currentMode = 'player'; // 'player' ou ID du brawler
-    
-    // --- BRAWLERS DICTIONARY (Pour afficher les noms) ---
-    // Idéalement, on le chargerait depuis l'API, mais pour l'instant on fait simple ou on fetch
     let brawlersNameMap = {}; 
+    let myChart = null;
+    let currentMode = 'player'; // 'player' OU id_brawler (int)
 
-    // --- SECURITE ---
     function checkAdminKey() {
         const k = document.getElementById('admin-key-input').value;
         if(k) {
@@ -150,42 +146,35 @@
         initPage();
     }
 
-    // --- INITIALISATION ---
     async function initPage() {
-        await loadBrawlersList(); // Récupère noms et IDs
-        await loadGlobalData();   // Charge les stats joueur par défaut
+        await loadBrawlersList();
+        await loadGlobalData();
     }
 
     async function loadBrawlersList() {
         try {
-            // On récupère la liste globale des brawlers pour remplir le select
             const res = await fetch(`${API_URL}/api/brawlers`);
             const data = await res.json();
             const items = data.items || [];
-            
-            // Tri alphabétique
             items.sort((a,b) => a.name.localeCompare(b.name));
             
             const select = document.getElementById('view-selector');
             items.forEach(b => {
-                brawlersNameMap[b.id] = b.name; // Mapping ID -> Nom
+                brawlersNameMap[b.id] = b.name;
                 const opt = document.createElement('option');
                 opt.value = b.id;
                 opt.innerText = b.name;
                 select.appendChild(opt);
             });
-        } catch(e) { console.error("Erreur chargement brawlers", e); }
+        } catch(e) { console.error("Erreur brawlers", e); }
     }
 
-    // --- CHARGEMENT DONNÉES JOUEUR (GLOBAL) ---
     async function loadGlobalData() {
         currentMode = 'player';
-        document.getElementById('history-type-label').innerText = "Global (Compte)";
+        document.getElementById('history-type-label').innerText = "(Compte)";
         
         try {
-            const res = await fetch(`${API_URL}/api/admin/player/${USER_ID}/full-history`, {
-                headers: { 'X-Admin-Pass': ADMIN_KEY }
-            });
+            const res = await fetch(`${API_URL}/api/admin/player/${USER_ID}/full-history`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
             if(res.status === 403) { document.getElementById('login-overlay').style.display = 'flex'; return; }
             
             const data = await res.json();
@@ -194,46 +183,39 @@
 
             currentHistory = data.history;
             renderInterface();
-        } catch(e) { console.error(e); alert("Erreur chargement"); }
+        } catch(e) { console.error(e); }
     }
 
-    // --- CHARGEMENT DONNÉES BRAWLER ---
     async function loadBrawlerData(brawlerId) {
-        currentMode = brawlerId;
+        currentMode = parseInt(brawlerId);
         const bName = brawlersNameMap[brawlerId] || "Brawler";
-        document.getElementById('history-type-label').innerText = `Brawler : ${bName}`;
+        document.getElementById('history-type-label').innerText = `: ${bName}`;
 
         try {
-            const res = await fetch(`${API_URL}/api/admin/player/${USER_ID}/brawler/${brawlerId}/history`, {
-                headers: { 'X-Admin-Pass': ADMIN_KEY }
-            });
+            const res = await fetch(`${API_URL}/api/admin/player/${USER_ID}/brawler/${brawlerId}/history`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
             currentHistory = await res.json();
             renderInterface();
         } catch(e) { console.error(e); alert("Erreur chargement Brawler"); }
     }
 
-    // --- SWITCH MODE ---
     function switchViewMode() {
         const val = document.getElementById('view-selector').value;
         if (val === 'player') loadGlobalData();
         else loadBrawlerData(val);
     }
 
-    // --- RENDU GÉNÉRIQUE ---
     function renderInterface() {
         const thead = document.getElementById('table-headers');
         const tbody = document.getElementById('history-table');
         tbody.innerHTML = '';
         thead.innerHTML = '';
 
-        // 1. Définition des colonnes
         if (currentMode === 'player') {
             thead.innerHTML = `<th>Date</th><th>Trophées</th><th>3vs3</th><th>Solo</th><th>Duo</th><th style="text-align:right;">Actions</th>`;
         } else {
             thead.innerHTML = `<th>Date</th><th>Trophées</th><th style="text-align:right;">Actions</th>`;
         }
 
-        // 2. Remplissage Tableau
         currentHistory.forEach(h => {
             const tr = document.createElement('tr');
             let content = `<td>${h.recorded_at}</td><td style="color:#ffce00; font-weight:bold;">${h.trophies}</td>`;
@@ -242,26 +224,16 @@
                 content += `<td>${h.victories_3v3}</td><td>${h.victories_solo}</td><td>${h.victories_duo}</td>`;
             }
 
-            // Note: Pour l'instant, édition/suppression Brawler désactivée ou simplifiée
-            // On désactive le bouton delete pour brawler temporairement si pas d'API delete specifique
-            // Mais l'API delete existante marche par ID de stat, donc ça devrait marcher si c'est la bonne table.
-            // ATTENTION: l'API delete actuelle supprime dans 'player_stats'. Il en faudrait une pour 'player_stats_brawler'.
-            // Pour l'instant, on cache les boutons actions en mode brawler pour éviter les bugs, sauf si tu veux que je code l'API delete Brawler.
-            
-            if (currentMode === 'player') {
-                content += `<td style="text-align:right;">
-                    <button class="btn btn-edit" onclick='openModal(${JSON.stringify(h)})'>✎</button>
-                    <button class="btn btn-del" onclick="deletePoint(${h.id})">✖</button>
-                </td>`;
-            } else {
-                content += `<td style="text-align:right;"><span style="color:#666; font-size:0.8em;">Lecture seule</span></td>`;
-            }
+            // Boutons d'action actifs pour tout le monde maintenant
+            content += `<td style="text-align:right;">
+                <button class="btn btn-edit" onclick='openModal(${JSON.stringify(h)})'>✎</button>
+                <button class="btn btn-del" onclick="deletePoint(${h.id})">✖</button>
+            </td>`;
 
             tr.innerHTML = content;
             tbody.appendChild(tr);
         });
 
-        // 3. Graphique
         renderChart();
     }
 
@@ -289,50 +261,72 @@
         });
     }
 
-    // --- MODAL & ACTIONS (Uniquement pour le mode Player actuellement) ---
+    // --- MODAL & ACTIONS ---
     function openModal(data = null) {
-        if(currentMode !== 'player') { alert("L'édition manuelle des Brawlers n'est pas encore implémentée."); return; }
-
         const modal = document.getElementById('edit-modal');
         modal.classList.add('active');
         
-        // Affichage des champs spécifiques
-        document.getElementById('player-specific-fields').style.display = 'block';
+        // Gestion visuelle selon le mode
+        if(currentMode === 'player') {
+            document.getElementById('player-specific-fields').style.display = 'block';
+        } else {
+            document.getElementById('player-specific-fields').style.display = 'none';
+        }
 
         if (data) {
             document.getElementById('modal-title').innerText = "Modifier l'archive";
             document.getElementById('edit-id').value = data.id;
             document.getElementById('edit-date').value = data.recorded_at;
             document.getElementById('edit-trophies').value = data.trophies;
-            document.getElementById('edit-3v3').value = data.victories_3v3;
-            document.getElementById('edit-solo').value = data.victories_solo;
-            document.getElementById('edit-duo').value = data.victories_duo;
+            if(currentMode === 'player') {
+                document.getElementById('edit-3v3').value = data.victories_3v3;
+                document.getElementById('edit-solo').value = data.victories_solo;
+                document.getElementById('edit-duo').value = data.victories_duo;
+            }
         } else {
             document.getElementById('modal-title').innerText = "Ajouter un point";
             document.getElementById('edit-id').value = "";
             const now = new Date();
             document.getElementById('edit-date').value = now.toISOString().slice(0, 19).replace('T', ' ');
             document.getElementById('edit-trophies').value = 0;
-            // ... (reset values)
+            // Reset champs joueur au cas où
+            document.getElementById('edit-3v3').value = 0;
+            document.getElementById('edit-solo').value = 0;
+            document.getElementById('edit-duo').value = 0;
         }
     }
 
     function closeModal() { document.getElementById('edit-modal').classList.remove('active'); }
 
     async function saveData() {
-        // La logique de sauvegarde actuelle ne concerne que la table player_stats
-        // ... (Ton code existant pour save) ...
         const id = document.getElementById('edit-id').value;
-        const payload = {
-            user_id: USER_ID,
-            recorded_at: document.getElementById('edit-date').value,
-            trophies: document.getElementById('edit-trophies').value,
-            victories_3v3: document.getElementById('edit-3v3').value,
-            victories_solo: document.getElementById('edit-solo').value,
-            victories_duo: document.getElementById('edit-duo').value
-        };
+        const recordedAt = document.getElementById('edit-date').value;
+        const trophies = document.getElementById('edit-trophies').value;
+        
+        let url, payload;
 
-        const url = id ? `${API_URL}/api/admin/history/${id}` : `${API_URL}/api/admin/history/add`;
+        if (currentMode === 'player') {
+            // MODE JOUEUR GLOBAL
+            url = id ? `${API_URL}/api/admin/history/${id}` : `${API_URL}/api/admin/history/add`;
+            payload = {
+                user_id: USER_ID,
+                recorded_at: recordedAt,
+                trophies: trophies,
+                victories_3v3: document.getElementById('edit-3v3').value,
+                victories_solo: document.getElementById('edit-solo').value,
+                victories_duo: document.getElementById('edit-duo').value
+            };
+        } else {
+            // MODE BRAWLER (Nouveau !)
+            url = id ? `${API_URL}/api/admin/brawler-history/${id}` : `${API_URL}/api/admin/brawler-history/add`;
+            payload = {
+                user_id: USER_ID,
+                brawler_id: currentMode, // L'ID du brawler est stocké ici
+                recorded_at: recordedAt,
+                trophies: trophies
+            };
+        }
+
         const method = id ? 'PUT' : 'POST';
 
         try {
@@ -341,19 +335,35 @@
                 headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
                 body: JSON.stringify(payload)
             });
-            if(res.ok) { closeModal(); loadGlobalData(); } 
-            else alert("Erreur sauvegarde");
+            
+            if(res.ok) {
+                closeModal();
+                if(currentMode === 'player') loadGlobalData();
+                else loadBrawlerData(currentMode);
+            } else {
+                alert("Erreur sauvegarde");
+            }
         } catch(e) { alert("Erreur réseau"); }
     }
 
     async function deletePoint(id) {
         if(!confirm("Supprimer ce point d'historique ?")) return;
+        
+        // Détermination de l'URL de suppression
+        let url;
+        if (currentMode === 'player') {
+            url = `${API_URL}/api/admin/history/${id}`;
+        } else {
+            url = `${API_URL}/api/admin/brawler-history/${id}`;
+        }
+
         try {
-            await fetch(`${API_URL}/api/admin/history/${id}`, {
+            await fetch(url, {
                 method: 'DELETE',
                 headers: { 'X-Admin-Pass': ADMIN_KEY }
             });
-            loadGlobalData();
+            if(currentMode === 'player') loadGlobalData();
+            else loadBrawlerData(currentMode);
         } catch(e) { alert("Erreur suppression"); }
     }
 
