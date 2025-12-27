@@ -536,8 +536,9 @@ button.filter-btn.blue-active.active:hover {
 /* En-tête (Titre + Bouton Retour) */
 .brawler-header-nav {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Pousse le titre à gauche et le bouton à l'extrême droite */
     align-items: center;
+    width: 100%; /* Force le conteneur à prendre toute la largeur disponible */
     margin-bottom: 20px;
     border-bottom: 1px solid #333;
     padding-bottom: 15px;
@@ -548,41 +549,27 @@ button.filter-btn.blue-active.active:hover {
     background-color: #333;
     color: white;
     border: 1px solid #555;
-    padding: 8px 16px;
+    
+    /* --- TAILLE DÉFINIE & POSITIONNEMENT --- */
+    width: auto;           /* Ne prend pas toute la largeur */
+    min-width: 100px;      /* Largeur minimum pour un aspect uniforme */
+    height: 40px;          /* Hauteur fixe définie */
+    padding: 0 20px;       /* Marge interne latérale */
+    display: flex;         /* Pour centrer le texte parfaitement */
+    align-items: center;   /* Centrage vertical du texte */
+    justify-content: center; /* Centrage horizontal du texte */
+    /* --------------------------------------- */
+
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
+    font-size: 0.9em;
     transition: all 0.2s;
+    white-space: nowrap; /* Empêche le texte de passer à la ligne */
 }
+
 .btn-back:hover {
     background-color: #444;
     border-color: #00d2ff;
-}
-
-/* Carte d'identité (Image + Nom) */
-.brawler-identity-card {
-    display: flex;
-    align-items: center;
-    background: #252525;
-    padding: 15px;
-    border-radius: 12px;
-    border-left: 5px solid #00d2ff; /* Touche de couleur thème */
-    margin-bottom: 10px;
-}
-
-/* Image du Brawler */
-.brawler-identity-icon {
-    width: 64px;
-    height: 64px;
-    object-fit: cover;
-    border-radius: 10px;
-    margin-right: 20px;
-    border: 2px solid #333;
-}
-
-/* Nom du Brawler */
-#selected-brawler-name {
-    margin: 0;
-    font-size: 1.8em;
-    line-height: 1.2;
+    box-shadow: 0 0 8px rgba(0, 210, 255, 0.2);
 }
