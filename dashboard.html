@@ -29,6 +29,8 @@
                 <div class="burger-icon" onclick="toggleMenu()">☰</div>
                 <div class="menu-overlay" id="menu-dropdown">
                     <div class="menu-item" onclick="switchView('dashboard')">🏠 Accueil</div>
+                    <div class="menu-item" onclick="switchView('brawlers')">🤖 Stats Brawlers</div>
+                    <div class="menu-item-divider"></div>
                     <div class="menu-item" onclick="switchView('data')">💾 Données</div>
                     <div class="menu-item" onclick="switchView('settings')">⚙️ Paramètres</div>
                     <div class="menu-item-divider"></div>
@@ -105,6 +107,37 @@
             <div id="brawlers-grid" style="margin-top: 15px;"></div>
         </div>
 
+        <div id="view-brawlers" class="view-section">
+            <h2 style="margin-bottom: 20px;">🤖 Statistiques par Brawler</h2>
+            
+            <div style="background: #222; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333;">
+                <label style="color:#aaa; display:block; margin-bottom:5px;">Choisis un Brawler :</label>
+                <select id="brawler-select-dashboard" onchange="loadSelectedBrawlerStats()" style="width:100%; font-size:1.1em; border-color:#ffce00;">
+                    <option value="">Chargement...</option>
+                </select>
+            </div>
+
+            <div id="brawler-chart-container" style="background: #222; padding: 15px; border-radius: 10px; position: relative;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0;">📈 Progression</h3>
+                    <span id="brawler-trophy-variation" style="font-weight: bold; font-size: 1em;"></span>
+                </div>
+
+                <div class="chart-filters">
+                    <button onclick="setBrawlerChartMode(0.042)" class="filter-btn filter-brawler-btn">1H</button>
+                    <button onclick="setBrawlerChartMode(1)" class="filter-btn filter-brawler-btn">Jour</button>
+                    <button onclick="setBrawlerChartMode(7)" class="filter-btn filter-brawler-btn">Semaine</button>
+                    <button onclick="setBrawlerChartMode(31)" class="filter-btn filter-brawler-btn">Mois</button>
+                    <button onclick="setBrawlerChartMode(0)" class="filter-btn filter-brawler-btn active" id="btn-brawler-all">Tout</button>
+                </div>
+
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="brawlerChartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+        
         <div id="view-data" class="view-section">
             <h2>💾 Données</h2>
             
@@ -180,6 +213,7 @@
     <script src="js/auth.js"></script>
     <script src="js/settings.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/brawlers_stats.js"></script>
     
     <script>
         const urlParams = new URLSearchParams(window.location.search);
