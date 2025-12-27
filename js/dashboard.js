@@ -16,7 +16,6 @@ async function loadMyStats() {
     let data;
 
     // --- BLOC 1 : CRITIQUE (Authentification) ---
-    // Si ça échoue ici, c'est que le token est invalide -> Logout
     try {
         const res = await fetch(`${API_URL}/api/my-stats`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
@@ -39,14 +38,13 @@ async function loadMyStats() {
 
     } catch (e) { 
         console.error("⛔ Erreur Critique (Auth):", e);
-        logout(); // On déconnecte seulement si l'API rejette le token
+        logout(); 
         return;
     }
 
     // --- BLOC 2 : SECONDAIRE (Interface & Graphiques) ---
-    // Si ça plante ici, on affiche une erreur console mais on reste connecté
     
-    // 2.1 Charger la grille des brawlers (Important d'attendre await)
+    // 2.1 Charger la grille des brawlers (et attendre la fin)
     try {
         await loadBrawlersGrid(data.brawlers);
     } catch (e) {
@@ -61,11 +59,11 @@ async function loadMyStats() {
         console.warn("⚠️ Erreur chargement Graphique:", e);
     }
     
-    // 2.3 Initialiser l'autocomplétion
+    // 2.3 Initialiser le menu déroulant
     try {
         initBrawlerSelector();
     } catch (e) {
-        console.warn("⚠️ Erreur init Autocomplétion:", e);
+        console.warn("⚠️ Erreur init Selecteur Brawlers:", e);
     }
 }
 
@@ -113,7 +111,6 @@ async function loadBrawlersGrid(playerBrawlers) {
         };
     });
     sortBrawlers();
-    // On ne lance pas initBrawlerSelector ici, c'est fait dans loadMyStats après le await
 }
 
 function sortBrawlers() {
@@ -202,6 +199,7 @@ function manageGenericFilters(data, idPrefix) {
 
     let diffDays = 0;
     if (data && data.length > 0) {
+        // Correction Date (remplacer espace par T)
         const dateStr = data[0].date.replace(' ', 'T'); 
         const oldest = new Date(dateStr);
         const now = new Date();
@@ -450,9 +448,6 @@ function renderMainChart() {
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // Mise à jour labels chart (si existants)
-    // ... code legacy pour labels nav ...
-
     if(window.myChart) window.myChart.destroy();
 
     window.myChart = renderGenericChart({
@@ -467,86 +462,44 @@ function renderMainChart() {
 }
 
 // =========================================================
-// === GESTION DU GRAPHIQUE BRAWLERS (NOUVEAU) ===
+// === GESTION DU GRAPHIQUE BRAWLERS (Ancien Select) ===
 // =========================================================
 
 function initBrawlerSelector() {
-    const input = document.getElementById('brawler-search-input');
-    const hiddenInput = document.getElementById('brawler-select-dashboard');
-    const listContainer = document.getElementById('brawler-dropdown-list');
-
-    // Si on ne trouve pas les éléments (pas sur la bonne vue), on quitte sans erreur
-    if (!input || !listContainer || !hiddenInput) { return; }
-
-    if (typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
-        const owned = globalBrawlersList.filter(b => b.owned).sort((a, b) => b.trophies - a.trophies);
+    const select = document.getElementById('brawler-select-dashboard');
+    if(!select) return; // Si on est pas sur la vue Brawlers
+    
+    // Si la liste est vide mais qu'on a des brawlers globaux
+    if (select.options.length <= 1 && typeof globalBrawlersList !== 'undefined' && globalBrawlersList.length > 0) {
+        select.innerHTML = "";
         
-        if (owned.length === 0) {
-            input.value = "Aucun brawler possédé";
-            input.disabled = true;
+        // On filtre uniquement les brawlers POSSÉDÉS (owned)
+        const owned = globalBrawlersList.filter(b => b.owned);
+        
+        // Tri par trophées décroissant
+        owned.sort((a,b) => b.trophies - a.trophies);
+
+        if(owned.length === 0) {
+            select.innerHTML = "<option>Aucun brawler possédé</option>";
             return;
         }
 
-        const renderList = (filterText = "") => {
-            listContainer.innerHTML = "";
-            const lowerFilter = filterText.toLowerCase();
-
-            owned.forEach(b => {
-                if (b.name.toLowerCase().includes(lowerFilter)) {
-                    const item = document.createElement('div');
-                    item.className = 'dropdown-item';
-                    item.innerHTML = `
-                        <span style="font-weight:bold;">${b.name}</span>
-                        <span style="opacity:0.7;">🏆 ${b.trophies}</span>
-                    `;
-                    item.onclick = () => { selectBrawler(b); };
-                    listContainer.appendChild(item);
-                }
-            });
-
-            if (listContainer.children.length === 0) {
-                listContainer.innerHTML = '<div style="padding:10px; color:#888; text-align:center;">Aucun résultat</div>';
-            }
-        };
-
-        const selectBrawler = (brawler) => {
-            input.value = brawler.name;       
-            hiddenInput.value = brawler.id;   
-            listContainer.classList.add('hidden'); 
-            loadSelectedBrawlerStats();       
-        };
-
-        if (!hiddenInput.value) {
-            selectBrawler(owned[0]);
-        }
-
-        input.oninput = () => {
-            renderList(input.value);
-            listContainer.classList.remove('hidden');
-        };
-
-        input.onfocus = () => {
-            input.select();
-            renderList(""); 
-            listContainer.classList.remove('hidden');
-        };
-
-        document.addEventListener('click', (e) => {
-            if (!input.contains(e.target) && !listContainer.contains(e.target)) {
-                listContainer.classList.add('hidden');
-                // Restore name if invalid input
-                const currentId = hiddenInput.value;
-                const currentBrawler = owned.find(b => b.id == currentId);
-                if (currentBrawler) input.value = currentBrawler.name;
-            }
+        owned.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.id;
+            opt.innerText = b.name; // On affiche juste le nom
+            select.appendChild(opt);
         });
+
+        // Sélectionner le premier par défaut
+        select.value = owned[0].id;
+        loadSelectedBrawlerStats();
     }
 }
 
 async function loadSelectedBrawlerStats() {
-    const hiddenInput = document.getElementById('brawler-select-dashboard');
-    if(!hiddenInput) return;
-    const brawlerId = hiddenInput.value;
+    const select = document.getElementById('brawler-select-dashboard');
+    const brawlerId = select.value;
     if(!brawlerId) return;
 
     const token = localStorage.getItem('token');
@@ -567,6 +520,7 @@ function setBrawlerChartMode(mode) {
 }
 
 function renderBrawlerChart() {
+    // UI Boutons Brawlers
     document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
     
     let btnId = 'btn-brawler-all';
@@ -581,13 +535,15 @@ function renderBrawlerChart() {
 
     if(brawlerChartInstance) brawlerChartInstance.destroy();
 
-    const hiddenInput = document.getElementById('brawler-select-dashboard');
+    // Récupérer le trophée actuel du brawler sélectionné pour le point "Live"
+    const select = document.getElementById('brawler-select-dashboard');
     let liveVal = null;
-    if(hiddenInput && globalBrawlersList) {
-        const b = globalBrawlersList.find(i => i.id == hiddenInput.value);
+    if(select && globalBrawlersList) {
+        const b = globalBrawlersList.find(i => i.id == select.value);
         if(b) liveVal = b.trophies;
     }
 
+    // APPEL GÉNÉRIQUE (Couleur Bleue #00d2ff)
     brawlerChartInstance = renderGenericChart({
         canvasId: 'brawlerChartCanvas',
         rawData: currentBrawlerHistory,
@@ -599,7 +555,8 @@ function renderBrawlerChart() {
     });
 }
 
-// --- PUBLIC (MODE VIEW ONLY) ---
+
+// --- PUBLIC ---
 async function loadPublicProfile(tag) {
     document.getElementById('public-actions').classList.remove('hidden');
     document.getElementById('burger-menu').classList.add('hidden');
