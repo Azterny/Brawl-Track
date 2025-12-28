@@ -251,7 +251,7 @@ function renderGenericChart(config) {
          color: '#ffce00',
          variationId: 'trophy-variation',
          labelId: 'chart-period-label',
-         isBrawler: false // NOUVEAU : Active le mode "Déblocage"
+         isBrawler: false // NOUVEAU
        }
     */
 
@@ -259,13 +259,28 @@ function renderGenericChart(config) {
     
     // --- SPECIFIQUE BRAWLER : Gestion Déblocage ---
     let unlockTs = null;
-    if (isBrawler) {
-        // 1. Trouver la date de déblocage (premier point > -1)
-        const u = rawData.find(d => d.trophies > -1);
-        if (u) unlockTs = new Date(u.date).getTime();
+    if (isBrawler && rawData.length > 0) {
+        // 1. On regarde l'état au tout début de l'historique enregistré
+        const firstPoint = rawData[0];
 
-        // 2. Nettoyer les données : -1 devient 0
-        // On copie pour ne pas muter l'original
+        // CAS A : Le Brawler n'était pas possédé au début (-1)
+        // -> On cherche le moment où il a été débloqué pour mettre le point blanc
+        if (firstPoint.trophies === -1) {
+            const u = rawData.find(d => d.trophies > -1);
+            if (u) {
+                unlockTs = new Date(u.date).getTime();
+            } else {
+                // S'il n'est jamais débloqué dans les données, tout reste blanc
+                unlockTs = Number.MAX_SAFE_INTEGER;
+            }
+        }
+        // CAS B : Le Brawler était déjà possédé (trophies >= 0)
+        // -> On laisse unlockTs à null.
+        // -> Conséquence : Aucun point ne sera de type 'unlock' ou 'locked'.
+        // -> La courbe sera entièrement bleue et le premier point sera 'start' (Bleu).
+
+        // 2. Nettoyer les données : -1 devient 0 pour le dessin
+        // (On utilise map pour créer une copie et ne pas altérer les données d'origine)
         rawData = rawData.map(d => ({
             ...d,
             trophies: d.trophies === -1 ? 0 : d.trophies
@@ -320,7 +335,7 @@ function renderGenericChart(config) {
             let type = 'real';
             if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) type = 'start';
             
-            // Logique Brawler Unlock (On assigne les types spéciaux)
+            // Logique Brawler Unlock
             if (isBrawler && unlockTs !== null) {
                 const t = new Date(h.date).getTime();
                 if (t === unlockTs) type = 'unlock';
@@ -388,19 +403,19 @@ function renderGenericChart(config) {
         }
     }
 
-    // 4. Styles (Couleurs des points)
+    // 4. Styles (Couleurs)
     const pointColors = finalDataPoints.map(p => {
         if (p.type === 'live') return '#ff5555';
         if (isBrawler && p.type === 'unlock') return '#ffffff'; // Point débloqué BLANC
         if (isBrawler && p.type === 'locked') return '#ffffff'; // Points courbe blanche BLANC
-        if (p.type === 'start') return '#007bff';
+        if (p.type === 'start') return '#007bff'; // Point bleu classique
         return color;
     });
     
-    // Styles (Tailles des points)
+    // Styles (Rayons)
     const pointRadiuses = finalDataPoints.map(p => {
         if (p.type === 'ghost') return 0;
-        if (isBrawler && p.type === 'unlock') return 6; // Gros point pour le déblocage
+        if (isBrawler && p.type === 'unlock') return 6; 
         if (p.type === 'live' || p.type === 'start') return 5;
         if (shouldHidePoints) return 0;
         return 3;
@@ -431,12 +446,11 @@ function renderGenericChart(config) {
                 pointBorderColor: pointColors,
                 pointRadius: pointRadiuses,
                 pointHoverRadius: 6,
-                // Segment pour changer la couleur de la courbe en BLANC avant le déblocage
+                // Segment pour changer la couleur de la courbe
                 segment: {
                     borderColor: ctx => {
                         if (!isBrawler) return undefined;
                         const p = finalDataPoints[ctx.p1DataIndex];
-                        // Si le segment se termine par 'locked' ou 'unlock', il doit être blanc
                         if (p && (p.type === 'locked' || p.type === 'unlock')) return '#ffffff';
                         return undefined;
                     }
