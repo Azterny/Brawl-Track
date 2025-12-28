@@ -251,12 +251,27 @@ function renderGenericChart(config) {
          color: '#ffce00',
          variationId: 'trophy-variation',
          labelId: 'chart-period-label',
-         // ... autres options d'UI
+         isBrawler: false // NOUVEAU : Active le mode "Déblocage"
        }
     */
 
-    const { rawData, mode, offset, liveValue, color, canvasId, variationId } = config;
+    let { rawData, mode, offset, liveValue, color, canvasId, variationId, isBrawler } = config;
     
+    // --- SPECIFIQUE BRAWLER : Gestion Déblocage ---
+    let unlockTs = null;
+    if (isBrawler) {
+        // 1. Trouver la date de déblocage (premier point > -1)
+        const u = rawData.find(d => d.trophies > -1);
+        if (u) unlockTs = new Date(u.date).getTime();
+
+        // 2. Nettoyer les données : -1 devient 0
+        // On copie pour ne pas muter l'original
+        rawData = rawData.map(d => ({
+            ...d,
+            trophies: d.trophies === -1 ? 0 : d.trophies
+        }));
+    }
+
     // 1. Calcul des bornes temporelles
     let startDate = null;
     let endDate = null;
@@ -304,12 +319,20 @@ function renderGenericChart(config) {
         source.forEach(h => {
             let type = 'real';
             if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) type = 'start';
+            
+            // Logique Brawler Unlock (On assigne les types spéciaux)
+            if (isBrawler && unlockTs !== null) {
+                const t = new Date(h.date).getTime();
+                if (t === unlockTs) type = 'unlock';
+                else if (t < unlockTs) type = 'locked';
+            }
+
             finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
         });
         if (liveValue !== null && liveValue !== undefined) 
             finalDataPoints.push({ x: new Date().toISOString(), y: liveValue, type: 'live' });
     } else {
-        // Mode Plages (avec interpolation)
+        // Mode Plages
         let inRange = rawData.filter(i => {
             const d = new Date(i.date);
             return d >= startDate && d <= endDate;
@@ -319,6 +342,14 @@ function renderGenericChart(config) {
         inRange.forEach(h => {
             let type = 'real';
             if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) type = 'start';
+            
+            // Logique Brawler Unlock
+            if (isBrawler && unlockTs !== null) {
+                const t = new Date(h.date).getTime();
+                if (t === unlockTs) type = 'unlock';
+                else if (t < unlockTs) type = 'locked';
+            }
+
             finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
         });
 
@@ -357,14 +388,19 @@ function renderGenericChart(config) {
         }
     }
 
-    // 4. Styles
+    // 4. Styles (Couleurs des points)
     const pointColors = finalDataPoints.map(p => {
         if (p.type === 'live') return '#ff5555';
+        if (isBrawler && p.type === 'unlock') return '#ffffff'; // Point débloqué BLANC
+        if (isBrawler && p.type === 'locked') return '#ffffff'; // Points courbe blanche BLANC
         if (p.type === 'start') return '#007bff';
         return color;
     });
+    
+    // Styles (Tailles des points)
     const pointRadiuses = finalDataPoints.map(p => {
         if (p.type === 'ghost') return 0;
+        if (isBrawler && p.type === 'unlock') return 6; // Gros point pour le déblocage
         if (p.type === 'live' || p.type === 'start') return 5;
         if (shouldHidePoints) return 0;
         return 3;
@@ -380,8 +416,6 @@ function renderGenericChart(config) {
     if (!canvas) return null;
     const ctx = canvas.getContext('2d');
     
-    // Destruction instance existante (géré par l'appelant via variable globale ou retour)
-    
     return new Chart(ctx, {
         type: 'line',
         data: { 
@@ -389,14 +423,24 @@ function renderGenericChart(config) {
                 label: 'Trophées', 
                 data: finalDataPoints, 
                 borderColor: color, 
-                backgroundColor: color + '1A', // Ajoute 10% d'opacité hex
+                backgroundColor: color + '1A', 
                 borderWidth: 2, 
                 tension: 0.2, 
                 fill: true,
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointColors,
                 pointRadius: pointRadiuses,
-                pointHoverRadius: 6
+                pointHoverRadius: 6,
+                // Segment pour changer la couleur de la courbe en BLANC avant le déblocage
+                segment: {
+                    borderColor: ctx => {
+                        if (!isBrawler) return undefined;
+                        const p = finalDataPoints[ctx.p1DataIndex];
+                        // Si le segment se termine par 'locked' ou 'unlock', il doit être blanc
+                        if (p && (p.type === 'locked' || p.type === 'unlock')) return '#ffffff';
+                        return undefined;
+                    }
+                }
             }] 
         },
         options: {
@@ -410,6 +454,7 @@ function renderGenericChart(config) {
                             const point = context.raw;
                             if (point.type === 'ghost') return `~ Environ : ${point.y}`;
                             if (point.type === 'live') return `🔴 Actuel : ${point.y}`;
+                            if (point.type === 'unlock') return `🔓 Débloquer`; // Label Spécifique
                             return `🏆 ${point.y}`;
                         }
                     }
@@ -576,11 +621,13 @@ function renderBrawlerChart() {
         rawData: currentBrawlerHistory,
         mode: currentBrawlerMode,
         offset: 0,
-        liveValue: liveVal, // C'est ici que le point rouge est généré
+        liveValue: liveVal, 
         color: '#00d2ff', 
-        variationId: 'brawler-trophy-variation'
+        variationId: 'brawler-trophy-variation',
+        isBrawler: true // Activation du mode Brawler (Unlock blanc)
     });
 }
+
 
 // --- PUBLIC ---
 async function loadPublicProfile(tag) {
