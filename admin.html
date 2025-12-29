@@ -1,3 +1,7 @@
+{
+type: uploaded file
+fileName: admin.html
+fullContent:
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,162 +10,193 @@
     <title>Admin Panel - Brawl Track</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* BASE */
+        /* --- BASE & THEME --- */
         body { background-color: #121212; color: #eee; font-family: 'Roboto', sans-serif; margin: 0; padding: 20px; }
-        h1, h2 { color: #ffce00; text-transform: uppercase; }
+        h1, h2, h3 { color: #ffce00; text-transform: uppercase; margin: 0; }
+        a { text-decoration: none; color: inherit; }
 
-        /* LOGIN */
-        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-        #login-screen input { padding: 10px; width: 250px; text-align: center; margin-bottom: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; }
+        /* --- LOGIN OVERLAY --- */
+        #login-screen { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #121212; z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        #login-screen input { 
+            padding: 12px; width: 250px; text-align: center; margin: 15px 0; 
+            border-radius: 5px; border: 1px solid #444; background: #222; color: white; font-size: 1.1em;
+        }
+
+        /* --- LAYOUT --- */
+        .container { max-width: 1200px; margin: 0 auto; display: none; } /* Caché par défaut */
         
-        /* DASHBOARD */
-        .container { max-width: 1200px; margin: 0 auto; display: none; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+        .top-bar { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; 
+        }
 
-        /* STATS GRILLE (2 Lignes x 4 Colonnes) */
+        /* --- STATS GRID --- */
         .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 15px; 
-            margin-bottom: 30px; 
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 40px; 
         }
         .card { 
-            background: #1e1e1e; 
-            padding: 15px; 
-            border-radius: 8px; 
-            border: 1px solid #333; 
-            text-align: center; 
+            background: #1e1e1e; padding: 20px; border-radius: 12px; 
+            border: 1px solid #333; text-align: center; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .card-val { font-size: 1.5em; font-weight: bold; color: #fff; margin-bottom: 5px; }
-        .card-label { color: #888; font-size: 0.8em; text-transform: uppercase; }
+        .card-val { font-size: 1.8em; font-weight: bold; color: #fff; margin-bottom: 5px; }
+        .card-label { color: #888; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* FILTRES */
-        .filters { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; background: #1e1e1e; padding: 10px; border-radius: 8px; }
-        
-        /* TABLE & ACCORDION */
-        .table-container { overflow-x: auto; border-radius: 8px; }
+        /* --- MENU DÉROULANT GESTION --- */
+        .management-header {
+            display: flex; align-items: center; gap: 15px;
+            background: #1e1e1e; padding: 20px; border-radius: 12px;
+            border-left: 5px solid #ffce00; margin-bottom: 20px;
+        }
+        .view-select {
+            background: #333; color: #ffce00; border: 1px solid #ffce00;
+            padding: 10px 20px; font-size: 1.2em; font-weight: bold;
+            border-radius: 6px; cursor: pointer; text-transform: uppercase; outline: none;
+        }
+        .view-select:hover { background: #444; }
+
+        /* --- TABLEAUX --- */
+        .table-wrapper { overflow-x: auto; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         table { width: 100%; border-collapse: collapse; background: #1e1e1e; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; vertical-align: middle; }
-        th { background: #252525; color: #ffce00; }
         
-        /* Ligne principale */
-        .user-row { transition: background 0.2s; }
-        .user-row:hover { background: #2a2a2a; }
-
-        /* Zone détails (cachée par défaut) */
-        .details-row { display: none; background: #181818; }
-        .details-row.active { display: table-row; animation: fadeIn 0.3s; }
-        .details-content { padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; color: #aaa; font-size: 0.9em; }
-        .details-item strong { color: #fff; display: block; margin-bottom: 5px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* UI ELEMENTS */
-        select, input { padding: 8px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
-        
-        .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; text-transform: uppercase; }
-        .badge-basic { background: #555; }
-        .badge-subscriber { background: #0056b3; }
-        .badge-premium { background: #ffd700; color: #000; }
-
-        /* BUTTONS */
-        button { cursor: pointer; padding: 6px 12px; border: none; border-radius: 4px; color: white; font-weight: bold; transition: 0.2s; }
-        button:hover { filter: brightness(1.2); }
-        
-        .btn-login { background: #ffce00; color: black; width: 270px; font-size: 1.1em; }
-        .btn-refresh { background: #28a745; }
-        .btn-save { background: #007bff; margin-left: 5px; }
-        .btn-del { background: #dc3545; }
-        
-        .btn-expand { 
-            background: transparent; border: 1px solid #555; color: #ffce00; 
-            width: 30px; height: 30px; border-radius: 50%; font-size: 1.2em; line-height: 1;
-            padding: 0; display: flex; align-items: center; justify-content: center;
+        th { 
+            background: #252525; color: #aaa; font-size: 0.85em; text-transform: uppercase; 
+            padding: 15px; text-align: left; border-bottom: 2px solid #333; 
         }
-        .btn-expand:hover { background: #333; }
+        td { 
+            padding: 15px; border-bottom: 1px solid #333; font-size: 0.95em; vertical-align: middle; 
+        }
+        
+        /* Lignes Interactive */
+        .row-main:hover { background: #2a2a2a; }
+        
+        /* Details (Tags du joueur) */
+        .row-details { display: none; background: #151515; }
+        .row-details.active { display: table-row; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Mobile Responsive Stats */
+        /* Tableau Imbriqués (Tags) */
+        .nested-table { width: 96%; margin: 10px auto; background: #222; border: 1px solid #444; border-radius: 8px; overflow: hidden; }
+        .nested-table th { background: #333; color: #ffce00; padding: 10px; font-size: 0.8em; }
+        .nested-table td { padding: 10px; font-size: 0.9em; border-bottom: 1px solid #444; }
+
+        /* --- COMPOSANTS UI --- */
+        button { cursor: pointer; border: none; border-radius: 4px; transition: 0.2s; font-weight: bold; }
+        button:hover { filter: brightness(1.2); transform: scale(1.05); }
+        
+        .btn-login { background: #ffce00; color: black; padding: 12px 24px; font-size: 1em; }
+        .btn-refresh { background: #333; color: white; border: 1px solid #555; padding: 8px 16px; }
+
+        .btn-expand { 
+            background: transparent; border: 1px solid #555; color: #ffce00;
+            width: 30px; height: 30px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+        }
+        .btn-expand.open { background: #ffce00; color: black; transform: rotate(180deg); }
+
+        select.tier-editor { padding: 6px; background: #222; color: #eee; border: 1px solid #555; border-radius: 4px; }
+
+        /* Actions Icons */
+        .action-btn { font-size: 1.2em; padding: 5px; background: transparent; }
+        .action-btn:hover { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        
+        .badge-tag { 
+            background: #333; color: #ffce00; padding: 4px 8px; 
+            border-radius: 4px; font-family: monospace; font-size: 1.1em; border: 1px solid #555;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .management-header { flex-direction: column; align-items: flex-start; }
+            td, th { padding: 10px 5px; font-size: 0.85em; }
         }
-
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <h1 style="margin-bottom: 30px;">🔒 ADMIN ACCESS</h1>
-        <input type="password" id="admin-pass" placeholder="Mot de passe Admin" onkeyup="if(event.key === 'Enter') login()">
-        <button class="btn-login" onclick="login()">ENTRER</button>
-        <p id="login-msg" style="color: #ff5555; margin-top: 15px;"></p>
+        <h1 style="font-size: 3em; margin-bottom: 10px;">🛡️ ADMIN</h1>
+        <p style="color:#666;">Brawl Track Control Panel</p>
+        <input type="password" id="admin-pass" placeholder="Clé d'accès..." onkeyup="if(event.key === 'Enter') login()">
+        <button class="btn-login" onclick="login()">CONNEXION</button>
+        <p id="login-msg" style="color: #ff5555; margin-top: 20px; min-height: 20px;"></p>
     </div>
 
     <div id="dashboard" class="container">
         
         <div class="top-bar">
-            <h1 style="margin: 0;">🛠️ Panneau de Contrôle</h1>
-            <button class="btn-refresh" onclick="loadData()">🔄 Actualiser</button>
+            <div>
+                <h1>Tableau de Bord</h1>
+                <span style="color: #666; font-size: 0.9em;">Serveur: Online &bull; Worker: Active</span>
+            </div>
+            <button class="btn-refresh" onclick="loadData()">🔄 Actualiser Données</button>
         </div>
 
         <div class="stats-grid">
-            <div class="card"><div class="card-val" id="val-users">--</div><div class="card-label">Nombre d'utilisateurs</div></div>
-            <div class="card"><div class="card-val" id="val-archives">--</div><div class="card-label">Archives Totales</div></div>
-            <div class="card"><div class="card-val" id="val-avg">--</div><div class="card-label">Moyenne / User</div></div>
-            <div class="card"><div class="card-val" id="val-disk">--</div><div class="card-label">Disque Utilisé / Total</div></div>
-            
-            <div class="card"><div class="card-val" id="val-cpu">--%</div><div class="card-label">CPU Serveur</div></div>
-            <div class="card"><div class="card-val" id="val-ram">--%</div><div class="card-label">RAM Serveur</div></div>
-            <div class="card"><div class="card-val" id="val-last-date" style="font-size: 1.2em;">--</div><div class="card-label">Date dernière archive</div></div>
-            <div class="card"><div class="card-val" id="val-next-date" style="font-size: 1.2em;">--</div><div class="card-label">Date prochaine archive</div></div>
+            <div class="card">
+                <div class="card-val" id="val-users">--</div>
+                <div class="card-label">Utilisateurs Inscrits</div>
+            </div>
+            <div class="card">
+                <div class="card-val" id="val-archives">--</div>
+                <div class="card-label">Points d'Historique</div>
+            </div>
+            <div class="card">
+                <div class="card-val" id="val-cpu">--</div>
+                <div class="card-label">Charge CPU / RAM</div>
+            </div>
+            <div class="card">
+                <div class="card-val" id="val-next-date" style="color: #ffce00;">--</div>
+                <div class="card-label">Prochaine Archive Auto</div>
+            </div>
         </div>
 
-        <h2>Gestion Utilisateurs</h2>
-        
-        <div class="filters">
-            <label>Trier par :</label>
-            <select id="sort-select" onchange="applySort()">
-                <option value="id">ID (Création)</option>
-                <option value="last_archive">Date dernière archive</option>
-                <option value="last_login">Date dernière connexion</option>
-                <option value="next_archive">Prochaine Archive (Urgent)</option>
+        <div class="management-header">
+            <h2 style="color:white; margin-right: 10px;">GESTION DES</h2>
+            <select id="view-mode" class="view-select" onchange="renderTable()">
+                <option value="users">👤 UTILISATEURS</option>
+                <option value="tags">🏷️ TAGS</option>
             </select>
         </div>
 
-        <div class="table-container">
+        <div class="table-wrapper">
             <table>
-                <thead>
-                    <tr>
-                        <th style="width: 50px;"></th> <th>ID</th>
-                        <th>Pseudo</th>
-                        <th>Tag</th>
-                        <th>Grade</th>
-                        <th>Dernière Connexion</th>
-                        <th style="text-align: right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="users-table">
-                    <tr><td colspan="7" style="text-align:center; padding: 20px; color:#888;">Chargement...</td></tr>
+                <thead id="table-head">
+                    </thead>
+                <tbody id="table-body">
+                    <tr><td colspan="7" style="text-align: center; padding: 30px; color: #666;">Chargement des données...</td></tr>
                 </tbody>
             </table>
         </div>
+
     </div>
 
     <script>
         const API_URL = "https://api.brawl-track.com"; 
         let ADMIN_KEY = "";
-        let usersData = [];
+        
+        // Données brutes de l'API
+        let rawApiData = []; 
+        // Données structurées (Groupées par user)
+        let groupedUsers = [];
 
-        // --- AUTH & LOAD ---
+        // --- AUTH ---
         async function login() {
             const pass = document.getElementById('admin-pass').value;
             if(!pass) return;
             ADMIN_KEY = pass;
-            document.getElementById('login-msg').innerText = "Connexion...";
+            document.getElementById('login-msg').innerText = "Vérification...";
 
             try {
-                const res = await fetch(`${API_URL}/api/admin/users`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
-                if(res.status === 403) throw new Error("Mot de passe incorrect");
-                if(!res.ok) throw new Error("Erreur serveur");
+                // Test Auth simple
+                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                if(res.status === 403) throw new Error("Accès Refusé");
+                if(!res.ok) throw new Error("Erreur Serveur");
                 
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
@@ -179,193 +214,266 @@
                 const res = await fetch(`${API_URL}/api/admin/stats`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
                 const s = await res.json();
                 
-                // Ligne 1
                 document.getElementById('val-users').innerText = s.users;
                 document.getElementById('val-archives').innerText = s.total_archives;
-                document.getElementById('val-avg').innerText = s.avg_archives_user;
-                document.getElementById('val-disk').innerText = s.disk_used_gb + ' / ' + s.disk_total_gb + ' GB';
-
-                // Ligne 2
-                document.getElementById('val-cpu').innerText = s.cpu_percent + '%';
-                document.getElementById('val-ram').innerText = s.ram_percent + '%';
-                document.getElementById('val-last-date').innerText = formatDate(s.last_archive_date);
-                document.getElementById('val-next-date').innerText = formatDate(s.next_archive_date);
-
-            } catch(e) { console.error(e); }
+                document.getElementById('val-cpu').innerText = `${s.cpu_percent}% / ${s.ram_percent}%`;
+                document.getElementById('val-next-date').innerText = formatTimeOnly(s.next_archive_date);
+            } catch(e) {}
         }
 
+        // --- CORE DATA LOGIC ---
         async function loadUsersList() {
             try {
                 const res = await fetch(`${API_URL}/api/admin/users`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
-                usersData = await res.json();
-                applySort(); 
-            } catch(e) { console.error(e); }
-        }
-
-        // --- TRI & RENDU ---
-        function applySort() {
-            const criteria = document.getElementById('sort-select').value;
-            
-            usersData.sort((a, b) => {
-                if (criteria === 'id') return a.id - b.id;
+                rawApiData = await res.json();
                 
-                if (criteria === 'last_archive') {
-                    if(!a.last_archive) return 1;
-                    if(!b.last_archive) return -1;
-                    return new Date(b.last_archive) - new Date(a.last_archive);
-                }
+                // REGROUPEMENT INTELLIGENT (Pour gérer le Multi-Tag si activé)
+                // L'API renvoie des lignes à plat (LEFT JOIN). On les groupe par User ID.
+                const map = new Map();
 
-                if (criteria === 'last_login') {
-                    if(!a.last_login) return 1;
-                    if(!b.last_login) return -1;
-                    return new Date(b.last_login) - new Date(a.last_login);
-                }
-
-                if (criteria === 'next_archive') {
-                    const nextA = getNextUpdateTime(a.last_archive, a.update_interval);
-                    const nextB = getNextUpdateTime(b.last_archive, b.update_interval);
-                    return nextA - nextB;
-                }
-            });
-            
-            renderUsersTable();
-        }
-
-        function getNextUpdateTime(lastStr, intervalMinutes) {
-            if(!lastStr) return 0;
-            const last = new Date(lastStr);
-            return last.getTime() + (intervalMinutes * 60000); 
-        }
-
-        function formatDate(dateStr) {
-            if(!dateStr || dateStr === 'N/A') return 'N/A';
-            const d = new Date(dateStr);
-            return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
-        }
-
-        function renderUsersTable() {
-            const tbody = document.getElementById('users-table');
-            tbody.innerHTML = '';
-            
-            usersData.forEach(u => {
-                let badgeClass = 'badge-basic';
-                if(u.tier === 'subscriber') badgeClass = 'badge-subscriber';
-                if(u.tier === 'premium') badgeClass = 'badge-premium';
-
-                const lastArchive = u.last_archive ? formatDate(u.last_archive) : "Jamais";
-                const lastLogin = u.last_login ? formatDate(u.last_login) : "Jamais";
-                
-                // Calcul Temps Restant (Prochaine archive)
-                let timeRemaining = "En attente";
-                let nextDateInfo = "Immédiat";
-                
-                if (u.last_archive) {
-                    const nextUpdateTs = getNextUpdateTime(u.last_archive, u.update_interval);
-                    const now = new Date().getTime();
-                    const diffMinutes = Math.floor((nextUpdateTs - now) / 60000);
-
-                    if (diffMinutes <= 0) {
-                        timeRemaining = "<span style='color:#ff5555'>En retard</span>";
-                    } else {
-                        const h = Math.floor(diffMinutes / 60);
-                        const m = diffMinutes % 60;
-                        timeRemaining = `<span style='color:#28a745'>Dans ${h}h ${m}min</span>`;
-                        nextDateInfo = formatDate(new Date(nextUpdateTs).toISOString());
+                rawApiData.forEach(row => {
+                    if (!map.has(row.id)) {
+                        map.set(row.id, {
+                            id: row.id,
+                            username: row.username,
+                            tier: row.tier,
+                            last_login: row.last_login,
+                            tags: []
+                        });
                     }
-                }
+                    // Si la ligne contient un tag (brawl_tag n'est pas null)
+                    if (row.brawl_tag) {
+                        map.get(row.id).tags.push({
+                            tag_str: row.brawl_tag,
+                            interval: row.update_interval,
+                            last_archive: row.last_archive,
+                            total_archives: row.total_archives || 0
+                        });
+                    }
+                });
+
+                groupedUsers = Array.from(map.values()).sort((a,b) => a.id - b.id);
+                renderTable();
+
+            } catch(e) { console.error(e); alert("Erreur chargement liste utilisateurs"); }
+        }
+
+        function renderTable() {
+            const mode = document.getElementById('view-mode').value;
+            const thead = document.getElementById('table-head');
+            const tbody = document.getElementById('table-body');
+            
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if (mode === 'users') renderUsersView(thead, tbody);
+            else renderTagsView(thead, tbody);
+        }
+
+        // --- VUE 1 : UTILISATEURS ---
+        function renderUsersView(thead, tbody) {
+            thead.innerHTML = `
+                <tr>
+                    <th style="width: 50px;"></th>
+                    <th>ID</th>
+                    <th>Pseudo</th>
+                    <th>Grade</th>
+                    <th>Dernière Connexion</th>
+                    <th>Total Archives</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            `;
+
+            groupedUsers.forEach(u => {
+                const totalGlobalArchives = u.tags.reduce((acc, t) => acc + t.total_archives, 0);
+                const lastLoginDisplay = u.last_login ? formatDate(u.last_login) : "Jamais";
 
                 // LIGNE PRINCIPALE
-                const trMain = document.createElement('tr');
-                trMain.className = 'user-row';
-                trMain.innerHTML = `
-                    <td><button class="btn-expand" onclick="toggleDetails(${u.id})">▼</button></td>
-                    <td>${u.id}</td>
+                const tr = document.createElement('tr');
+                tr.className = 'row-main';
+                tr.innerHTML = `
+                    <td><button class="btn-expand" id="btn-exp-${u.id}" onclick="toggleDetails(${u.id})">▼</button></td>
+                    <td style="color:#888;">#${u.id}</td>
                     <td style="font-weight:bold; color: white;">${u.username}</td>
-                    <td style="color:#aaa;">${u.brawl_tag}</td>
-                    <td><span class="badge ${badgeClass}">${u.tier}</span></td>
-                    <td style="color:#ddd;">${lastLogin}</td>
+                    <td>
+                        <select class="tier-editor" onchange="updateTier(${u.id}, this.value)">
+                            <option value="basic" ${u.tier === 'basic' ? 'selected' : ''}>Basic</option>
+                            <option value="subscriber" ${u.tier === 'subscriber' ? 'selected' : ''}>Abonné</option>
+                            <option value="premium" ${u.tier === 'premium' ? 'selected' : ''}>Premium</option>
+                        </select>
+                    </td>
+                    <td style="color:#aaa;">${lastLoginDisplay}</td>
+                    <td><span style="color:#ffce00; font-weight:bold;">${totalGlobalArchives}</span> pts</td>
                     <td style="text-align: right;">
-                        <button class="btn-save" style="background:#17a2b8; margin-right:5px;" onclick="window.location.href='admin_edit.html?id=${u.id}'">✏️</button>
-                        <button class="btn-del" onclick="deleteUser(${u.id})">🗑️</button>
+                        <button class="action-btn" title="Ajouter un Tag" onclick="alert('Fonctionnalité backend à venir')">➕</button>
+                        <button class="action-btn" title="Renommer" onclick="alert('API Renommage non implémentée')">✏️</button>
+                        <button class="action-btn" title="Supprimer Compte" style="color:#ff5555;" onclick="deleteUser(${u.id})">🗑️</button>
                     </td>
                 `;
+                tbody.appendChild(tr);
 
-                // LIGNE DÉTAILS
-                const trDetails = document.createElement('tr');
-                trDetails.className = 'details-row';
-                trDetails.id = `details-${u.id}`;
-                trDetails.innerHTML = `
-                    <td colspan="7">
-                        <div class="details-content">
-                            <div class="details-item">
-                                <strong>📂 Archives</strong>
-                                Total : ${u.total_archives}<br>
-                                Dernière : ${lastArchive}
-                            </div>
-                            <div class="details-item">
-                                <strong>⚡ Fréquence</strong>
-                                Tous les ${u.update_interval} min
-                            </div>
-                            <div class="details-item">
-                                <strong>⏳ Prochaine Archive</strong>
-                                ${timeRemaining}<br>
-                                <span style="font-size:0.8em; color:#666;">Prévu : ${nextDateInfo}</span>
-                            </div>
-                            
-                            <div class="details-item" style="grid-column: 1/-1; border-top: 1px solid #333; padding-top: 10px; margin-top: 5px;">
-                                <strong>Modifier le Grade :</strong>
-                                <div style="display:flex; gap:10px; align-items:center; margin-top:5px;">
-                                    <select id="select-tier-${u.id}">
-                                        <option value="basic" ${u.tier === 'basic' ? 'selected' : ''}>Basic</option>
-                                        <option value="subscriber" ${u.tier === 'subscriber' ? 'selected' : ''}>Abonné</option>
-                                        <option value="premium" ${u.tier === 'premium' ? 'selected' : ''}>Premium</option>
-                                    </select>
-                                    <button class="btn-save" onclick="changeTier(${u.id})">Appliquer</button>
-                                </div>
-                            </div>
-                        </div>
+                // LIGNE DÉTAILS (Liste des Tags)
+                const trDet = document.createElement('tr');
+                trDet.className = 'row-details';
+                trDet.id = `details-${u.id}`;
+                
+                let tagsHtml = '';
+                if(u.tags.length === 0) {
+                    tagsHtml = '<tr><td colspan="5" style="text-align:center; color:#666;">Aucun tag associé.</td></tr>';
+                } else {
+                    u.tags.forEach(t => {
+                        const nextArch = getNextTime(t.last_archive, t.interval);
+                        tagsHtml += `
+                            <tr>
+                                <td><span class="badge-tag">${t.tag_str}</span></td>
+                                <td>${t.interval} min</td>
+                                <td>${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
+                                <td>${nextArch}</td>
+                                <td style="text-align:right;">
+                                    <button class="action-btn" title="Éditer" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
+                                    <button class="action-btn" title="Unclaim" style="color:#ff5555;" onclick="alert('Impossible de dissocier sans supprimer le compte pour l\\'instant.')">❌</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                trDet.innerHTML = `
+                    <td colspan="7" style="padding: 0; border-bottom: 2px solid #333;">
+                        <table class="nested-table">
+                            <thead>
+                                <tr>
+                                    <th>TAG ID</th>
+                                    <th>FRÉQUENCE</th>
+                                    <th>DERNIÈRE ARCHIVE</th>
+                                    <th>PROCHAINE ARCHIVE</th>
+                                    <th style="text-align:right;">ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>${tagsHtml}</tbody>
+                        </table>
                     </td>
                 `;
-
-                tbody.appendChild(trMain);
-                tbody.appendChild(trDetails);
+                tbody.appendChild(trDet);
             });
         }
 
-        // --- INTERACTIONS ---
-        function toggleDetails(id) {
-            const row = document.getElementById(`details-${id}`);
-            if(row.classList.contains('active')) {
+        // --- VUE 2 : TAGS (Vue à plat) ---
+        function renderTagsView(thead, tbody) {
+            thead.innerHTML = `
+                <tr>
+                    <th>PROPRIÉTAIRE</th>
+                    <th>TAG ID</th>
+                    <th>FRÉQUENCE</th>
+                    <th>DERNIÈRE ARCHIVE</th>
+                    <th>PROCHAINE ARCHIVE</th>
+                    <th style="text-align: right;">ACTIONS</th>
+                </tr>
+            `;
+
+            // On itère sur groupedUsers pour extraire tous les tags
+            const allTags = [];
+            groupedUsers.forEach(u => {
+                u.tags.forEach(t => {
+                    allTags.push({ user: u, tag: t });
+                });
+            });
+
+            if (allTags.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Aucun tag trouvé.</td></tr>';
+                return;
+            }
+
+            allTags.forEach(item => {
+                const u = item.user;
+                const t = item.tag;
+                const nextArch = getNextTime(t.last_archive, t.interval);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:bold;">${u.username}</td>
+                    <td><span class="badge-tag">${t.tag_str}</span></td>
+                    <td>${t.interval} min</td>
+                    <td>${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
+                    <td>${nextArch}</td>
+                    <td style="text-align: right;">
+                        <button class="action-btn" title="Éditer" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
+                        <button class="action-btn" title="Unclaim" style="color:#ff5555;" onclick="alert('Nécessite MAJ API')">❌</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- INTERACTIVITY ---
+        function toggleDetails(uid) {
+            const row = document.getElementById(`details-${uid}`);
+            const btn = document.getElementById(`btn-exp-${uid}`);
+            
+            if (row.classList.contains('active')) {
                 row.classList.remove('active');
+                btn.classList.remove('open');
             } else {
-                document.querySelectorAll('.details-row.active').forEach(r => r.classList.remove('active'));
+                // Fermer les autres ? Non, on laisse ouvert pour comparer
                 row.classList.add('active');
+                btn.classList.add('open');
             }
         }
 
-        async function changeTier(userId) {
-            const newTier = document.getElementById(`select-tier-${userId}`).value;
+        async function updateTier(uid, val) {
             try {
                 await fetch(`${API_URL}/api/admin/set-tier`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
-                    body: JSON.stringify({ user_id: userId, tier: newTier })
+                    method:'POST',
+                    headers: {'Content-Type':'application/json', 'X-Admin-Pass': ADMIN_KEY},
+                    body: JSON.stringify({ user_id: uid, tier: val })
                 });
-                loadUsersList();
-            } catch(e) { alert("Erreur connexion"); }
+                // Pas besoin de reload, l'UI est déjà sur la bonne valeur
+            } catch(e) { alert("Erreur MAJ Grade"); }
         }
 
-        async function deleteUser(id) {
-            if(!confirm("Supprimer DEFINITIVEMENT cet utilisateur ?")) return;
+        async function deleteUser(uid) {
+            if(!confirm("⚠️ SUPPRIMER DÉFINITIVEMENT CE COMPTE ET TOUS SES TAGS ?")) return;
             try {
-                await fetch(`${API_URL}/api/admin/user/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'X-Admin-Pass': ADMIN_KEY }
+                await fetch(`${API_URL}/api/admin/user/${uid}`, {
+                    method:'DELETE', 
+                    headers: {'X-Admin-Pass': ADMIN_KEY}
                 });
                 loadUsersList();
-                loadStats();
             } catch(e) { alert("Erreur serveur"); }
         }
+
+        // --- HELPERS ---
+        function formatDate(str) {
+            const d = new Date(str);
+            return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+        }
+        function formatTimeOnly(str) {
+            if(!str || str==='N/A') return 'En attente...';
+            const d = new Date(str);
+            return d.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+        }
+
+        function getNextTime(lastStr, interval) {
+            if(!lastStr) return "<span style='color:#888'>En attente</span>";
+            
+            // Format API Python parfois avec .ms ou sans
+            const last = new Date(lastStr).getTime();
+            const next = last + (interval * 60000);
+            const now = new Date().getTime();
+            const diffMs = next - now;
+
+            if(diffMs <= 0) return "<span style='color:#ff5555; font-weight:bold;'>EN RETARD</span>";
+
+            const h = Math.floor(diffMs / (1000 * 60 * 60));
+            const m = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            let color = '#28a745'; // Vert
+            if (h === 0 && m < 10) color = '#ffce00'; // Jaune si proche
+
+            return `<span style="color:${color}; font-weight:bold;">${h}h ${m}m</span>`;
+        }
+
     </script>
 </body>
 </html>
+}
