@@ -67,7 +67,6 @@ function renderProfile(data) {
     `;
 }
 
-// --- BRAWLERS GRID (ACCUEIL) ---
 async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     if(!grid) return;
@@ -80,7 +79,9 @@ async function loadBrawlersGrid(playerBrawlers) {
         return { 
             id: b.id, name: b.name, 
             imageUrl: `https://cdn.brawlify.com/brawlers/borderless/${b.id}.png`, 
-            owned: !!owned, trophies: owned ? owned.trophies : 0 
+            owned: !!owned, 
+            trophies: owned ? owned.trophies : 0,
+            change24h: owned ? (owned.trophy_change_24h || 0) : 0 // Récupération de la variation
         };
     });
     sortBrawlers();
@@ -101,14 +102,12 @@ function renderBrawlersGrid() {
     const grid = document.getElementById('brawlers-grid');
     if (!grid) return;
     
-    grid.innerHTML = ''; // On vide proprement
+    grid.innerHTML = ''; 
     
     globalBrawlersList.forEach(b => {
-        // 1. Création du conteneur carte
         const card = document.createElement('div');
         card.className = 'brawler-card';
 
-        // Gestion de l'état (Possédé / Gris)
         if (!b.owned) {
             card.style.filter = "grayscale(100%) opacity(0.3)";
             card.style.cursor = "default";
@@ -118,37 +117,49 @@ function renderBrawlersGrid() {
             card.onclick = () => goToBrawlerStats(b.id, b.name);
         }
 
-        // 2. Création de l'image (SÉCURISÉ : src est un attribut)
         const img = document.createElement('img');
         img.src = b.imageUrl;
         img.style.width = '100%';
         img.style.aspectRatio = '1/1';
         img.style.objectFit = 'contain';
         img.loading = 'lazy';
-        img.alt = b.name; // Bonne pratique accessibilité
+        img.alt = b.name;
 
-        // 3. Création du Nom (SÉCURISÉ : textContent empêche l'exécution de HTML)
         const nameDiv = document.createElement('div');
         nameDiv.style.fontSize = '0.8em';
         nameDiv.style.overflow = 'hidden';
         nameDiv.style.textOverflow = 'ellipsis';
         nameDiv.style.whiteSpace = 'nowrap';
-        nameDiv.textContent = b.name; // <--- C'est ici que la magie opère
+        nameDiv.textContent = b.name; 
 
-        // 4. Ajout des éléments à la carte
         card.appendChild(img);
         card.appendChild(nameDiv);
 
-        // 5. Trophées (si possédé)
         if (b.owned) {
             const trophyDiv = document.createElement('div');
             trophyDiv.style.color = '#ffce00';
             trophyDiv.style.fontSize = '0.7em';
+            trophyDiv.style.marginTop = '2px';
             trophyDiv.textContent = `🏆 ${b.trophies}`;
+
+            // Affichage des flèches
+            if (b.change24h > 0) {
+                const arrow = document.createElement('span');
+                arrow.textContent = ' ↗'; 
+                arrow.style.color = '#28a745';
+                arrow.style.fontWeight = 'bold';
+                trophyDiv.appendChild(arrow);
+            } else if (b.change24h < 0) {
+                const arrow = document.createElement('span');
+                arrow.textContent = ' ↘'; 
+                arrow.style.color = '#ff5555';
+                arrow.style.fontWeight = 'bold';
+                trophyDiv.appendChild(arrow);
+            }
+            
             card.appendChild(trophyDiv);
         }
 
-        // Ajout final à la grille
         grid.appendChild(card);
     });
 }
