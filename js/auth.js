@@ -45,7 +45,7 @@ async function login() {
 
 async function register() {
     const username = document.getElementById('reg-username').value;
-    const tag = document.getElementById('reg-tag').value;
+    // SUPPRIMER : const tag = document.getElementById('reg-tag').value;
     const password = document.getElementById('reg-password').value;
     const msg = document.getElementById('message');
 
@@ -53,7 +53,8 @@ async function register() {
         const res = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ username, tag, password })
+            // MODIFIER LA LIGNE SUIVANTE (retirer 'tag')
+            body: JSON.stringify({ username, password }) 
         });
         const data = await res.json();
         
