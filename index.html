@@ -57,16 +57,104 @@
             font-size: 0.9em;
             color: #666;
         }
+
+        #timer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #2a2a2a; /* Légèrement plus clair que le container */
+            padding: 10px;
+            border-radius: 8px;
+            min-width: 70px;
+            border: 1px solid #333;
+        }
+
+        .number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffce00; /* Utilisation de ton jaune */
+        }
+
+        .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #888;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="loader"></div>
         <h1>Maintenance</h1>
-        <p>Brawl Track évolue !<br>
+        <p>Brawl-Track évolue !<br>
         Nous mettons à jour notre infrastructure.</p>
-        <p style="color: #fff; font-weight: bold;">Le site sera de retour très bientôt.</p>
+        <div id="timer">
+            <div class="time-block">
+                <span id="days" class="number">00</span>
+                <span class="label">Jours</span>
+            </div>
+            <div class="time-block">
+                <span id="hours" class="number">00</span>
+                <span class="label">Heures</span>
+            </div>
+            <div class="time-block">
+                <span id="minutes" class="number">00</span>
+                <span class="label">Minutes</span>
+            </div>
+            <div class="time-block">
+                <span id="seconds" class="number">00</span>
+                <span class="label">Secondes</span>
+            </div>
+        </div>
+        
+        <div id="message">Le site sera de retour très bientôt.</div>
+        
         <div class="footer">&copy; Brawl Track</div>
     </div>
+    <script>
+        // 1. Définir la date cible (Demain 12h00)
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + 1); // Ajoute 1 jour à aujourd'hui
+        targetDate.setHours(12, 0, 0, 0); // Fixe l'heure à 12:00:00
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            // Si le compte à rebours est terminé
+            if (distance < 0) {
+                document.getElementById("timer").style.display = "none";
+                document.getElementById("message").style.display = "block";
+                return;
+            }
+
+            // Calculs mathématiques pour le temps
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Mise à jour du HTML (avec ajout d'un zéro devant si < 10)
+            document.getElementById("days").innerText = days < 10 ? "0" + days : days;
+            document.getElementById("hours").innerText = hours < 10 ? "0" + hours : hours;
+            document.getElementById("minutes").innerText = minutes < 10 ? "0" + minutes : minutes;
+            document.getElementById("seconds").innerText = seconds < 10 ? "0" + seconds : seconds;
+        }
+
+        // Mise à jour chaque seconde
+        setInterval(updateCountdown, 1000);
+        
+        // Appel initial pour éviter le délai d'une seconde à l'affichage
+        updateCountdown();
+    </script>
 </body>
 </html>
