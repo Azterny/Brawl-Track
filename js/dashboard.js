@@ -253,45 +253,21 @@ function decimateDataPoints(points) {
 // =========================================================
 
 function renderGenericChart(config) {
-    /* config = {
-         canvasId: 'trophyChart',
-         rawData: [...],
-         mode: 0, 1, 7...,
-         offset: 0,
-         liveValue: 1234 (optionnel),
-         color: '#ffce00',
-         variationId: 'trophy-variation',
-         labelId: 'chart-period-label',
-         isBrawler: false // NOUVEAU
-       }
-    */
-
     let { rawData, mode, offset, liveValue, color, canvasId, variationId, isBrawler } = config;
     
     // --- SPECIFIQUE BRAWLER : Gestion Déblocage ---
     let unlockTs = null;
     if (isBrawler && rawData.length > 0) {
-        // 1. On regarde l'état au tout début de l'historique enregistré
         const firstPoint = rawData[0];
-
-        // CAS A : Le Brawler n'était pas possédé au début (-1)
-        // -> On cherche le moment où il a été débloqué pour mettre le point blanc
         if (firstPoint.trophies === -1) {
             const u = rawData.find(d => d.trophies > -1);
             if (u) {
                 unlockTs = new Date(u.date).getTime();
             } else {
-                // S'il n'est jamais débloqué dans les données, tout reste blanc
                 unlockTs = Number.MAX_SAFE_INTEGER;
             }
         }
-        // CAS B : Le Brawler était déjà possédé (trophies >= 0)
-        // -> On laisse unlockTs à null.
-        // -> Conséquence : Aucun point ne sera de type 'unlock' ou 'locked'.
-        // -> La courbe sera entièrement bleue et le premier point sera 'start' (Bleu).
-
-        // 2. Nettoyer les données : -1 devient 0 pour le dessin
-        // (On utilise map pour créer une copie et ne pas altérer les données d'origine)
+        // Nettoyer les données : -1 devient 0 pour le dessin
         rawData = rawData.map(d => ({
             ...d,
             trophies: d.trophies === -1 ? 0 : d.trophies
@@ -337,6 +313,8 @@ function renderGenericChart(config) {
     // 2. Préparation des points
     let finalDataPoints = [];
     const shouldDecimate = (mode === 0 || mode === 365);
+    
+    // <--- AMÉLIORATION : On cache les points pour Tout, Année et MOIS (31)
     const shouldHidePoints = (mode === 0 || mode === 365 || mode === 31);
 
     if (mode === 0) {
@@ -417,9 +395,9 @@ function renderGenericChart(config) {
     // 4. Styles (Couleurs)
     const pointColors = finalDataPoints.map(p => {
         if (p.type === 'live') return '#ff5555';
-        if (isBrawler && p.type === 'unlock') return '#ffffff'; // Point débloqué BLANC
-        if (isBrawler && p.type === 'locked') return '#ffffff'; // Points courbe blanche BLANC
-        if (p.type === 'start') return '#007bff'; // Point bleu classique
+        if (isBrawler && p.type === 'unlock') return '#ffffff'; 
+        if (isBrawler && p.type === 'locked') return '#ffffff'; 
+        if (p.type === 'start') return '#007bff'; 
         return color;
     });
     
@@ -428,7 +406,7 @@ function renderGenericChart(config) {
         if (p.type === 'ghost') return 0;
         if (isBrawler && p.type === 'unlock') return 6; 
         if (p.type === 'live' || p.type === 'start') return 5;
-        if (shouldHidePoints) return 0;
+        if (shouldHidePoints) return 0; // Utilisation du nouveau filtre
         return 3;
     });
 
@@ -441,6 +419,8 @@ function renderGenericChart(config) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return null;
     const ctx = canvas.getContext('2d');
+    
+    // <--- AMÉLIORATION : Ligne droite si < 24h, Courbe sinon
     const lineTension = (mode === 1 || (mode > 0 && mode < 0.2)) ? 0 : 0.2;
     
     return new Chart(ctx, {
@@ -452,13 +432,12 @@ function renderGenericChart(config) {
                 borderColor: color, 
                 backgroundColor: color + '1A', 
                 borderWidth: 2, 
-                tension: lineTension,
+                tension: lineTension, // Utilisation de la tension dynamique
                 fill: true,
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointColors,
                 pointRadius: pointRadiuses,
                 pointHoverRadius: 6,
-                // Segment pour changer la couleur de la courbe
                 segment: {
                     borderColor: ctx => {
                         if (!isBrawler) return undefined;
@@ -480,7 +459,7 @@ function renderGenericChart(config) {
                             const point = context.raw;
                             if (point.type === 'ghost') return `~ Environ : ${point.y}`;
                             if (point.type === 'live') return `🔴 Actuel : ${point.y}`;
-                            if (point.type === 'unlock') return `🔓 Débloquer`; // Label Spécifique
+                            if (point.type === 'unlock') return `🔓 Débloquer`;
                             return `🏆 ${point.y}`;
                         }
                     }
