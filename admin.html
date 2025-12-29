@@ -549,18 +549,17 @@
                     <td style="font-weight:bold">${u.username}</td>
                     <td><span class="badge-tag">${t.tag_str}</span></td>
                     <td>
-                        <input type="number" 
-                               value="${t.interval}" 
+                        <input type="number" value="${t.interval}" 
                                style="width:60px; background:#111; color:#ffce00; border:1px solid #444; border-radius:4px; text-align:center; padding:5px;" 
-                               onchange="updateTagFreq(${t.id || 0}, this)" 
-                               title="Modifier la fréquence (min)"> min
+                               onchange="updateTagFreq(${t.id}, this)"> min
                     </td>
                     <td>${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
                     <td>${getNextTime(t.last_archive, t.interval)}</td>
                     <td style="color:#ffce00; font-weight:bold;">${t.trophies || 0} 🏆</td>
                     <td style="text-align:right">
                         <button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
-                        <button class="btn-del" title="Détacher le tag" onclick="adminUnclaimTag(${t.id || 0})">🔗✖</button>
+                        <button class="btn-del" onclick="adminUnclaimTag(${t.id})">🔗✖</button>
+                        <button class="btn-del" style="background:#8b0000; border:1px solid #ff5555;" onclick="adminDeleteTag(${t.id})">🗑️ Tag</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -672,6 +671,23 @@
                 alert("Erreur réseau"); 
                 inputElement.style.borderColor = "#ff5555";
             }
+        }
+        async function adminDeleteTag(tagId) {
+            if (!confirm("⚠️ ATTENTION ⚠️\nCela va supprimer DÉFINITIVEMENT ce tag et tout son historique de la base de données.\nCette action est irréversible.\n\nContinuer ?")) return;
+        
+            try {
+                const res = await fetch(`${API_URL}/api/admin/tag/${tagId}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Pass': ADMIN_KEY }
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    alert("✅ " + d.message);
+                    loadUsersList();
+                } else {
+                    alert("❌ " + d.message);
+                }
+            } catch (e) { alert("Erreur réseau"); }
         }
         function formatDate(s) { const d=new Date(s); return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
         function formatTimeOnly(s) { if(!s||s==='N/A')return'--'; const d=new Date(s); return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
