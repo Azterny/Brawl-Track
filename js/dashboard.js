@@ -1,6 +1,7 @@
 // --- VARIABLES GLOBALES ---
 let currentChartMode = 0;   // 0=Tout, 1=Jour... (Principal)
 let currentChartOffset = 0; // Décalage (Principal)
+let currentActiveTagId = null;
 
 // Variables spécifiques Brawlers
 let currentBrawlerHistory = [];
@@ -11,6 +12,7 @@ let brawlerChartInstance = null; // Instance Chart.js Brawler
 async function loadMyStats() {
     try {
         const token = localStorage.getItem('token');
+        // Appel standard (sans paramètre = charge le premier tag par défaut)
         const res = await fetch(`${API_URL}/api/my-stats`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
@@ -18,12 +20,24 @@ async function loadMyStats() {
         if (!res.ok) throw new Error("Session invalide");
         
         const data = await res.json();
+        
+        // --- GESTION MULTI-TAGS ---
+        if (data.tags && data.tags.length > 0) {
+            // L'API nous dit quel tag elle a chargé via active_tag_id
+            currentActiveTagId = data.active_tag_id;
+            setupAccountSwitcher(data.tags);
+        } else {
+            // Cas sans tags ou fallback
+            document.getElementById('account-selector-container').innerHTML = 
+                `<div style="color: #888; font-size: 0.9em; margin-top:5px;">${data.tag || 'Aucun Tag'}</div>`;
+        }
+
+        // --- RENDU UI ---
         currentUserTier = data.internal_tier || 'basic';
         window.currentUpdateInterval = data.internal_interval; 
 
         renderProfile(data);
         
-        // Affichage Badge
         const badge = document.getElementById('tier-badge');
         if(badge) badge.classList.remove('hidden');
         
@@ -32,11 +46,75 @@ async function loadMyStats() {
         await loadBrawlersGrid(data.brawlers);
         
         unlockChart();
-        loadHistoryChart(token, data.trophies);
+        
+        // IMPORTANT : On passe l'ID actif pour charger le bon historique
+        loadHistoryChart(token, data.trophies, currentActiveTagId);
 
     } catch (e) { 
         console.error(e);
-        logout(); 
+        // logout(); // À décommenter en prod
+    }
+}
+
+function setupAccountSwitcher(tags) {
+    const container = document.getElementById('account-selector-container');
+    if(!container) return; 
+
+    if (tags.length <= 1) {
+        // Un seul tag : Affichage simple texte
+        // On cherche le tag actif dans la liste pour afficher son nom
+        const activeTagName = tags.find(t => t.id == currentActiveTagId)?.tag || "Tag";
+        container.innerHTML = `<div id="player-tag" style="color: #888; font-size: 0.9em; margin-top: 5px;">${activeTagName}</div>`;
+        return;
+    }
+
+    // Plusieurs tags : Création du Select
+    let html = `<select id="tag-switcher" onchange="switchAccount(this.value)" 
+        style="margin-top: 5px; padding: 4px 8px; background: #252525; color: #fff; border: 1px solid #444; border-radius: 6px; font-size: 0.9em; cursor: pointer; outline: none;">`;
+    
+    tags.forEach(t => {
+        const isSelected = (t.id == currentActiveTagId) ? 'selected' : '';
+        html += `<option value="${t.id}" ${isSelected}>${t.tag}</option>`;
+    });
+    
+    html += `</select>`;
+    container.innerHTML = html;
+}
+
+async function switchAccount(newTagId) {
+    // Feedback visuel (Loader léger)
+    document.getElementById('player-name').innerText = "Chargement...";
+    const statsArea = document.getElementById('stats-area');
+    if(statsArea) statsArea.style.opacity = '0.5';
+    
+    const token = localStorage.getItem('token');
+
+    try {
+        // Appel avec paramètre tag_id
+        const res = await fetch(`${API_URL}/api/my-stats?tag_id=${newTagId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            
+            // Mise à jour ID actif
+            currentActiveTagId = data.active_tag_id;
+            
+            // Rafraîchir UI
+            renderProfile(data);
+            await loadBrawlersGrid(data.brawlers);
+            
+            // Reset Graphique
+            if(window.myChart) window.myChart.destroy();
+            loadHistoryChart(token, data.trophies, currentActiveTagId);
+            
+            if(statsArea) statsArea.style.opacity = '1';
+        }
+    } catch(e) {
+        console.error("Erreur switch compte", e);
+        alert("Impossible de changer de compte.");
+        if(statsArea) statsArea.style.opacity = '1';
     }
 }
 
@@ -485,19 +563,20 @@ function renderGenericChart(config) {
 // === GESTION DU GRAPHIQUE PRINCIPAL (GLOBAL) ===
 // =========================================================
 
-async function loadHistoryChart(token, liveTrophies) {
-    if (!token) { lockChart(); fullHistoryData = []; return; }
+async function loadHistoryChart(token, liveTrophies, tagId = null) {
+if (!token) { lockChart(); fullHistoryData = []; return; }
 
     currentLiveTrophies = liveTrophies;
     try {
-        const res = await fetch(`${API_URL}/api/history`, { headers: { 'Authorization': `Bearer ${token}` } });
+        let url = `${API_URL}/api/history`;
+        if (tagId) url += `?tag_id=${tagId}`;
+
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
         if(res.ok) fullHistoryData = await res.json();
         else fullHistoryData = [];
     } catch(e) { fullHistoryData = []; }
     
-    // APPEL DE LA NOUVELLE FONCTION (Préfixe 'btn' pour les IDs btn-7d, btn-31d...)
     manageGenericFilters(fullHistoryData, 'btn');
-    
     setChartMode(0);
 
     let lastDate = fullHistoryData.length > 0 ? fullHistoryData[fullHistoryData.length - 1].date : null;
