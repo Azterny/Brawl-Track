@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Brawl Track</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* BASE */
+        body { background-color: #121212; color: #eee; font-family: 'Roboto', sans-serif; margin: 0; padding: 20px; }
+        h1, h2 { color: #ffce00; text-transform: uppercase; }
+
+        /* LOGIN */
+        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #login-screen input { padding: 10px; width: 250px; text-align: center; margin-bottom: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: white; }
+        
+        /* DASHBOARD */
+        .container { max-width: 1200px; margin: 0 auto; display: none; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+
+        /* STATS GRILLE (2 Lignes x 4 Colonnes) */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px; 
+            margin-bottom: 30px; 
+        }
+        .card { 
+            background: #1e1e1e; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #333; 
+            text-align: center; 
+        }
+        .card-val { font-size: 1.5em; font-weight: bold; color: #fff; margin-bottom: 5px; }
+        .card-label { color: #888; font-size: 0.8em; text-transform: uppercase; }
+
+        /* VIEW HEADER (Gestion des...) */
+        .view-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #ffce00;
+        }
+        .view-header h2 { margin: 0; font-size: 1.5em; color: white; }
+        .view-select {
+            background: #333;
+            color: #ffce00;
+            border: 1px solid #ffce00;
+            padding: 8px 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        /* TABLE & ACCORDION */
+        .table-container { overflow-x: auto; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; background: #1e1e1e; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; vertical-align: middle; }
+        th { background: #252525; color: #ffce00; text-transform: uppercase; font-size: 0.85em; }
+        
+        /* Ligne principale */
+        .user-row { transition: background 0.2s; }
+        .user-row:hover { background: #2a2a2a; }
+
+        /* Zone détails (cachée par défaut) */
+        .details-row { display: none; background: #181818; }
+        .details-row.active { display: table-row; animation: fadeIn 0.3s; }
+        
+        /* Nested Table (Tags dans User) */
+        .nested-table { width: 95%; margin: 15px auto; border: 1px solid #444; border-radius: 5px; overflow: hidden; }
+        .nested-table th { background: #333; color: #aaa; font-size: 0.8em; }
+        .nested-table td { background: #222; font-size: 0.9em; padding: 8px 15px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* UI ELEMENTS */
+        select.tier-select { padding: 5px; background: #252525; color: white; border: 1px solid #555; border-radius: 4px; font-size: 0.9em; }
+        select.tier-select:focus { border-color: #ffce00; outline: none; }
+
+        /* BUTTONS */
+        button { cursor: pointer; padding: 6px 12px; border: none; border-radius: 4px; color: white; font-weight: bold; transition: 0.2s; }
+        button:hover { filter: brightness(1.2); transform: scale(1.05); }
+        
+        .btn-login { background: #ffce00; color: black; width: 270px; font-size: 1.1em; }
+        .btn-refresh { background: #28a745; }
+        
+        /* Action Icons Buttons */
+        .btn-icon { padding: 5px 8px; font-size: 1.1em; margin-left: 3px; background: #333; border: 1px solid #444; }
+        .btn-icon:hover { background: #444; border-color: #666; }
+        
+        .btn-expand { 
+            background: transparent; border: 1px solid #555; color: #ffce00; 
+            width: 25px; height: 25px; border-radius: 50%; font-size: 1em; line-height: 1;
+            padding: 0; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-expand:hover { background: #333; }
+
+        .hidden { display: none !important; }
+
+        /* Mobile Responsive Stats */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .view-header { flex-direction: column; align-items: flex-start; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <h1 style="margin-bottom: 30px;">🔒 ADMIN ACCESS</h1>
+        <input type="password" id="admin-pass" placeholder="Mot de passe Admin" onkeyup="if(event.key === 'Enter') login()">
+        <button class="btn-login" onclick="login()">ENTRER</button>
+        <p id="login-msg" style="color: #ff5555; margin-top: 15px;"></p>
+    </div>
+
+    <div id="dashboard" class="container">
+        
+        <div class="top-bar">
+            <h1 style="margin: 0;">🛠️ Panneau de Contrôle</h1>
+            <button class="btn-refresh" onclick="loadData()">🔄 Actualiser</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="card"><div class="card-val" id="val-users">--</div><div class="card-label">Nombre d'utilisateurs</div></div>
+            <div class="card"><div class="card-val" id="val-archives">--</div><div class="card-label">Archives Totales</div></div>
+            <div class="card"><div class="card-val" id="val-avg">--</div><div class="card-label">Moyenne / User</div></div>
+            <div class="card"><div class="card-val" id="val-disk">--</div><div class="card-label">Disque Utilisé / Total</div></div>
+            
+            <div class="card"><div class="card-val" id="val-cpu">--%</div><div class="card-label">CPU Serveur</div></div>
+            <div class="card"><div class="card-val" id="val-ram">--%</div><div class="card-label">RAM Serveur</div></div>
+            <div class="card"><div class="card-val" id="val-last-date" style="font-size: 1.2em;">--</div><div class="card-label">Date dernière archive</div></div>
+            <div class="card"><div class="card-val" id="val-next-date" style="font-size: 1.2em;">--</div><div class="card-label">Date prochaine archive</div></div>
+        </div>
+
+        <div class="view-header">
+            <h2>GESTION DES</h2>
+            <select id="view-mode" class="view-select" onchange="switchView()">
+                <option value="users">UTILISATEURS</option>
+                <option value="tags">TAGS</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead id="main-thead">
+                    </thead>
+                <tbody id="main-tbody">
+                    <tr><td colspan="7" style="text-align:center; padding: 20px; color:#888;">Chargement...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://api.brawl-track.com"; 
+        let ADMIN_KEY = "";
+        let usersData = [];
+        let currentView = 'users';
+
+        // --- AUTH & LOAD ---
+        async function login() {
+            const pass = document.getElementById('admin-pass').value;
+            if(!pass) return;
+            ADMIN_KEY = pass;
+            document.getElementById('login-msg').innerText = "Connexion...";
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                if(res.status === 403) throw new Error("Mot de passe incorrect");
+                if(!res.ok) throw new Error("Erreur serveur");
+                
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                loadData();
+            } catch(e) { document.getElementById('login-msg').innerText = "❌ " + e.message; }
+        }
+
+        function loadData() {
+            loadStats();
+            loadUsersList();
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                const s = await res.json();
+                
+                document.getElementById('val-users').innerText = s.users;
+                document.getElementById('val-archives').innerText = s.total_archives;
+                document.getElementById('val-avg').innerText = s.avg_archives_user;
+                document.getElementById('val-disk').innerText = s.disk_used_gb + ' / ' + s.disk_total_gb + ' GB';
+
+                document.getElementById('val-cpu').innerText = s.cpu_percent + '%';
+                document.getElementById('val-ram').innerText = s.ram_percent + '%';
+                document.getElementById('val-last-date').innerText = formatDate(s.last_archive_date);
+                document.getElementById('val-next-date').innerText = formatDate(s.next_archive_date);
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadUsersList() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                usersData = await res.json();
+                // Tri par défaut : ID croissant
+                usersData.sort((a,b) => a.id - b.id);
+                renderTable();
+            } catch(e) { console.error(e); }
+        }
+
+        function switchView() {
+            currentView = document.getElementById('view-mode').value;
+            renderTable();
+        }
+
+        // --- RENDU TABLEAU ---
+        function renderTable() {
+            const thead = document.getElementById('main-thead');
+            const tbody = document.getElementById('main-tbody');
+            tbody.innerHTML = '';
+            thead.innerHTML = '';
+
+            if (currentView === 'users') {
+                renderUsersMode(thead, tbody);
+            } else {
+                renderTagsMode(thead, tbody);
+            }
+        }
+
+        // MODE 1 : UTILISATEURS
+        function renderUsersMode(thead, tbody) {
+            // En-têtes
+            thead.innerHTML = `
+                <tr>
+                    <th style="width: 40px;"></th>
+                    <th style="width: 50px;">ID</th>
+                    <th>Pseudo</th>
+                    <th>Grade</th>
+                    <th>Dernière Connexion</th>
+                    <th>Total Archives</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            `;
+
+            usersData.forEach(u => {
+                const lastLogin = u.last_login ? formatDate(u.last_login) : "Jamais";
+                
+                // Ligne Principale
+                const tr = document.createElement('tr');
+                tr.className = 'user-row';
+                tr.innerHTML = `
+                    <td><button class="btn-expand" onclick="toggleDetails(${u.id})">▼</button></td>
+                    <td>${u.id}</td>
+                    <td style="font-weight:bold; color: #fff;">${u.username}</td>
+                    <td>
+                        <select class="tier-select" onchange="changeTier(${u.id}, this.value)">
+                            <option value="basic" ${u.tier === 'basic' ? 'selected' : ''}>Basic</option>
+                            <option value="subscriber" ${u.tier === 'subscriber' ? 'selected' : ''}>Abonné</option>
+                            <option value="premium" ${u.tier === 'premium' ? 'selected' : ''}>Premium</option>
+                        </select>
+                    </td>
+                    <td style="color:#aaa;">${lastLogin}</td>
+                    <td>${u.total_archives}</td>
+                    <td style="text-align: right;">
+                        <button class="btn-icon" title="Ajouter Tag" onclick="alert('Fonctionnalité Multi-Tag en cours de développement')">➕</button>
+                        <button class="btn-icon" title="Renommer" onclick="renameUser(${u.id}, '${u.username}')">✏️</button>
+                        <button class="btn-icon" title="Supprimer" style="border-color:#dc3545; color:#ff5555;" onclick="deleteUser(${u.id})">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // Ligne Détails (Tags Claims)
+                const trDet = document.createElement('tr');
+                trDet.className = 'details-row';
+                trDet.id = `details-${u.id}`;
+                
+                // Calculs Tag
+                const lastArch = u.last_archive ? formatDate(u.last_archive) : "Aucune";
+                const nextArch = getNextArchiveDisplay(u.last_archive, u.update_interval);
+
+                trDet.innerHTML = `
+                    <td colspan="7" style="padding:0; background:#1a1a1a;">
+                        <table class="nested-table">
+                            <thead>
+                                <tr>
+                                    <th>TAG ID</th>
+                                    <th>Fréquence</th>
+                                    <th>Dernière Archive</th>
+                                    <th>Prochaine Archive</th>
+                                    <th style="text-align:right;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="color:#ffce00; font-weight:bold;">${u.brawl_tag}</td>
+                                    <td>${u.update_interval} min</td>
+                                    <td>${lastArch}</td>
+                                    <td>${nextArch}</td>
+                                    <td style="text-align:right;">
+                                        <button class="btn-icon" title="Editer" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
+                                        <button class="btn-icon" title="Unclaim" style="color:#ff5555;" onclick="unclaimTag(${u.id})">❌</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                `;
+                tbody.appendChild(trDet);
+            });
+        }
+
+        // MODE 2 : TAGS
+        function renderTagsMode(thead, tbody) {
+            thead.innerHTML = `
+                <tr>
+                    <th>Propriétaire</th>
+                    <th>ID du Tag</th>
+                    <th>Fréquence</th>
+                    <th>Dernière Archive</th>
+                    <th>Prochaine Archive</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            `;
+
+            usersData.forEach(u => {
+                const lastArch = u.last_archive ? formatDate(u.last_archive) : "Aucune";
+                const nextArch = getNextArchiveDisplay(u.last_archive, u.update_interval);
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:bold;">${u.username}</td>
+                    <td style="color:#ffce00;">${u.brawl_tag}</td>
+                    <td>${u.update_interval} min</td>
+                    <td>${lastArch}</td>
+                    <td>${nextArch}</td>
+                    <td style="text-align: right;">
+                        <button class="btn-icon" title="Editer" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
+                        <button class="btn-icon" title="Unclaim" style="color:#ff5555;" onclick="unclaimTag(${u.id})">❌</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- HELPERS & ACTIONS ---
+
+        function toggleDetails(id) {
+            const row = document.getElementById(`details-${id}`);
+            if(row.classList.contains('active')) {
+                row.classList.remove('active');
+            } else {
+                // Fermer les autres ? Optionnel. Ici on garde ouvert.
+                row.classList.add('active');
+            }
+        }
+
+        async function changeTier(userId, newTier) {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/set-tier`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
+                    body: JSON.stringify({ user_id: userId, tier: newTier })
+                });
+                if(res.ok) {
+                    // Update local data pour éviter un reload complet
+                    const u = usersData.find(x => x.id === userId);
+                    if(u) u.tier = newTier;
+                    alert("✅ Grade mis à jour !");
+                } else throw new Error();
+            } catch(e) { alert("Erreur mise à jour grade"); }
+        }
+
+        function renameUser(id, oldName) {
+            const newName = prompt("Nouveau pseudo pour " + oldName + " :", oldName);
+            if(newName && newName !== oldName) {
+                // NOTE: Pas d'endpoint 'rename' dans le main.py actuel, simuler ou ajouter route
+                alert("⚠️ Attention : La route API 'Renommer' doit être ajoutée au backend (main.py) pour que cela fonctionne réellement.");
+            }
+        }
+
+        function unclaimTag(id) {
+            if(confirm("⚠️ Le système actuel lie 1 Tag à 1 Compte.\n'Unclaim' va supprimer le compte et son historique.\nContinuer ?")) {
+                deleteUser(id);
+            }
+        }
+
+        async function deleteUser(id) {
+            if(!confirm("Supprimer DÉFINITIVEMENT cet utilisateur ?")) return;
+            try {
+                await fetch(`${API_URL}/api/admin/user/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Pass': ADMIN_KEY }
+                });
+                loadUsersList();
+                loadStats();
+            } catch(e) { alert("Erreur serveur"); }
+        }
+
+        function formatDate(dateStr) {
+            if(!dateStr || dateStr === 'N/A') return 'N/A';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function getNextArchiveDisplay(lastStr, interval) {
+            if(!lastStr) return "En attente";
+            const last = new Date(lastStr).getTime();
+            const next = last + (interval * 60000);
+            const now = new Date().getTime();
+            const diff = next - now;
+
+            if(diff <= 0) return "<span style='color:#ff5555'>En retard</span>";
+            
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            return `<span style='color:#28a745'>${h}h ${m}m</span>`;
+        }
+
+    </script>
+</body>
+</html>
+}
