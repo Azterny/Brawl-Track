@@ -516,7 +516,13 @@
                 let tagsHtml = u.tags.map(t => `
                     <tr>
                         <td><span class="badge-tag">${t.tag_str}</span></td>
-                        <td>${t.interval} min</td>
+                        <td>
+                            <input type="number" 
+                                   value="${t.interval}" 
+                                   style="width:50px; background:#111; color:#ffce00; border:1px solid #444; border-radius:4px; text-align:center;" 
+                                   onchange="updateTagFreq(${t.id}, this)" 
+                                   title="Modifier la fréquence (min)"> min
+                        </td>
                         <td>${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
                         <td>${getNextTime(t.last_archive, t.interval)}</td>
                         <td style="text-align:right">
@@ -542,7 +548,13 @@
                 row.innerHTML = `
                     <td style="font-weight:bold">${u.username}</td>
                     <td><span class="badge-tag">${t.tag_str}</span></td>
-                    <td>${t.interval} min</td>
+                    <td>
+                        <input type="number" 
+                               value="${t.interval}" 
+                               style="width:60px; background:#111; color:#ffce00; border:1px solid #444; border-radius:4px; text-align:center; padding:5px;" 
+                               onchange="updateTagFreq(${t.id || 0}, this)" 
+                               title="Modifier la fréquence (min)"> min
+                    </td>
                     <td>${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
                     <td>${getNextTime(t.last_archive, t.interval)}</td>
                     <td style="color:#ffce00; font-weight:bold;">${t.trophies || 0} 🏆</td>
@@ -625,6 +637,41 @@
                     alert("❌ " + d.message);
                 }
             } catch (e) { alert("Erreur réseau"); }
+        }
+        async function updateTagFreq(tagId, inputElement) {
+            const newVal = parseInt(inputElement.value);
+            if (isNaN(newVal) || newVal < 0) {
+                alert("Veuillez entrer un nombre valide (>= 0).");
+                return;
+            }
+        
+            // Petit effet visuel : changement de couleur bordure pendant la sauvegarde
+            const originalBorder = inputElement.style.borderColor;
+            inputElement.style.borderColor = "#ffce00"; // Jaune pendant l'envoi
+        
+            try {
+                const res = await fetch(`${API_URL}/api/admin/tag/${tagId}/frequency`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
+                    body: JSON.stringify({ minutes: newVal })
+                });
+                const d = await res.json();
+                
+                if (res.ok) {
+                    // Succès : Bordure verte temporaire
+                    inputElement.style.borderColor = "#28a745";
+                    setTimeout(() => inputElement.style.borderColor = originalBorder, 1000);
+                    
+                    // Si la valeur est 0, on peut notifier que l'archivage est stoppé
+                    if(newVal === 0) console.log("Archivage stoppé pour ce tag.");
+                } else {
+                    alert("❌ " + d.message);
+                    inputElement.style.borderColor = "#ff5555"; // Rouge si erreur
+                }
+            } catch (e) { 
+                alert("Erreur réseau"); 
+                inputElement.style.borderColor = "#ff5555";
+            }
         }
         function formatDate(s) { const d=new Date(s); return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
         function formatTimeOnly(s) { if(!s||s==='N/A')return'--'; const d=new Date(s); return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
