@@ -310,12 +310,12 @@
                     }
                     if (row.brawl_tag) {
                         map.get(row.id).tags.push({
-                            id: row.tag_id || 0, // Fallback si API pas maj
+                            id: row.tag_id,  // CORRECTION : On prend le vrai ID du tag
                             tag_str: row.brawl_tag,
-                            interval: row.update_interval,
+                            interval: row.rec_temp, // CORRECTION : On prend la fréquence réelle du tag
                             last_archive: row.last_archive,
                             total_archives: row.total_archives || 0,
-                            trophies: row.current_trophies || 0 // Anticipation backend
+                            trophies: 0 
                         });
                     }
                 });
