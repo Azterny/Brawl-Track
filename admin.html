@@ -501,9 +501,10 @@
                     </select></td>
                     <td style="color:#aaa; font-size:0.9em">${lastLog}</td>
                     <td><span style="color:#ffce00">${totArch}</span></td>
-                    <td style="text-align:right">
-                        <button class="action-btn" onclick="alert('TODO: Rename')">✏️</button>
-                        <button class="action-btn" style="color:#ff5555" onclick="deleteUser(${u.id})">🗑️</button>
+                    <td style="text-align:right; display:flex; gap:5px; justify-content:flex-end;">
+                        <button class="action-btn" title="Renommer" onclick="renameUser(${u.id}, '${u.username}')">✏️</button>
+                        <button class="btn-add" style="padding:2px 8px; font-size:1.1em;" title="Ajouter un Tag" onclick="adminAddTag(${u.id})">➕</button>
+                        <button class="action-btn" style="color:#ff5555" title="Supprimer User" onclick="deleteUser(${u.id})">🗑️</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -518,9 +519,12 @@
                         <td>${t.interval} min</td>
                         <td>${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
                         <td>${getNextTime(t.last_archive, t.interval)}</td>
-                        <td style="text-align:right"><button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button></td>
+                        <td style="text-align:right">
+                            <button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
+                            <button class="btn-del" onclick="adminUnclaimTag(${t.id})">🔗✖</button>
+                        </td>
                     </tr>
-                `).join('') || '<tr><td colspan="5" style="text-align:center">Aucun tag</td></tr>';
+                `).join('') || '<tr><td colspan="5" style="text-align:center">Aucun tag associé</td></tr>';
 
                 det.innerHTML = `<td colspan="7" style="padding:0"><table class="nested-table"><thead><tr><th>TAG</th><th>FREQ</th><th>LAST</th><th>NEXT</th><th style="text-align:right">ACT</th></tr></thead><tbody>${tagsHtml}</tbody></table></td>`;
                 tbody.appendChild(det);
@@ -544,6 +548,7 @@
                     <td style="color:#ffce00; font-weight:bold;">${t.trophies || 0} 🏆</td>
                     <td style="text-align:right">
                         <button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
+                        <button class="btn-del" title="Détacher le tag" onclick="adminUnclaimTag(${t.id || 0})">🔗✖</button>
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -563,10 +568,67 @@
         async function deleteUser(uid) {
             if(confirm("Supprimer ?")) { await fetch(`${API_URL}/api/admin/user/${uid}`, {method:'DELETE', headers:{'X-Admin-Pass':ADMIN_KEY}}); loadUsersList(); }
         }
+        async function renameUser(uid, currentName) {
+            const newName = prompt("Nouveau pseudo pour cet utilisateur :", currentName);
+            if (!newName || newName === currentName) return;
+        
+            try {
+                const res = await fetch(`${API_URL}/api/admin/user/${uid}/rename`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
+                    body: JSON.stringify({ username: newName })
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    alert("✅ " + d.message);
+                    loadUsersList(); // Rafraichir
+                } else {
+                    alert("❌ " + d.message);
+                }
+            } catch (e) { alert("Erreur réseau"); }
+        }
+        
+        async function adminAddTag(uid) {
+            const tag = prompt("Entrez le TAG à ajouter (ex: #XYZ123) :");
+            if (!tag) return;
+        
+            try {
+                const res = await fetch(`${API_URL}/api/admin/user/${uid}/claim`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
+                    body: JSON.stringify({ tag: tag })
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    alert("✅ " + d.message);
+                    loadUsersList();
+                } else {
+                    alert("❌ " + d.message);
+                }
+            } catch (e) { alert("Erreur réseau"); }
+        }
+        
+        async function adminUnclaimTag(tagId) {
+            // tagId peut être 0 si le backend n'a pas renvoyé l'ID dans la vue users (selon la version précédente)
+            // Assurez-vous que loadUsersList récupère bien t.id dans la boucle map()
+            if (!confirm("Voulez-vous vraiment DÉTACHER ce tag de l'utilisateur ?\n(L'historique sera conservé mais plus mis à jour)")) return;
+        
+            try {
+                const res = await fetch(`${API_URL}/api/admin/tag/${tagId}/unclaim`, {
+                    method: 'POST',
+                    headers: { 'X-Admin-Pass': ADMIN_KEY }
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    loadUsersList(); // ou renderTable()
+                } else {
+                    alert("❌ " + d.message);
+                }
+            } catch (e) { alert("Erreur réseau"); }
+        }
         function formatDate(s) { const d=new Date(s); return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
         function formatTimeOnly(s) { if(!s||s==='N/A')return'--'; const d=new Date(s); return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
         function getNextTime(s, i) { if(!s) return '<span style="color:#888">Attente</span>'; const diff = (new Date(s).getTime() + i*60000) - Date.now(); if(diff<=0) return '<span style="color:#f55">Retard</span>'; const h=Math.floor(diff/3600000), m=Math.floor((diff%3600000)/60000); return `<span style="color:${h==0&&m<10?'#fc0':'#2a4'}">${h}h ${m}m</span>`; }
-
     </script>
 </body>
 </html>
