@@ -326,7 +326,7 @@ function renderGenericChart(config) {
     // 2. Préparation des points
     let finalDataPoints = [];
     const shouldDecimate = (mode === 0 || mode === 365);
-    const shouldHidePoints = shouldDecimate;
+    const shouldHidePoints = (mode === 0 || mode === 365 || mode === 31);
 
     if (mode === 0) {
         // Mode TOUT
@@ -430,6 +430,7 @@ function renderGenericChart(config) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return null;
     const ctx = canvas.getContext('2d');
+    const lineTension = (mode === 1 || (mode > 0 && mode < 0.2)) ? 0 : 0.2;
     
     return new Chart(ctx, {
         type: 'line',
@@ -440,7 +441,7 @@ function renderGenericChart(config) {
                 borderColor: color, 
                 backgroundColor: color + '1A', 
                 borderWidth: 2, 
-                tension: 0.2, 
+                tension: lineTension,
                 fill: true,
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointColors,
