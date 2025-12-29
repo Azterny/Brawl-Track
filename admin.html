@@ -228,6 +228,7 @@
         
         let rawApiData = []; 
         let groupedUsers = [];
+        let rawTagsData = [];
         
         // État de tri et filtrage
         let sortOrder = 1; // 1 = Asc (Croissant), -1 = Desc
@@ -283,7 +284,7 @@
             } catch(e) { document.getElementById('login-msg').innerText = "❌ " + e.message; }
         }
 
-        function loadData() { loadStats(); loadUsersList(); }
+        function loadData() { loadStats(); loadUsersList(); loadTagsList();}
 
         async function loadStats() {
             try {
@@ -324,6 +325,18 @@
             } catch(e) { console.error(e); }
         }
 
+        async function loadTagsList() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/tags`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                rawTagsData = await res.json();
+                
+                // Si on est déjà sur la vue TAGS, on rafraîchit
+                if (document.getElementById('view-mode').value === 'tags') {
+                    renderTable();
+                }
+            } catch(e) { console.error("Erreur chargement tags", e); }
+        }
+        
         // --- LOGIC CONTROLS ---
         function switchView() {
             const mode = document.getElementById('view-mode').value;
@@ -429,42 +442,51 @@
                 });
 
             } else {
-                // Mode TAGS : On aplatit d'abord
-                let allTags = [];
-                groupedUsers.forEach(u => {
-                    u.tags.forEach(t => allTags.push({ user: u, tag: t }));
-                });
-
-                // Filtrage Tags
-                data = allTags.filter(item => {
-                    if (currentFilters.size === 0) return true;
-                    // Claimed / Unclaimed
-                    // Note : Unclaimed n'existe pas dans le backend actuel, mais voici la logique :
-                    if (currentFilters.has('claimed') && !item.user) return false; 
-                    if (currentFilters.has('unclaimed') && item.user) return false; 
-                    return true;
-                });
-
-                // Tri Tags
-                const crit = document.getElementById('sort-select').value;
-                data.sort((a, b) => {
-                    let valA, valB;
-                    // Helper pour Prochaine Archive
-                    const getNext = (t) => t.last_archive ? new Date(t.last_archive).getTime() + (t.interval*60000) : 0;
-
-                    if (crit === 'id') { valA = a.tag.tag_str; valB = b.tag.tag_str; } // Tri par string Tag ID
-                    else if (crit === 'owner') { valA = a.user.username.toLowerCase(); valB = b.user.username.toLowerCase(); }
-                    else if (crit === 'next_archive') { valA = getNext(a.tag); valB = getNext(b.tag); }
-                    else if (crit === 'last_archive') { valA = a.tag.last_archive ? new Date(a.tag.last_archive).getTime() : 0; valB = b.tag.last_archive ? new Date(b.tag.last_archive).getTime() : 0; }
-                    else if (crit === 'total_archives') { valA = a.tag.total_archives; valB = b.tag.total_archives; }
-                    else if (crit === 'trophies') { valA = a.tag.trophies || 0; valB = b.tag.trophies || 0; }
-
-                    if (valA < valB) return -1 * sortOrder;
-                    if (valA > valB) return 1 * sortOrder;
-                    return 0;
-                });
-            }
-            return data;
+            // Mode TAGS : On utilise la liste exhaustive rawTagsData
+            data = rawTagsData.map(t => ({
+                user: t.owner_id ? { id: t.owner_id, username: t.owner_name } : null,
+                tag: {
+                    id: t.id,
+                    tag_str: t.tag_str,
+                    interval: t.rec_temp,
+                    last_archive: t.last_archive,
+                    total_archives: t.total_archives,
+                    trophies: t.current_trophies || 0
+                }
+            }));
+        
+            // Filtrage
+            data = data.filter(item => {
+                if (currentFilters.size === 0) return true;
+                
+                // Filtres Claimed / Unclaimed
+                if (currentFilters.has('claimed') && !item.user) return false; 
+                if (currentFilters.has('unclaimed') && item.user) return false; 
+                
+                return true;
+            });
+        
+            // Tri (Reste identique à avant, le mapping est compatible)
+            const crit = document.getElementById('sort-select').value;
+            data.sort((a, b) => {
+                let valA, valB;
+                const getNext = (t) => t.last_archive ? new Date(t.last_archive).getTime() + (t.interval*60000) : 0;
+                
+                // Gestion des valeurs nulles pour le tri owner
+                const ownerA = a.user ? a.user.username.toLowerCase() : 'zzz'; // 'zzz' pour mettre les unclaimed à la fin ou au début
+                const ownerB = b.user ? b.user.username.toLowerCase() : 'zzz';
+        
+                if (crit === 'id') { valA = a.tag.tag_str; valB = b.tag.tag_str; }
+                else if (crit === 'owner') { valA = ownerA; valB = ownerB; }
+                else if (crit === 'next_archive') { valA = getNext(a.tag); valB = getNext(b.tag); }
+                else if (crit === 'last_archive') { valA = a.tag.last_archive ? new Date(a.tag.last_archive).getTime() : 0; valB = b.tag.last_archive ? new Date(b.tag.last_archive).getTime() : 0; }
+                else if (crit === 'total_archives') { valA = a.tag.total_archives; valB = b.tag.total_archives; }
+                else if (crit === 'trophies') { valA = a.tag.trophies; valB = b.tag.trophies; }
+        
+                if (valA < valB) return -1 * sortOrder;
+                if (valA > valB) return 1 * sortOrder;
+                return 0;
+            });
         }
 
         function renderTable() {
@@ -539,14 +561,34 @@
 
         function renderTagsTable(data, thead, tbody) {
             thead.innerHTML = `<tr><th>Propriétaire</th><th>Tag</th><th>Freq</th><th>Last Arch.</th><th>Next Arch.</th><th>Trophées</th><th style="text-align:right">Actions</th></tr>`;
-            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px">Aucun résultat</td></tr>`; return; }
+            
+            if(data.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px">Aucun résultat</td></tr>`; 
+                return; 
+            }
             
             data.forEach(item => {
                 const u = item.user;
                 const t = item.tag;
+                
+                // Gestion affichage Propriétaire (Lien ou Texte Unclaimed)
+                const ownerDisplay = u 
+                    ? `<span style="font-weight:bold; color:white;">${u.username}</span>` 
+                    : `<span style="color:#666; font-style:italic;">-- Unclaimed --</span>`;
+                    
+                // Gestion Bouton Edit (Désactivé si pas de user)
+                const editBtn = u
+                    ? `<button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'" title="Voir Historique User">📝</button>`
+                    : `<button class="action-btn" style="opacity:0.3; cursor:not-allowed;" title="Pas de propriétaire">📝</button>`;
+        
+                // Gestion Bouton Unclaim (Désactivé si déjà unclaimed)
+                const unclaimBtn = u
+                    ? `<button class="btn-del" onclick="adminUnclaimTag(${t.id})" title="Détacher le tag">🔗✖</button>`
+                    : ``;
+        
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td style="font-weight:bold">${u.username}</td>
+                    <td>${ownerDisplay}</td>
                     <td><span class="badge-tag">${t.tag_str}</span></td>
                     <td>
                         <input type="number" value="${t.interval}" 
@@ -557,8 +599,8 @@
                     <td>${getNextTime(t.last_archive, t.interval)}</td>
                     <td style="color:#ffce00; font-weight:bold;">${t.trophies || 0} 🏆</td>
                     <td style="text-align:right">
-                        <button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
-                        <button class="btn-del" onclick="adminUnclaimTag(${t.id})">🔗✖</button>
+                        ${editBtn}
+                        ${unclaimBtn}
                         <button class="btn-del" style="background:#8b0000; border:1px solid #ff5555;" onclick="adminDeleteTag(${t.id})">🗑️ Tag</button>
                     </td>
                 `;
