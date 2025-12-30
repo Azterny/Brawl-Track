@@ -124,8 +124,6 @@
                 <label class="filter-label"><input type="checkbox" onchange="toggleFilter('premium')"> <span>Premium</span></label>
                 <label class="filter-label"><input type="checkbox" onchange="toggleFilter('subscriber')"> <span>Abonnés</span></label>
                 <label class="filter-label"><input type="checkbox" onchange="toggleFilter('basic')"> <span>Basics</span></label>
-                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('single_tag')"> <span>1 Seul Tag</span></label>
-                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('never_connected')"> <span>Jamais Connectés</span></label>
                 <label class="filter-label"><input type="checkbox" onchange="toggleFilter('connected_today')"> <span>Connecté Aujourd'hui</span></label>
             </div>
 
@@ -287,8 +285,6 @@
                     });
                 }
 
-                if(filters.has('single_tag')) data = data.filter(u => u.tags.length === 1);
-                if(filters.has('never_connected')) data = data.filter(u => !u.last_login);
                 if(filters.has('connected_today')) data = data.filter(u => u.last_login && (now - new Date(u.last_login) < 86400000));
 
                 // 3. Tri
@@ -390,6 +386,7 @@
                                 <td>Freq: <input type="number" value="${t.interval}" style="width:40px; text-align:center" onchange="updFreq(${t.id}, this)">m</td>
                                 <td>Last: ${t.last || 'Never'}</td>
                                 <td>Arch: ${t.total}</td>
+                                <button onclick="window.location.href='admin_edit.html?tag_id=${t.id}'" class="btn-red">EDIT</button>
                                 <td style="text-align:right"><button onclick="unclaim(${t.id})" class="btn-red">UNCLAIM</button></td>
                             </tr>`;
                         });
@@ -424,6 +421,7 @@
                         <td style="color:#ffce00">${t.current_trophies || 0}</td>
                         <td>${t.total_archives}</td>
                         <td>
+                            <button onclick="window.location.href='admin_edit.html?tag_id=${t.id}'" class="btn-red">EDIT</button>
                             ${t.claimer_id ? `<button onclick="unclaim(${t.id})" class="btn-red">UNCLAIM</button>` : ''}
                             <button onclick="delTag(${t.id})" class="btn-red">DEL</button>
                         </td>
