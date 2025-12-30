@@ -58,41 +58,50 @@
             color: #666;
         }
 
-        /* Conteneur du compte à rebours */
-        #timer {
+        /* --- NOUVEAU STYLE DU COMPTEUR --- */
+        
+        /* La boîte unique qui contient tout */
+        .unified-box {
             display: flex;
             justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px; /* Espace entre les chiffres */
+            background: #2a2a2a; /* Fond de la boîte unique */
+            padding: 20px 30px;
+            border-radius: 10px;
+            border: 1px solid #333;
             margin-bottom: 20px;
+            flex-wrap: wrap; /* Pour s'adapter aux petits écrans */
         }
-        
-        /* Les boîtes individuelles (Jours, Heures, etc.) */
-        .time-box {
+
+        .time-unit {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: #2a2a2a;
-            padding: 10px;
-            border-radius: 8px;
-            min-width: 70px;
-            border: 1px solid #333;
         }
 
         .number {
-            font-size: 1.8rem;
+            font-size: 2.2rem; /* Chiffres plus gros */
             font-weight: bold;
             color: #ffce00;
+            line-height: 1;
         }
 
         .label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
             color: #888;
-            margin-top: 5px;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+        
+        /* Séparateur optionnel (petits deux points entre les chiffres) */
+        .separator {
+            font-size: 1.5rem;
+            color: #444;
+            margin-top: -15px; /* Ajustement vertical */
         }
 
-        /* Message de fin caché par défaut */
         #message {
             display: none;
             font-size: 1.2rem;
@@ -108,23 +117,28 @@
         <p>Brawl-Track évolue !<br>
         Nous mettons à jour notre infrastructure.</p>
         
-        <div id="timer">
-            <div class="time-box">
+        <div id="timer" class="unified-box">
+            
+            <div class="time-unit">
                 <span id="days" class="number">00</span>
                 <span class="label">Jours</span>
             </div>
-            <div class="time-box">
+
+            <div class="time-unit">
                 <span id="hours" class="number">00</span>
                 <span class="label">Heures</span>
             </div>
-            <div class="time-box">
+
+            <div class="time-unit">
                 <span id="minutes" class="number">00</span>
                 <span class="label">Min</span>
             </div>
-            <div class="time-box">
+
+            <div class="time-unit">
                 <span id="seconds" class="number">00</span>
                 <span class="label">Sec</span>
             </div>
+
         </div>
         
         <div id="message">Le site est de retour ! Actualisez la page.</div>
@@ -133,12 +147,23 @@
     </div>
 
     <script>
-        // --- CONFIGURATION DE LA DATE DE FIN ---
-        // Modifiez la date ci-dessous (Format: Année, Mois (0-11), Jour, Heure, Minute)
-        // Note: Les mois commencent à 0 (Janvier = 0, Décembre = 11)
+        // ==========================================
+        // CONFIGURATION DE LA DATE (C'est ici qu'on change !)
+        // ==========================================
         
-        // EXEMPLE : Pour finir le 30 Décembre 2025 à 14h00 :
-        const targetDate = new Date(2025, 11, 30, 14, 00, 0).getTime();
+        // Année, Mois (0 = Janvier, 11 = Décembre), Jour, Heure, Minute
+        // Exemple ci-dessous : 1er Janvier 2026 à 14h30
+        
+        const annee = 2026;
+        const mois  = 0;  // 0 = Janvier !
+        const jour  = 1;
+        const heure = 14; 
+        const minute = 30;
+
+        // Création de la date cible FIXE
+        const targetDate = new Date(annee, mois, jour, heure, minute, 0).getTime();
+
+        // ==========================================
 
         function updateCountdown() {
             const now = new Date().getTime();
@@ -148,28 +173,24 @@
             if (distance < 0) {
                 document.getElementById("timer").style.display = "none";
                 document.getElementById("message").style.display = "block";
-                // Optionnel : Arrêter l'intervalle pour économiser des ressources
-                // clearInterval(intervalId); 
+                clearInterval(intervalId); 
                 return;
             }
 
-            // Calculs mathématiques pour le temps
+            // Calculs
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Mise à jour du HTML (avec ajout d'un zéro devant si < 10)
+            // Affichage
             document.getElementById("days").innerText = days < 10 ? "0" + days : days;
             document.getElementById("hours").innerText = hours < 10 ? "0" + hours : hours;
             document.getElementById("minutes").innerText = minutes < 10 ? "0" + minutes : minutes;
             document.getElementById("seconds").innerText = seconds < 10 ? "0" + seconds : seconds;
         }
 
-        // Mise à jour chaque seconde
         const intervalId = setInterval(updateCountdown, 1000);
-        
-        // Appel initial pour éviter le délai d'une seconde à l'affichage
         updateCountdown();
     </script>
 </body>
