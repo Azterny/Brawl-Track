@@ -245,257 +245,56 @@ async function goToBrawlerStats(id, name) {
 }
 
 // =========================================================
-// === MOTEUR GRAPHIQUE (CONSERVÉ INTACT) ===
+// === MOTEUR GRAPHIQUE (OPTIMISÉ FANTÔMES) ===
 // =========================================================
 
+/**
+ * Calcule une valeur estimée à une date précise en se basant sur les points existants.
+ * Gère l'exception : Si targetDate < Premier point connu, retourne la valeur du premier point.
+ */
 function getInterpolatedValue(targetDate, allData) {
+    if (!allData || allData.length === 0) return 0;
+
     const targetTs = targetDate.getTime();
-    let prev = null, next = null;
-    for (let pt of allData) {
-        let d = pt.date || pt.recorded_at;
-        if(d) d = d.replace(' ', 'T'); 
-        let ptTs = new Date(d).getTime();
-        
-        if (ptTs <= targetTs) prev = { ...pt, ts: ptTs };
-        if (ptTs >= targetTs && !next) { next = { ...pt, ts: ptTs }; break; }
+    
+    // Convertir les données en format utilisable avec Timestamp
+    // On suppose que allData est trié chronologiquement
+    const points = allData.map(d => {
+        let dateStr = (d.date || d.recorded_at).replace(' ', 'T');
+        return { ts: new Date(dateStr).getTime(), val: d.trophies };
+    });
+
+    // Exception : Si la date cible est AVANT le tout premier enregistrement
+    // On renvoie la valeur du premier enregistrement (Effet plateau au début)
+    if (targetTs <= points[0].ts) {
+        return points[0].val;
     }
-    if (prev && next && prev.ts === next.ts) return prev.trophies;
+
+    // Recherche des voisins (Précédent et Suivant)
+    let prev = null, next = null;
+    for (let pt of points) {
+        if (pt.ts <= targetTs) prev = pt;
+        if (pt.ts >= targetTs && !next) { next = pt; break; }
+    }
+    
+    // Cas exact ou limites
+    if (prev && next && prev.ts === next.ts) return prev.val; // Tombé pile sur un point
+    if (!next) return prev ? prev.val : 0; // Au-delà du dernier point
+
+    // Interpolation linéaire standard
     if (prev && next) {
         const factor = (targetTs - prev.ts) / (next.ts - prev.ts);
-        return prev.trophies + (next.trophies - prev.trophies) * factor;
+        return Math.round(prev.val + (next.val - prev.val) * factor);
     }
-    if (prev) return prev.trophies; 
-    if (next) return next.trophies;
-    return null;
-}
-
-function decimateDataPoints(points) {
-    const grouped = {};
-    points.forEach(p => {
-        const dObj = new Date(p.x);
-        if (isNaN(dObj)) return;
-        const dayKey = dObj.toISOString().split('T')[0]; 
-        grouped[dayKey] = p; 
-    });
-    return Object.values(grouped).sort((a,b) => new Date(a.x) - new Date(b.x));
-}
-
-// --- GESTION GRAPH GLOBAL ---
-
-function loadHistoryChart(historyData, currentTrophies) {
-    fullHistoryData = historyData || [];
-    currentLiveTrophies = currentTrophies;
     
-    manageGenericFilters(fullHistoryData, 'btn');
-    setChartMode(0);
-}
-
-function setChartMode(mode) {
-    currentChartMode = mode;
-    currentChartOffset = 0;
-    const nav = document.getElementById('chart-navigation');
-    if (nav) {
-        if (mode === 0) nav.classList.add('hidden');
-        else nav.classList.remove('hidden');
-    }
-
-    renderMainChart();
-}
-
-function navigateChart(direction) {
-    currentChartOffset += direction;
-    if (currentChartOffset < 0) currentChartOffset = 0;
-    renderMainChart();
-}
-
-function navigateMonth(direction) {
-    if (currentChartMode !== 1) return;
-    const now = new Date();
-    const currentDate = new Date();
-    currentDate.setDate(now.getDate() - currentChartOffset);
-    const targetDate = new Date(currentDate);
-    targetDate.setMonth(targetDate.getMonth() - direction); 
-    currentChartOffset = Math.floor((now - targetDate) / (1000 * 60 * 60 * 24));
-    if (currentChartOffset < 0) currentChartOffset = 0;
-    renderMainChart();
-}
-
-function renderMainChart() {
-    // Boutons actifs
-    document.querySelectorAll('.filter-btn:not(.filter-brawler-btn)').forEach(btn => btn.classList.remove('active'));
-    let btnId = 'btn-all';
-    if(currentChartMode === 1) btnId = 'btn-24h';
-    else if(currentChartMode === 7) btnId = 'btn-7d';
-    else if(currentChartMode === 31) btnId = 'btn-31d';
-    else if(currentChartMode === 365) btnId = 'btn-365d';
-    const activeBtn = document.getElementById(btnId);
-    if(activeBtn) activeBtn.classList.add('active');
-
-    if(window.myChart) window.myChart.destroy();
-
-    window.myChart = renderGenericChart({
-        canvasId: 'trophyChart',
-        rawData: fullHistoryData,
-        mode: currentChartMode,
-        offset: currentChartOffset,
-        liveValue: currentLiveTrophies,
-        color: '#ffce00',
-        variationId: 'trophy-variation'
-    });
-}
-
-// --- GESTION GRAPH BRAWLER ---
-
-function setBrawlerChartMode(mode, liveValOverride) {
-    currentBrawlerMode = mode;
-    
-    document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
-    let btnId = 'btn-brawler-all';
-    if(currentBrawlerMode === 1) btnId = 'btn-brawler-24h';
-    else if(currentBrawlerMode === 7) btnId = 'btn-brawler-7d'; 
-    else if(currentBrawlerMode === 31) btnId = 'btn-brawler-31d';
-    else if(currentBrawlerMode === 365) btnId = 'btn-brawler-365d';
-    
-    const activeBtn = document.getElementById(btnId);
-    if(activeBtn) activeBtn.classList.add('active');
-
-    let liveVal = liveValOverride;
-    if (liveVal === undefined || liveVal === null) {
-        const hiddenId = document.getElementById('selected-brawler-id').value;
-        const b = window.currentBrawlersDisplay.find(x => x.id == hiddenId);
-        if(b) liveVal = b.trophies;
-    }
-
-    if(brawlerChartInstance) brawlerChartInstance.destroy();
-    
-    brawlerChartInstance = renderGenericChart({
-        canvasId: 'brawlerChartCanvas',
-        rawData: currentBrawlerHistory,
-        mode: currentBrawlerMode,
-        offset: 0,
-        liveValue: liveVal,
-        color: '#00d2ff',
-        variationId: 'brawler-trophy-variation',
-        isBrawler: true
-    });
-}
-
-function manageGenericFilters(data, idPrefix) {
-    let diffDays = 0;
-    if (data && data.length > 0) {
-        let d = data[0].date || data[0].recorded_at;
-        const dateStr = d.replace(' ', 'T'); 
-        const oldest = new Date(dateStr);
-        const now = new Date();
-        diffDays = (now - oldest) / (1000 * 60 * 60 * 24);
-    }
-
-    const toggle = (suffix, condition) => {
-        const el = document.getElementById(`${idPrefix}-${suffix}`);
-        if(el) {
-            if(condition) el.classList.remove('hidden');
-            else el.classList.add('hidden');
-        }
-    };
-    toggle('7d', diffDays >= 1);
-    toggle('31d', diffDays > 7);
-    toggle('365d', diffDays > 31);
-}
-
-// --- NAVIGATION TEMPORELLE ---
-
-// Appelé par les flèches < et >
-function navigateChart(direction) {
-    // direction = 1 (Vers le passé), direction = -1 (Vers le futur)
-    currentChartOffset += direction;
-    
-    // Sécurité basique (ne pas aller dans le futur au-delà d'aujourd'hui)
-    if (currentChartOffset < 0) currentChartOffset = 0;
-    
-    renderMainChart();
-}
-
-// Appelé par le calendrier
-function jumpToDate(dateString) {
-    if (!dateString) return;
-    
-    const targetDate = new Date(dateString);
-    const now = new Date();
-    
-    // Calcul de la différence en millisecondes
-    const diffTime = now - targetDate;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-    
-    if (diffDays < 0) {
-        alert("Impossible de prédire le futur ! 🔮");
-        return;
-    }
-
-    // Conversion de la différence en "unités" selon le mode
-    if (currentChartMode === 1) { // Mode Jour
-        currentChartOffset = diffDays; // (approximatif, car offset 1 = 24h)
-    } else if (currentChartMode === 7) { // Mode Semaine
-        currentChartOffset = Math.floor(diffDays / 7);
-    } else if (currentChartMode === 31) { // Mode Mois
-        // Calcul approximatif en mois
-        let months = (now.getFullYear() - targetDate.getFullYear()) * 12;
-        months -= targetDate.getMonth();
-        months += now.getMonth();
-        currentChartOffset = months <= 0 ? 0 : months;
-    }
-
-    renderMainChart();
-}
-
-// Met à jour les boutons (Grisés ou non) et le texte
-function updateNavigationUI(startDate, endDate) {
-    const btnPrev = document.getElementById('nav-btn-prev');
-    const btnNext = document.getElementById('nav-btn-next');
-    const label = document.getElementById('chart-period-label');
-    const picker = document.getElementById('chart-date-picker');
-
-    if (!btnPrev || !btnNext) return;
-
-    // 1. Gestion des dates limites pour désactiver les boutons
-    // On cherche la date la plus ancienne dans les données
-    let oldestDate = new Date();
-    if (fullHistoryData && fullHistoryData.length > 0) {
-        const d = fullHistoryData[0].date || fullHistoryData[0].recorded_at;
-        oldestDate = new Date(d.replace(' ', 'T'));
-    }
-
-    // Si la fin de la vue est avant ou égale à la plus vieille donnée -> Stop Reculer
-    // Note: startDate est le début de la fenetre affichée
-    if (startDate <= oldestDate) {
-        btnPrev.disabled = true; 
-    } else {
-        btnPrev.disabled = false;
-    }
-
-    // Si l'offset est 0 -> Stop Avancer (on est aujourd'hui)
-    if (currentChartOffset === 0) {
-        btnNext.disabled = true;
-        label.innerText = "Aujourd'hui";
-    } else {
-        btnNext.disabled = false;
-        // Formatage joli de la date
-        const options = { day: 'numeric', month: 'short' };
-        if (currentChartMode === 1) {
-             label.innerText = startDate.toLocaleDateString('fr-FR', options);
-        } else {
-             label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
-        }
-    }
-
-    // Mise à jour du calendrier (pour qu'il indique la date actuelle du graph)
-    // On prend la date de fin de la vue
-    picker.value = endDate.toISOString().split('T')[0];
+    return 0;
 }
 
 // --- RENDER GÉNÉRIQUE ---
 function renderGenericChart(config) {
-    let { rawData, mode, offset, liveValue, color, canvasId, variationId, isBrawler } = config;
+    let { rawData, mode, offset, liveValue, color, canvasId, variationId } = config;
     
+    // Préparation des données brutes
     let processedData = [];
     rawData.forEach(d => {
         processedData.push({
@@ -503,44 +302,81 @@ function renderGenericChart(config) {
             trophies: d.trophies
         });
     });
+    // Tri indispensable pour l'interpolation
+    processedData.sort((a,b) => new Date(a.date) - new Date(b.date));
 
-    // 1. Bornes temporelles
+    // 1. DÉFINITION DES BORNES TEMPORELLES (MODE CALENDRIER)
     let startDate = null;
     let endDate = null;
     const now = new Date();
 
     if (mode > 0) {
-        if (mode === 1) { // 24H
+        if (mode === 0.042) { // 1H (Heure fixe : HH:00 à HH:59)
+            // Note: offset déplace d'heure en heure
+            const target = new Date();
+            target.setHours(target.getHours() - offset);
+            startDate = new Date(target.setMinutes(0, 0, 0)); // 0min 0s
+            endDate = new Date(target.setMinutes(59, 59, 999)); // 59min 59s
+            
+        } else if (mode === 1) { // 24H / JOUR (00:00 à 23:59)
             const target = new Date();
             target.setDate(now.getDate() - offset);
-            startDate = new Date(target.setHours(0,0,0,0));
-            endDate = new Date(target.setHours(23,59,59,999));
-        } else if (mode === 7) { // Semaine
-            const targetEnd = new Date();
-            targetEnd.setDate(now.getDate() - (offset * 7));
-            endDate = targetEnd;
-            const targetStart = new Date(targetEnd);
-            targetStart.setDate(targetEnd.getDate() - 7);
-            startDate = targetStart;
-        } else if (mode === 31) { // Mois
+            startDate = new Date(target.setHours(0, 0, 0, 0));
+            endDate = new Date(target.setHours(23, 59, 59, 999));
+
+        } else if (mode === 7) { // SEMAINE (Lundi 00:00 à Dimanche 23:59)
+            const target = new Date();
+            target.setDate(now.getDate() - (offset * 7));
+            
+            // Trouver le Lundi de cette semaine cible
+            // (getDay: Dim=0, Lun=1... Sam=6)
+            const day = target.getDay();
+            const diff = target.getDate() - day + (day === 0 ? -6 : 1); // Ajustement pour Lundi start
+            
+            const monday = new Date(target.setDate(diff));
+            startDate = new Date(monday.setHours(0, 0, 0, 0));
+            
+            const sunday = new Date(startDate);
+            sunday.setDate(startDate.getDate() + 6);
+            endDate = new Date(sunday.setHours(23, 59, 59, 999));
+
+        } else if (mode === 31) { // MOIS (1er 00:00 au Dernier 23:59)
             const target = new Date();
             target.setMonth(now.getMonth() - offset);
-            startDate = new Date(target.getFullYear(), target.getMonth(), 1);
+            startDate = new Date(target.getFullYear(), target.getMonth(), 1, 0, 0, 0);
             endDate = new Date(target.getFullYear(), target.getMonth() + 1, 0, 23, 59, 59);
-        } else if (mode === 365) { // Année
+
+        } else if (mode === 365) { // ANNÉE (1er Jan au 31 Déc)
             const targetYear = now.getFullYear() - offset;
-            startDate = new Date(targetYear, 0, 1);
+            startDate = new Date(targetYear, 0, 1, 0, 0, 0);
             endDate = new Date(targetYear, 11, 31, 23, 59, 59);
         }
+    } else {
+        // Mode "TOUT" (Pas de bornes fixes, s'adapte aux données)
+        if (processedData.length > 0) {
+            startDate = new Date(processedData[0].date);
+            endDate = new Date(); // Jusqu'à maintenant
+        } else {
+            startDate = new Date(); endDate = new Date();
+        }
     }
-    if (canvasId === 'trophyChart' && mode > 0) {
+
+    // Mise à jour de la barre de navigation UI
+    if (canvasId === 'trophyChart' && mode > 0 && typeof updateNavigationUI === 'function') {
         updateNavigationUI(startDate, endDate);
     }
-    
-    // 2. Filtrage
-    let finalDataPoints = [];
-    const shouldHidePoints = (mode === 0 || mode === 365 || mode === 31);
 
+    // 2. CONSTRUCTION DES POINTS
+    let finalDataPoints = [];
+    
+    // A. POINT FANTÔME GAUCHE (Début de période)
+    // Toujours présent si on est en mode fenêtré (mode > 0)
+    if (mode > 0 && processedData.length > 0) {
+        const valStart = getInterpolatedValue(startDate, processedData);
+        finalDataPoints.push({ x: startDate, y: valStart, type: 'ghost' });
+    }
+
+    // B. POINTS RÉELS (Filtrés)
     let sourceData = processedData;
     if (mode > 0) {
         sourceData = processedData.filter(pt => {
@@ -548,56 +384,75 @@ function renderGenericChart(config) {
             return d >= startDate && d <= endDate;
         });
     }
+    // Décimation seulement pour l'année pour éviter la surcharge
+    if (mode === 365) {
+        let temp = sourceData.map(p => ({ x: p.date, y: p.trophies }));
+        sourceData = decimateDataPoints(temp).map(p => ({ date: p.x, trophies: p.y }));
+    }
 
     sourceData.forEach(h => {
         finalDataPoints.push({ x: new Date(h.date), y: h.trophies, type: 'real' });
     });
 
-    // Fantômes / Live
-    if (mode > 0 && processedData.length > 0) {
-        // Début
-        if (startDate > new Date(processedData[0].date)) {
-            const val = getInterpolatedValue(startDate, processedData);
-            if (val !== null) finalDataPoints.unshift({ x: new Date(startDate), y: Math.round(val), type: 'ghost' });
-        }
+    // C. POINT FANTÔME DROITE (Fin de période)
+    // Règle : On ne l'ajoute QUE si on n'est pas sur la période actuelle (offset > 0)
+    // Si offset == 0, on veut le "trou" jusqu'à maintenant/fin de journée
+    if (mode > 0 && offset > 0 && processedData.length > 0) {
+        const valEnd = getInterpolatedValue(endDate, processedData);
+        finalDataPoints.push({ x: endDate, y: valEnd, type: 'ghost' });
     }
-    
-    if (liveValue !== null && liveValue !== undefined && offset === 0) {
+
+    // D. POINT LIVE
+    // S'affiche uniquement si offset == 0 (Aujourd'hui)
+    if (offset === 0 && liveValue !== null && liveValue !== undefined) {
         finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live' });
     }
 
+    // Tri final chronologique (Ghost -> Real -> Live -> Ghost)
     finalDataPoints.sort((a,b) => a.x - b.x);
 
-    // 3. Variation
+
+    // 3. CALCUL VARIATION (Sur la période affichée)
     if (variationId) {
         const varElem = document.getElementById(variationId);
-        if (varElem) {
-            if (finalDataPoints.length >= 2) {
-                const startVal = finalDataPoints[0].y;
-                const endVal = finalDataPoints[finalDataPoints.length - 1].y;
-                const diff = endVal - startVal;
-                varElem.innerHTML = diff > 0 ? `<span style="color:#28a745">▲ +${diff}</span>` : 
-                                   (diff < 0 ? `<span style="color:#ff5555">▼ ${diff}</span>` : `<span style="color:#888">= 0</span>`);
-            } else varElem.innerHTML = `<span style="color:#888">--</span>`;
+        if (varElem && finalDataPoints.length >= 2) {
+            // On compare le dernier point visible (Live ou Ghost Fin) au premier (Ghost Début)
+            const startVal = finalDataPoints[0].y;
+            const endVal = finalDataPoints[finalDataPoints.length - 1].y;
+            const diff = endVal - startVal;
+            
+            varElem.innerHTML = diff > 0 ? `<span style="color:#28a745">▲ +${diff}</span>` : 
+                               (diff < 0 ? `<span style="color:#ff5555">▼ ${diff}</span>` : `<span style="color:#888">= 0</span>`);
+        } else if (varElem) {
+            varElem.innerHTML = `<span style="color:#888">--</span>`;
         }
     }
 
-    // 4. Styles
+    // 4. CONFIGURATION GRAPHIQUE
     const pointColors = finalDataPoints.map(p => p.type === 'live' ? '#ff5555' : color);
+    
+    // Gestion visuelle des points
     const pointRadiuses = finalDataPoints.map(p => {
-        if (p.type === 'ghost') return 0;
-        if (p.type === 'live') return 5;
-        if (shouldHidePoints) return 0;
-        return 3;
+        if (p.type === 'ghost') return 0; // Invisible
+        if (p.type === 'live') return 5;  // Gros point rouge
+        if (mode === 0 || mode === 365 || mode === 31) return 0; // Cache les points réels sur vues larges
+        return 3; // Points normaux
     });
 
-    // 5. Chart.js
+    // Gestion des zones de clic (HitRadius)
+    const pointHitRadiuses = finalDataPoints.map(p => {
+        if (p.type === 'ghost') return 0; // Non cliquable
+        return 10; // Cliquable
+    });
+
+    // Configuration Chart.js
     let timeUnit = 'day';
-    if (mode === 1) timeUnit = 'hour';
+    if (mode === 0.042) timeUnit = 'minute';
+    else if (mode === 1) timeUnit = 'hour';
     else if (mode === 0 || mode === 365) timeUnit = 'month';
 
     const ctx = document.getElementById(canvasId).getContext('2d');
-    const lineTension = (mode === 1) ? 0 : 0.2;
+    const lineTension = (mode <= 1) ? 0 : 0.2; // Ligne droite pour 1H/24H, courbe pour le reste
 
     return new Chart(ctx, {
         type: 'line',
@@ -613,22 +468,54 @@ function renderGenericChart(config) {
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointColors,
                 pointRadius: pointRadiuses,
-                pointHoverRadius: 6
+                pointHoverRadius: pointRadiuses.map(r => r > 0 ? 6 : 0), // Pas de hover si radius 0
+                pointHitRadius: pointHitRadiuses // Applique la règle "non cliquable"
             }] 
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: {display:false} },
+            plugins: { 
+                legend: {display:false},
+                tooltip: {
+                    filter: function(tooltipItem) {
+                        // Empêche le tooltip de s'afficher sur un point ghost
+                        return tooltipItem.raw.type !== 'ghost';
+                    },
+                    callbacks: {
+                        label: function(context) {
+                            const point = context.raw;
+                            if (point.type === 'live') return `🔴 Actuel : ${point.y}`;
+                            return `🏆 ${point.y}`;
+                        }
+                    }
+                }
+            },
             interaction: { mode: 'nearest', axis: 'x', intersect: false },
             scales: { 
                 x: { 
                     type: 'time', 
-                    time: { unit: timeUnit, displayFormats: { hour:'HH:mm', day:'dd/MM', month:'MMM yy' }}, 
+                    time: { 
+                        unit: timeUnit, 
+                        displayFormats: { minute:'HH:mm', hour:'HH:mm', day:'dd/MM', month:'MMM yy' },
+                        tooltipFormat: 'dd/MM/yyyy HH:mm'
+                    }, 
                     grid: {color:'#333'} 
                 }, 
                 y: { grid: {color:'#333'}, ticks: { color: '#888' } } 
             }
         }
     });
+}
+
+// Fonction utilitaire pour décimer (inchangée mais nécessaire si absente)
+function decimateDataPoints(points) {
+    const grouped = {};
+    points.forEach(p => {
+        const dObj = new Date(p.x);
+        if (isNaN(dObj)) return;
+        const dayKey = dObj.toISOString().split('T')[0]; 
+        grouped[dayKey] = p; 
+    });
+    return Object.values(grouped).sort((a,b) => new Date(a.x) - new Date(b.x));
 }
