@@ -7,12 +7,53 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <style>
-        /* Styles spécifiques Admin (Grid Stats) */
+        body {
+            background-color: #050505; /* Fond très sombre pour la page */
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center; /* Centre la box principale */
+        }
+
+        /* --- CONTENEUR PRINCIPAL (LA "BOX") --- */
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            background-color: #121212; /* Fond de la box */
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        /* --- LOGIN OVERLAY (REMPLACE LE PROMPT) --- */
+        #login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .login-box {
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #ffce00;
+            text-align: center;
+            width: 300px;
+        }
+
+        /* --- STATS GRID --- */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         .stat-card {
             background: #1e1e1e;
@@ -22,8 +63,8 @@
             text-align: center;
         }
         .stat-card h3 {
-            font-size: 0.85em;
-            color: #aaa;
+            font-size: 0.8em;
+            color: #888;
             margin-bottom: 5px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -35,49 +76,52 @@
             margin: 0;
         }
         
-        /* Contrôles & Tables */
+        /* --- CONTROLS --- */
         .controls-bar {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
             margin-bottom: 20px;
             background: #181818;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             align-items: center;
+            border: 1px solid #2a2a2a;
         }
         .filter-group {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 10px;
             background: #252525;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 4px;
             border: 1px solid #333;
         }
-        select, input[type="text"] {
+        
+        /* --- ELEMENTS UI --- */
+        select, input[type="text"], input[type="password"] {
             background: #111;
             color: #fff;
             border: 1px solid #444;
-            padding: 5px;
+            padding: 6px 10px;
             border-radius: 4px;
+            outline: none;
         }
+        select:focus, input:focus { border-color: #ffce00; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #333; }
-        th { background: #111; color: #888; font-size: 0.9em; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+        th { background: #1a1a1a; color: #888; font-size: 0.85em; text-transform: uppercase; }
         tr:hover { background: #1a1a1a; }
         
-        /* Boutons Actions */
-        .action-btn { background: #333; border: none; color: #fff; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: 0.2s; }
+        .action-btn { background: #333; border: none; color: #fff; cursor: pointer; padding: 5px 10px; border-radius: 4px; transition: 0.2s; }
         .action-btn:hover { background: #555; }
-        .btn-add { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-add:hover { background: #218838; }
-        .btn-del { background: #444; color: #ff5555; border: 1px solid #ff5555; border-radius: 4px; cursor: pointer; padding: 2px 6px; }
+        .btn-add { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 4px 8px;}
+        .btn-del { background: transparent; color: #ff5555; border: 1px solid #ff5555; border-radius: 4px; cursor: pointer; padding: 4px 8px; }
         .btn-del:hover { background: #ff5555; color: white; }
         
         .badge-tag { background: #222; padding: 2px 6px; border-radius: 4px; border: 1px solid #444; font-family: monospace; color: #ffce00; }
-        .details-row { background: #151515 !important; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         
         /* Switch Mode Vue */
         .view-switch {
@@ -88,144 +132,198 @@
             border: 1px solid #444;
         }
         .view-btn {
-            padding: 6px 12px;
+            padding: 8px 16px;
             cursor: pointer;
             border: none;
             background: transparent;
             color: #888;
+            font-weight: 500;
         }
         .view-btn.active {
             background: #333;
             color: #fff;
             font-weight: bold;
         }
+
+        /* Checkbox Style Custom */
+        .filter-label { font-size: 0.9em; display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none;}
     </style>
 </head>
-<body style="background-color: #0a0a0a; color: #e0e0e0; font-family: sans-serif; padding: 20px;">
+<body>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1 style="color: #ffce00; margin: 0;">🛡️ Administration</h1>
-        <div>
-            <button onclick="loadData()" style="padding: 8px 15px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer;">Actualiser</button>
-            <button onclick="logout()" style="padding: 8px 15px; background: #8b0000; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">Quitter</button>
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2 style="color: #ffce00; margin-top: 0;">🛡️ Accès Admin</h2>
+            <p style="color: #ccc; font-size: 0.9em;">Veuillez vous identifier</p>
+            <input type="password" id="admin-pass-input" placeholder="Mot de passe" style="width: 80%; margin-bottom: 15px; padding: 10px;">
+            <br>
+            <button onclick="attemptLogin()" style="background: #ffce00; color: #000; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer;">Entrer</button>
         </div>
     </div>
 
-    <div id="stats-container">Chargement des statistiques...</div>
-
-    <div class="controls-bar">
-        <div class="view-switch">
-            <button class="view-btn active" id="btn-view-users" onclick="switchView('users')">Utilisateurs</button>
-            <button class="view-btn" id="btn-view-tags" onclick="switchView('tags')">Tous les Tags</button>
+    <div class="main-container">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <h1 style="color: #ffce00; margin: 0; font-size: 1.8em;">🛡️ Administration</h1>
+                <span style="background: #222; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; border: 1px solid #444;">v2.0 Multi-Tag</span>
+            </div>
+            <div>
+                <button onclick="loadData()" class="action-btn">Actualiser</button>
+                <button onclick="logout()" style="padding: 8px 15px; background: #8b0000; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">Déconnexion</button>
+            </div>
         </div>
 
-        <div class="filter-group">
-            <span>🔍</span>
-            <input type="text" id="search-input" placeholder="Rechercher..." onkeyup="renderTable()">
+        <div id="stats-container">
+            <div style="text-align:center; padding: 20px; color: #666;">Chargement des statistiques...</div>
         </div>
 
-        <div class="filter-group">
-            <span>Filtres:</span>
-            <label><input type="checkbox" onchange="toggleFilter('premium')"> Premium</label>
-            <label><input type="checkbox" onchange="toggleFilter('active_24h')"> Actif 24h</label>
-            <label id="filter-unclaimed-wrapper" class="hidden"><input type="checkbox" onchange="toggleFilter('unclaimed')"> Non Claim</label>
-            <label id="filter-claimed-wrapper" class="hidden"><input type="checkbox" onchange="toggleFilter('claimed')"> Claimed</label>
+        <div class="controls-bar">
+            <div class="view-switch">
+                <button class="view-btn active" id="btn-view-users" onclick="switchView('users')">Utilisateurs</button>
+                <button class="view-btn" id="btn-view-tags" onclick="switchView('tags')">Tous les Tags</button>
+            </div>
+
+            <div class="filter-group">
+                <span>🔍</span>
+                <input type="text" id="search-input" placeholder="Pseudo, ID, Tag..." onkeyup="renderTable()" style="background:transparent; border:none; color:white; padding:0;">
+            </div>
+
+            <div class="filter-group">
+                <span style="color:#888; font-size:0.9em;">Filtres:</span>
+                
+                <span id="filters-users" style="display:flex; gap:10px;">
+                    <label class="filter-label"><input type="checkbox" onchange="toggleFilter('premium')"> Premium</label>
+                    <label class="filter-label"><input type="checkbox" onchange="toggleFilter('active_24h')"> Actif 24h</label>
+                </span>
+
+                <span id="filters-tags" class="hidden" style="display:flex; gap:10px;">
+                    <label class="filter-label"><input type="checkbox" onchange="toggleFilter('unclaimed')"> Non Claim</label>
+                    <label class="filter-label"><input type="checkbox" onchange="toggleFilter('claimed')"> Claimed</label>
+                </span>
+            </div>
+
+            <div style="margin-left: auto; display: flex; gap: 5px;">
+                <select id="sort-select" onchange="renderTable()">
+                    <option value="id">ID / Alpha</option>
+                    <option value="last_archive">Dernière Archive</option>
+                    <option value="next_archive">Prochaine Archive</option>
+                    <option value="total_archives">Nb Archives</option>
+                    <option value="trophies">Trophées</option>
+                    <option value="owner">Propriétaire</option>
+                </select>
+                <button onclick="toggleSortOrder()" id="sort-order-btn" class="action-btn" style="min-width: 30px;">▼</button>
+            </div>
         </div>
 
-        <div style="margin-left: auto; display: flex; gap: 10px;">
-            <select id="sort-select" onchange="renderTable()">
-                <option value="id">ID / Alpha</option>
-                <option value="last_archive">Dernière Archive</option>
-                <option value="next_archive">Prochaine Archive</option>
-                <option value="total_archives">Nb Archives</option>
-                <option value="trophies">Trophées</option>
-                <option value="owner">Propriétaire</option>
-            </select>
-            <button onclick="toggleSortOrder()" id="sort-order-btn" style="background:#333; color:white; border:1px solid #555;">▼</button>
-        </div>
+        <table id="main-table">
+            <thead id="table-head"></thead>
+            <tbody id="table-body"></tbody>
+        </table>
+
     </div>
-
-    <table id="main-table">
-        <thead id="table-head"></thead>
-        <tbody id="table-body"></tbody>
-    </table>
 
     <script src="js/config.js"></script>
     <script>
-        const ADMIN_KEY = localStorage.getItem('admin_key');
-        if (!ADMIN_KEY) {
-            const pass = prompt("Mot de passe Admin :");
-            // Vérification basique locale avant appel API (facultatif mais UX)
-            if(pass) {
+        // --- GESTION LOGIN ---
+        const storedKey = localStorage.getItem('admin_key');
+        if (storedKey) {
+            document.getElementById('login-overlay').classList.add('hidden');
+            loadData(); // Charge les données si déjà connecté
+        }
+
+        async function attemptLogin() {
+            const pass = document.getElementById('admin-pass-input').value;
+            // Test simple via API Stats pour vérifier le pass
+            try {
+                const res = await fetch(`${API_URL}/api/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pass })
+                });
+                
+                if (res.ok) {
+                    localStorage.setItem('admin_key', pass);
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    loadData();
+                } else {
+                    alert("Mot de passe incorrect");
+                }
+            } catch (e) {
+                // Fallback si l'API Login n'existe pas encore : on stocke et on essaie
                 localStorage.setItem('admin_key', pass);
-                window.location.reload();
-            } else {
-                document.body.innerHTML = "<h2 style='color:red'>Accès Refusé</h2>";
+                document.getElementById('login-overlay').classList.add('hidden');
+                loadData();
             }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_key');
+            location.reload();
         }
 
         // --- GLOBAL VARIABLES ---
         let rawUsersData = [];
-        let rawTagsData = []; // Liste indépendante des tags
+        let rawTagsData = []; 
         let currentFilters = new Set();
-        let sortOrder = 1; // 1 = ASC, -1 = DESC
-        let currentView = 'users'; // 'users' ou 'tags'
-
-        // --- INIT ---
-        loadData();
+        let sortOrder = 1; 
+        let currentView = 'users'; 
 
         // --- NAVIGATION ---
         function switchView(mode) {
             currentView = mode;
+            
+            // UI Boutons
             document.getElementById('btn-view-users').className = mode === 'users' ? 'view-btn active' : 'view-btn';
             document.getElementById('btn-view-tags').className = mode === 'tags' ? 'view-btn active' : 'view-btn';
             
-            // Affichage filtres contextuels
+            // Gestion Visibilité Filtres
+            const userFilters = document.getElementById('filters-users');
+            const tagFilters = document.getElementById('filters-tags');
+
             if(mode === 'tags') {
-                document.getElementById('filter-unclaimed-wrapper').classList.remove('hidden');
-                document.getElementById('filter-claimed-wrapper').classList.remove('hidden');
+                userFilters.classList.add('hidden');
+                tagFilters.classList.remove('hidden');
+                // On reset les filtres pour éviter la confusion
+                currentFilters.clear();
+                // On décoche tout visuellement
+                document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
             } else {
-                document.getElementById('filter-unclaimed-wrapper').classList.add('hidden');
-                document.getElementById('filter-claimed-wrapper').classList.add('hidden');
+                userFilters.classList.remove('hidden');
+                tagFilters.classList.add('hidden');
+                currentFilters.clear();
+                document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
             }
 
             renderTable();
         }
 
-        function logout() {
-            localStorage.removeItem('admin_key');
-            window.location.href = 'index.html';
-        }
-
         // --- LOAD DATA ---
         function loadData() {
-            loadStats();
-            loadUsersList();
-            loadTagsList();
+            const ADMIN_KEY = localStorage.getItem('admin_key');
+            if(!ADMIN_KEY) return; // Sécurité
+
+            loadStats(ADMIN_KEY);
+            loadUsersList(ADMIN_KEY);
+            loadTagsList(ADMIN_KEY);
         }
 
-        async function loadStats() {
+        async function loadStats(key) {
             try {
-                // IMPORTANT: Requête sur le port 5001 (via Cloudflare /api/admin)
-                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: { 'X-Admin-Pass': key } });
                 if (res.status === 403) throw new Error("Auth Failed");
                 const data = await res.json();
                 renderStats(data);
             } catch (e) {
-                console.error(e);
-                if(e.message === "Auth Failed") {
-                    localStorage.removeItem('admin_key');
-                    window.location.reload();
-                }
+                if(e.message === "Auth Failed") logout();
             }
         }
 
-        async function loadUsersList() {
+        async function loadUsersList(key) {
             try {
-                const res = await fetch(`${API_URL}/api/admin/users`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                const res = await fetch(`${API_URL}/api/admin/users`, { headers: { 'X-Admin-Pass': key } });
                 const rawApiData = await res.json();
                 
-                // Groupement des tags par user
                 const map = new Map();
                 rawApiData.forEach(row => {
                     if (!map.has(row.id)) {
@@ -250,24 +348,23 @@
             } catch(e) { console.error("Err Users", e); }
         }
 
-        async function loadTagsList() {
+        async function loadTagsList(key) {
             try {
-                const res = await fetch(`${API_URL}/api/admin/tags`, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
+                const res = await fetch(`${API_URL}/api/admin/tags`, { headers: { 'X-Admin-Pass': key } });
                 rawTagsData = await res.json();
                 if(currentView === 'tags') renderTable();
             } catch(e) { console.error("Err Tags", e); }
         }
 
-        // --- RENDER STATS (Layout 2x4) ---
+        // --- RENDER STATS ---
         function renderStats(data) {
             const container = document.getElementById('stats-container');
             
-            // Calcul temps restant
             let nextArchiveText = "En attente...";
             let nextArchiveColor = "#888";
             if (data.next_archive_date) {
                 const now = new Date();
-                const target = new Date(data.next_archive_date.replace(' ', 'T')); // Hack simple parsing SQL
+                const target = new Date(data.next_archive_date.replace(' ', 'T')); 
                 const diffMs = target - now;
                 const diffMins = Math.ceil(diffMs / 60000);
 
@@ -299,7 +396,6 @@
                         <h3>Tags (Claim / Total)</h3>
                         <p>${data.claimed_tags} <span style="font-size:0.6em; color:#888;">/ ${data.total_tags}</span></p>
                     </div>
-
                     <div class="stat-card">
                         <h3>Dernière Archive</h3>
                         <p style="font-size:0.9em">${lastArchText}</p>
@@ -327,7 +423,7 @@
             `;
         }
 
-        // --- RENDER TABLE MAIN ---
+        // --- RENDER TABLE ---
         function renderTable() {
             const thead = document.getElementById('table-head');
             const tbody = document.getElementById('table-body');
@@ -339,21 +435,21 @@
             else renderTagsTable(data, thead, tbody);
         }
 
-        // --- VUE UTILISATEURS ---
         function renderUsersTable(data, thead, tbody) {
             thead.innerHTML = `<tr><th style="width:30px"></th><th>ID</th><th>Utilisateur</th><th>Grade</th><th>Dernière Connexion</th><th>Total Archives</th><th style="text-align:right">Actions</th></tr>`;
             
+            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#666;">Aucun utilisateur trouvé</td></tr>`; return; }
+
             data.forEach(u => {
                 const row = document.createElement('tr');
                 const lastLog = u.last_login ? formatDate(u.last_login) : 'Jamais';
                 const totArch = u.tags.reduce((acc, t) => acc + t.total_archives, 0);
 
-                // Ligne Principale
                 row.innerHTML = `
                     <td><button class="action-btn" onclick="toggleDetails(${u.id})">▼</button></td>
                     <td style="color:#888">#${u.id}</td>
                     <td style="font-weight:bold; color:white">${u.username}</td>
-                    <td><select onchange="updateTier(${u.id}, this.value)" style="padding:2px;">
+                    <td><select onchange="updateTier(${u.id}, this.value)" style="padding:2px; font-size:0.9em;">
                         <option value="basic" ${u.tier==='basic'?'selected':''}>Basic</option>
                         <option value="subscriber" ${u.tier==='subscriber'?'selected':''}>Abonné</option>
                         <option value="premium" ${u.tier==='premium'?'selected':''}>Premium</option>
@@ -368,22 +464,23 @@
                 `;
                 tbody.appendChild(row);
 
-                // Ligne Détails (Tags)
+                // Détails
                 const detailRow = document.createElement('tr');
                 detailRow.id = `detail-${u.id}`;
                 detailRow.className = 'hidden details-row';
+                detailRow.style.background = '#0e0e0e';
                 
                 let tagsHtml = u.tags.map(t => `
-                    <tr style="background:transparent;">
-                        <td colspan="2" style="text-align:right">↳</td>
+                    <tr style="background:transparent; border-bottom:1px solid #222;">
+                        <td colspan="2" style="text-align:right; color:#444;">↳</td>
                         <td><span class="badge-tag">${t.tag_str}</span></td>
                         <td>
                             <input type="number" value="${t.interval}" 
                                 style="width:50px; background:#111; color:#ffce00; border:1px solid #444; border-radius:4px; text-align:center;" 
                                 onchange="updateTagFreq(${t.id}, this)" title="Freq (min)"> min
                         </td>
-                        <td>Last: ${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
-                        <td style="color:#aaa">Next: ${getNextTime(t.last_archive, t.interval)}</td>
+                        <td style="font-size:0.9em">Last: ${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
+                        <td style="color:#aaa; font-size:0.9em">Next: ${getNextTime(t.last_archive, t.interval)}</td>
                         <td style="text-align:right">
                             <button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
                             <button class="btn-del" title="Détacher" onclick="adminUnclaimTag(${t.id})">🔗✖</button>
@@ -391,21 +488,17 @@
                     </tr>
                 `).join('');
 
-                if(!tagsHtml) tagsHtml = `<tr><td colspan="7" style="text-align:center; color:#666; font-style:italic;">Aucun tag associé</td></tr>`;
+                if(!tagsHtml) tagsHtml = `<tr><td colspan="7" style="text-align:center; color:#444; font-style:italic; padding:10px;">Aucun tag associé</td></tr>`;
 
-                detailRow.innerHTML = `<td colspan="7"><table style="width:95%; margin:auto; background:#222; border-radius:4px;">${tagsHtml}</table></td>`;
+                detailRow.innerHTML = `<td colspan="7"><table style="width:95%; margin:auto; margin-bottom:10px;">${tagsHtml}</table></td>`;
                 tbody.appendChild(detailRow);
             });
         }
 
-        // --- VUE TAGS ---
         function renderTagsTable(data, thead, tbody) {
             thead.innerHTML = `<tr><th>Propriétaire</th><th>Tag</th><th>Freq</th><th>Last Arch.</th><th>Next Arch.</th><th>Trophées</th><th style="text-align:right">Actions</th></tr>`;
             
-            if(data.length === 0) { 
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px">Aucun résultat</td></tr>`; 
-                return; 
-            }
+            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#666;">Aucun tag trouvé</td></tr>`; return; }
             
             data.forEach(item => {
                 const u = item.user;
@@ -413,10 +506,10 @@
                 
                 const ownerDisplay = u 
                     ? `<span style="font-weight:bold; color:white;">${u.username}</span>` 
-                    : `<span style="color:#666; font-style:italic;">-- Unclaimed --</span>`;
+                    : `<span style="color:#555; font-style:italic;">-- Unclaimed --</span>`;
                     
                 const editBtn = u
-                    ? `<button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'" title="Edit">📝</button>`
+                    ? `<button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'" title="Voir User">📝</button>`
                     : `<button class="action-btn" style="opacity:0.3; cursor:not-allowed;">📝</button>`;
 
                 const unclaimBtn = u
@@ -445,7 +538,8 @@
             });
         }
 
-        // --- ACTIONS ADMIN ---
+        // --- UTILS & ACTIONS ---
+        const ADMIN_KEY = localStorage.getItem('admin_key');
 
         async function renameUser(uid, currentName) {
             const newName = prompt("Nouveau pseudo :", currentName);
@@ -455,8 +549,7 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
                     body: JSON.stringify({ username: newName })
                 });
-                if(res.ok) { alert("✅ Renommé"); loadUsersList(); }
-                else alert("Erreur");
+                if(res.ok) { alert("✅ Renommé"); loadUsersList(ADMIN_KEY); }
             } catch(e) { alert("Erreur réseau"); }
         }
 
@@ -470,27 +563,27 @@
                 });
                 const d = await res.json();
                 alert(d.message);
-                if(res.ok) loadUsersList();
+                if(res.ok) loadUsersList(ADMIN_KEY);
             } catch(e) { alert("Erreur réseau"); }
         }
 
         async function adminUnclaimTag(tagId) {
-            if (!confirm("Détacher ce tag ? (Arrêt des archives)")) return;
+            if (!confirm("Détacher ce tag ?")) return;
             try {
                 const res = await fetch(`${API_URL}/api/admin/tag/${tagId}/unclaim`, {
                     method: 'POST', headers: { 'X-Admin-Pass': ADMIN_KEY }
                 });
-                if(res.ok) { loadData(); }
+                if(res.ok) loadData();
             } catch(e) { alert("Erreur"); }
         }
 
         async function adminDeleteTag(tagId) {
-            if (!confirm("⚠️ SUPPRIMER DÉFINITIVEMENT CE TAG ET TOUT SON HISTORIQUE ?")) return;
+            if (!confirm("⚠️ SUPPRIMER DÉFINITIVEMENT CE TAG ?")) return;
             try {
                 const res = await fetch(`${API_URL}/api/admin/tag/${tagId}`, {
                     method: 'DELETE', headers: { 'X-Admin-Pass': ADMIN_KEY }
                 });
-                if(res.ok) { alert("Tag Supprimé"); loadData(); }
+                if(res.ok) { alert("Supprimé"); loadData(); }
             } catch(e) { alert("Erreur"); }
         }
 
@@ -516,18 +609,15 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
                     body: JSON.stringify({ user_id: uid, tier: tier })
                 });
-                if(res.ok) loadUsersList();
+                if(res.ok) loadUsersList(ADMIN_KEY);
             } catch(e) { console.error(e); }
         }
 
         async function deleteUser(uid) {
             if(!confirm("Supprimer l'utilisateur et détacher ses tags ?")) return;
-            // Note: Implémenter la route DELETE /api/admin/user/<id> si pas déjà fait dans main.py
-            alert("Fonctionnalité à implémenter côté backend si nécessaire."); 
+            alert("Veuillez implémenter la suppression utilisateur dans le backend (app_admin.py) si nécessaire.");
         }
 
-        // --- PROCESSING & UTILS ---
-        
         function getProcessedData(mode) {
             let data = [];
             const search = document.getElementById('search-input').value.toLowerCase();
@@ -538,21 +628,18 @@
                     u.username.toLowerCase().includes(search) || 
                     u.tags.some(t => t.tag_str.toLowerCase().includes(search))
                 );
-                // Filtre Premium etc.
                 if (currentFilters.has('premium')) data = data.filter(u => u.tier === 'premium');
                 if (currentFilters.has('active_24h')) data = data.filter(u => u.last_login && (now - new Date(u.last_login)) < 86400000);
                 
-                // Tri Users
+                // Tri
                 const crit = document.getElementById('sort-select').value;
                 data.sort((a,b) => {
                     let vA = a.username.toLowerCase(), vB = b.username.toLowerCase();
-                    if(crit === 'last_archive') { vA = 0; vB = 0; /* Pas pertinent sur user global */ } 
-                    // Ajoute tes logiques de tri ici si besoin
+                    if(crit === 'id') { vA = a.id; vB = b.id; } // Tri par ID user
                     return (vA < vB ? -1 : 1) * sortOrder;
                 });
 
             } else {
-                // Mode TAGS
                 data = rawTagsData.map(t => ({
                     user: t.owner_id ? { id: t.owner_id, username: t.owner_name } : null,
                     tag: {
@@ -562,7 +649,6 @@
                     }
                 }));
 
-                // Filtres Tags
                 data = data.filter(item => {
                     if (search && !item.tag.tag_str.toLowerCase().includes(search) && !(item.user && item.user.username.toLowerCase().includes(search))) return false;
                     if (currentFilters.has('claimed') && !item.user) return false; 
@@ -570,7 +656,6 @@
                     return true;
                 });
 
-                // Tri Tags
                 const crit = document.getElementById('sort-select').value;
                 data.sort((a, b) => {
                     let vA, vB;
@@ -585,7 +670,7 @@
                         vA = a.user ? a.user.username : 'zzz'; 
                         vB = b.user ? b.user.username : 'zzz'; 
                     }
-                    else { vA = tA.last_archive || ''; vB = tB.last_archive || ''; } // Default Last Arch
+                    else { vA = tA.last_archive || ''; vB = tB.last_archive || ''; }
                     
                     if (vA < vB) return -1 * sortOrder;
                     if (vA > vB) return 1 * sortOrder;
@@ -612,7 +697,6 @@
             if(row) row.classList.toggle('hidden');
         }
 
-        // --- UTILS ---
         function formatDate(str) {
             if(!str) return 'N/A';
             const d = new Date(str.replace(' ', 'T'));
