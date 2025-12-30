@@ -440,7 +440,6 @@ function renderGenericChart(config) {
 
     // 2. Filtrage & Décimation
     let finalDataPoints = [];
-    const shouldDecimate = (mode === 0 || mode === 365);
     const shouldHidePoints = (mode === 0 || mode === 365 || mode === 31);
 
     let sourceData = processedData;
@@ -449,11 +448,6 @@ function renderGenericChart(config) {
             const d = new Date(pt.date);
             return d >= startDate && d <= endDate;
         });
-    }
-
-    if (shouldDecimate) {
-        let temp = sourceData.map(p => ({ x: p.date, y: p.trophies }));
-        sourceData = decimateDataPoints(temp).map(p => ({ date: p.x, trophies: p.y }));
     }
 
     sourceData.forEach(h => {
