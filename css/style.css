@@ -883,6 +883,118 @@ button.filter-btn.blue-active.active:hover {
     background: #252525; padding: 10px; border-radius: 8px; margin-bottom: 10px; color: #aaa; font-size: 0.9em;
 }
 
+/* --- PERSONNALISATION FLATPICKR (Style Brawl Track) --- */
+
+/* 1. Conteneur global (Fond sombre) */
+.flatpickr-calendar, .flatpickr-calendar.hasWeeks .dayContainer {
+    background: #1e1e1e !important;
+    border: 1px solid #333 !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9) !important;
+    border-radius: 12px !important;
+    font-family: 'Roboto', sans-serif !important;
+}
+
+/* 2. En-tête (Mois/Année) */
+.flatpickr-months .flatpickr-month {
+    background: #1e1e1e !important;
+    color: #fff !important;
+    fill: #fff !important;
+    padding-top: 10px;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+    color: #fff !important;
+    font-weight: bold !important;
+}
+.flatpickr-months .flatpickr-prev-month, 
+.flatpickr-months .flatpickr-next-month {
+    color: #fff !important;
+    fill: #fff !important;
+}
+.flatpickr-months .flatpickr-prev-month:hover svg, 
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: #ffce00 !important;
+}
+
+/* 3. Jours de la semaine */
+span.flatpickr-weekday {
+    background: #1e1e1e !important;
+    color: #888 !important;
+}
+
+/* 4. Les jours (Numéros actifs) */
+.flatpickr-day {
+    color: #ccc !important;
+}
+.flatpickr-day:hover, .flatpickr-day:focus {
+    background: #333 !important;
+    border-color: #444 !important;
+}
+
+/* 5. SÉLECTION (Le Jaune Important) */
+.flatpickr-day.selected, 
+.flatpickr-day.startRange, 
+.flatpickr-day.endRange, 
+.flatpickr-day.selected.inRange, 
+.flatpickr-day.startRange.inRange, 
+.flatpickr-day.endRange.inRange {
+    background: #ffce00 !important;
+    border-color: #ffce00 !important;
+    color: #000 !important; /* Texte noir sur jaune */
+    font-weight: bold !important;
+    box-shadow: none !important;
+}
+
+/* Aujourd'hui (Petit contour) */
+.flatpickr-day.today {
+    border-color: #ffce00 !important;
+    color: #ffce00 !important;
+}
+.flatpickr-day.today:hover {
+    background: #ffce00 !important;
+    color: #000 !important;
+}
+
+/* 6. [NOUVEAU] Jours Désactivés / Non cliquables (Futur, etc.) */
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay,
+.flatpickr-day.notAllowed,
+.flatpickr-day.notAllowed.prevMonthDay,
+.flatpickr-day.notAllowed.nextMonthDay {
+    color: #444 !important; /* Beaucoup plus sombre (gris foncé) */
+    background: transparent !important;
+    border-color: transparent !important;
+    cursor: default !important;
+}
+
+/* --- STYLE PLUGIN MOIS (Pour le mode 31 jours) --- */
+.flatpickr-monthSelect-theme-dark {
+    background: #1e1e1e !important;
+}
+.flatpickr-monthSelect-month {
+    color: #ccc !important;
+    background: #1e1e1e !important; 
+    border: 1px solid transparent;
+}
+.flatpickr-monthSelect-month:hover {
+    background: #333 !important;
+    color: #fff !important;
+}
+/* Le mois sélectionné */
+.flatpickr-monthSelect-month.selected {
+    background: #ffce00 !important;
+    border-color: #ffce00 !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+
+/* Le mois désactivé (Futur) */
+.flatpickr-monthSelect-month.disabled {
+    color: #444 !important;
+}
+
 /* MEDIA QUERIES */
 @media (max-width: 768px) {
     .desktop-only { display: none !important; }
