@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Comptes - Brawl Track</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Styles spécifiques pour la grille de comptes */
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .account-btn {
+            background: #252525;
+            border: 2px solid #333;
+            color: #fff;
+            padding: 20px 10px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .account-btn:hover {
+            border-color: #ffce00;
+            background: #333;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(255, 206, 0, 0.15);
+        }
+
+        .account-icon {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container wide" style="text-align: center;">
+        
+        <h1 style="font-size: 2.5em; margin-bottom: 10px;">MES COMPTES</h1>
+        <p style="color: #888;">Sélectionne un profil pour voir les stats</p>
+
+        <div id="loading-msg" style="margin-top: 50px; color: #aaa;">Chargement de vos profils...</div>
+        <div id="tags-container" class="accounts-grid hidden"></div>
+
+        <div style="border-top: 1px solid #333; padding-top: 20px; margin-top: 20px;">
+            <button onclick="window.location.href='index.html'" style="background: #444; width: auto; display: inline-block; margin-right: 10px;">🔎 Chercher un autre Tag</button>
+            <button onclick="logout()" style="background: linear-gradient(to bottom, #dc3545, #c82333); width: auto; display: inline-block;">🚪 Déconnexion</button>
+        </div>
+
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    
+    <script>
+        // --- LOGIQUE INTERNE ---
+        
+        async function initUserHome() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = "index.html";
+                return;
+            }
+
+            try {
+                // On appelle l'API pour récupérer la liste des tags liés (claimés)
+                // L'endpoint /api/my-stats renvoie un objet contenant { tags: [...] }
+                const res = await fetch(`${API_URL}/api/my-stats`, { 
+                    headers: { 'Authorization': `Bearer ${token}` } 
+                });
+                
+                if (!res.ok) throw new Error("Session expirée");
+                
+                const data = await res.json();
+                const tags = data.tags || [];
+
+                const container = document.getElementById('tags-container');
+                const loader = document.getElementById('loading-msg');
+                
+                loader.classList.add('hidden');
+                container.classList.remove('hidden');
+
+                if (tags.length === 0) {
+                    container.innerHTML = `<div style="grid-column: 1/-1; color: #aaa; padding: 20px;">Aucun compte lié.<br>Cherchez un joueur sur l'accueil pour le lier ("Claim").</div>`;
+                    return;
+                }
+
+                // Génération des boutons
+                tags.forEach(t => {
+                    const btn = document.createElement('div');
+                    btn.className = 'account-btn';
+                    // Nettoyage du tag pour l'affichage et l'URL
+                    const cleanTag = t.tag.replace('#', '');
+                    
+                    btn.innerHTML = `
+                        <div class="account-icon">👤</div>
+                        <div>#${cleanTag}</div>
+                    `;
+                    
+                    // Au clic, on redirige vers le dashboard avec le paramètre tag
+                    btn.onclick = () => {
+                        window.location.href = `dashboard.html?tag=${cleanTag}`;
+                    };
+
+                    container.appendChild(btn);
+                });
+
+            } catch (e) {
+                console.error(e);
+                localStorage.removeItem('token');
+                window.location.href = "index.html";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = "index.html";
+        }
+
+        // Lancement
+        initUserHome();
+    </script>
+</body>
+</html>
