@@ -243,6 +243,104 @@ async function goToBrawlerStats(id, name) {
     setBrawlerChartMode(0, liveVal); 
 }
 
+// --- NOUVELLES FONCTIONS NAVIGATION BRAWLER ---
+
+function navigateBrawlerChart(direction) {
+    currentChartOffset += direction;
+    if (currentChartOffset < 0) currentChartOffset = 0;
+    renderBrawlerChart();
+}
+
+function jumpToBrawlerDate(dateString) {
+    if (!dateString) return;
+    const targetDate = new Date(dateString);
+    const now = new Date();
+    const diffTime = now - targetDate;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24); 
+    
+    if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
+
+    if (currentBrawlerMode === 1) currentChartOffset = Math.floor(diffDays);
+    else if (currentBrawlerMode === 7) currentChartOffset = Math.floor(diffDays / 7);
+    else if (currentBrawlerMode === 31) {
+        let months = (now.getFullYear() - targetDate.getFullYear()) * 12;
+        months -= targetDate.getMonth();
+        months += now.getMonth();
+        currentChartOffset = months <= 0 ? 0 : months;
+    } else if (currentBrawlerMode === 365) currentChartOffset = now.getFullYear() - targetDate.getFullYear();
+
+    renderBrawlerChart();
+}
+
+function updateBrawlerNavigationUI(data) {
+    const btnPrev = document.getElementById('brawler-nav-btn-prev');
+    const btnNext = document.getElementById('brawler-nav-btn-next');
+    const label = document.getElementById('brawler-chart-period-label');
+    const picker = document.getElementById('brawler-chart-date-picker');
+
+    if (!btnPrev || !btnNext) return;
+
+    // Calcul de la date du premier point de l'historique pour bloquer "Précédent"
+    let firstDataPointDate = new Date();
+    if (data && data.length > 0) {
+        let d = data[0].date || data[0].recorded_at;
+        firstDataPointDate = new Date(d.replace(' ', 'T'));
+    }
+
+    // Recalcul des bornes actuelles (StartDate / EndDate) basé sur le mode et l'offset
+    // C'est une duplication de logique de renderGenericChart nécessaire pour l'UI
+    const now = new Date();
+    let startDate = new Date();
+    let endDate = new Date();
+
+    if (currentBrawlerMode === 1) { // 24H
+        const target = new Date();
+        target.setDate(now.getDate() - currentChartOffset);
+        startDate = new Date(target.setHours(0,0,0,0));
+        endDate = new Date(target.setHours(23,59,59,999));
+    } else if (currentBrawlerMode === 7) { // Semaine
+        const currentDay = now.getDay(); 
+        const distanceToSunday = (currentDay === 0 ? 0 : 7 - currentDay);
+        const targetEnd = new Date(now);
+        targetEnd.setDate(now.getDate() + distanceToSunday - (currentChartOffset * 7));
+        endDate = targetEnd;
+        const targetStart = new Date(targetEnd);
+        targetStart.setDate(targetEnd.getDate() - 6);
+        startDate = targetStart;
+    } else if (currentBrawlerMode === 31) { // Mois
+        const target = new Date();
+        target.setMonth(now.getMonth() - currentChartOffset);
+        startDate = new Date(target.getFullYear(), target.getMonth(), 1);
+        endDate = new Date(target.getFullYear(), target.getMonth() + 1, 0);
+    } else if (currentBrawlerMode === 365) { // Année
+        const targetYear = now.getFullYear() - currentChartOffset;
+        startDate = new Date(targetYear, 0, 1);
+        endDate = new Date(targetYear, 11, 31);
+    }
+
+    // Mise à jour UI
+    btnPrev.disabled = (startDate <= firstDataPointDate);
+
+    if (currentChartOffset === 0) {
+        btnNext.disabled = true;
+        label.innerText = "Aujourd'hui";
+    } else {
+        btnNext.disabled = false;
+        const options = { day: 'numeric', month: 'short' };
+        
+        if (currentBrawlerMode === 1) {
+             label.innerText = startDate.toLocaleDateString('fr-FR', options);
+        } else if (currentBrawlerMode === 31) {
+             label.innerText = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        } else if (currentBrawlerMode === 365) {
+             label.innerText = startDate.getFullYear();
+        } else {
+             label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
+        }
+    }
+    if(picker) picker.value = endDate.toISOString().split('T')[0];
+}
+
 // =========================================================
 // === MOTEUR GRAPHIQUE AVANCÉ ===
 // =========================================================
@@ -301,6 +399,7 @@ function setBrawlerChartMode(mode, liveValOverride) {
     currentBrawlerMode = mode;
     currentChartOffset = 0; 
     
+    // Mise à jour visuelle des boutons filtres
     document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
     let btnId = 'btn-brawler-all';
     if(currentBrawlerMode === 1) btnId = 'btn-brawler-24h';
@@ -312,25 +411,52 @@ function setBrawlerChartMode(mode, liveValOverride) {
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
+    // Gestion visibilité Navigation Bar
+    const nav = document.getElementById('brawler-chart-navigation');
+    if (nav) {
+        // On cache la nav si on est en mode "Tout" (0) ou "1H" (0.042)
+        if (mode === 0 || Math.abs(mode - 0.042) < 0.001) nav.classList.add('hidden');
+        else nav.classList.remove('hidden');
+    }
+
+    // Gestion valeur Live
     let liveVal = liveValOverride;
     if (liveVal === undefined || liveVal === null) {
         const hiddenId = document.getElementById('selected-brawler-id').value;
-        const b = window.currentBrawlersDisplay.find(x => x.id == hiddenId);
-        if(b) liveVal = b.trophies;
+        // On récupère la valeur actuelle dans la liste globale
+        if(window.currentBrawlersDisplay) {
+            const b = window.currentBrawlersDisplay.find(x => x.id == hiddenId);
+            if(b) liveVal = b.trophies;
+        }
     }
 
+    // On stocke la valeur live actuelle dans une propriété globale temporaire pour le redraw
+    window.currentBrawlerLiveVal = liveVal;
+
+    // Appel du rendu
+    renderBrawlerChart();
+}
+
+function renderBrawlerChart() {
     if(brawlerChartInstance) brawlerChartInstance.destroy();
     
+    // Calcul et rendu
     brawlerChartInstance = renderGenericChart({
         canvasId: 'brawlerChartCanvas',
         rawData: currentBrawlerHistory,
         mode: currentBrawlerMode,
-        offset: 0, 
-        liveValue: liveVal,
+        offset: currentChartOffset, // On réutilise la variable globale offset (partagée mais reset au switch)
+        liveValue: window.currentBrawlerLiveVal,
         color: '#00d2ff',
         variationId: 'brawler-trophy-variation',
         isBrawler: true
     });
+    
+    // Mise à jour de l'UI de navigation Brawler
+    // On doit recalculer les dates bornes comme dans renderGenericChart, 
+    // ou récupérer ces infos. Pour faire simple, on délègue à une fonction UI dédiée
+    // qui va refaire le petit calcul de dates pour l'affichage du label.
+    updateBrawlerNavigationUI(currentBrawlerHistory);
 }
 
 function renderMainChart() {
