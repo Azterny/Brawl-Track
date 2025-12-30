@@ -883,70 +883,97 @@ button.filter-btn.blue-active.active:hover {
     background: #252525; padding: 10px; border-radius: 8px; margin-bottom: 10px; color: #aaa; font-size: 0.9em;
 }
 
-/* --- PERSONNALISATION FLATPICKR (Calendrier) --- */
+/* --- PERSONNALISATION FLATPICKR (Style Brawl Track) --- */
 
-/* Fond général et bordures */
-.flatpickr-calendar.dark {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-    border-radius: 12px;
+/* 1. Conteneur global (Fond sombre) */
+.flatpickr-calendar, .flatpickr-calendar.hasWeeks .dayContainer {
+    background: #1e1e1e !important;
+    border: 1px solid #333 !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9) !important;
+    border-radius: 12px !important;
+    font-family: 'Roboto', sans-serif !important;
 }
 
-/* En-tête (Mois / Année) */
+/* 2. En-tête (Mois/Année) */
 .flatpickr-months .flatpickr-month {
-    background: #1e1e1e;
-    color: #fff;
-    fill: #fff;
+    background: #1e1e1e !important;
+    color: #fff !important;
+    fill: #fff !important;
+    padding-top: 10px;
 }
 .flatpickr-current-month .flatpickr-monthDropdown-months,
 .flatpickr-current-month input.cur-year {
-    color: #fff;
-    font-weight: bold;
+    color: #fff !important;
+    font-weight: bold !important;
+}
+.flatpickr-months .flatpickr-prev-month, 
+.flatpickr-months .flatpickr-next-month {
+    color: #fff !important;
+    fill: #fff !important;
+}
+.flatpickr-months .flatpickr-prev-month:hover svg, 
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: #ffce00 !important;
 }
 
-/* Jours de la semaine (Lun, Mar...) */
+/* 3. Jours de la semaine */
 span.flatpickr-weekday {
-    background: #1e1e1e;
-    color: #888;
+    background: #1e1e1e !important;
+    color: #888 !important;
 }
 
-/* Les jours (chiffres) */
-.flatpickr-day.dark {
-    color: #ccc;
+/* 4. Les jours (Numéros) */
+.flatpickr-day {
+    color: #ccc !important;
 }
-.flatpickr-day.dark:hover {
-    background: #333;
-    border-color: #444;
+.flatpickr-day:hover, .flatpickr-day:focus {
+    background: #333 !important;
+    border-color: #444 !important;
 }
 
-/* LE JOUR SÉLECTIONNÉ (C'est ici le Jaune Brawl Track) */
+/* 5. SÉLECTION (Le Jaune Important) */
 .flatpickr-day.selected, 
 .flatpickr-day.startRange, 
 .flatpickr-day.endRange, 
 .flatpickr-day.selected.inRange, 
 .flatpickr-day.startRange.inRange, 
-.flatpickr-day.endRange.inRange, 
-.flatpickr-day.selected:focus, 
-.flatpickr-day.startRange:focus, 
-.flatpickr-day.endRange:focus, 
-.flatpickr-day.selected:hover, 
-.flatpickr-day.startRange:hover, 
-.flatpickr-day.endRange:hover {
+.flatpickr-day.endRange.inRange {
     background: #ffce00 !important;
     border-color: #ffce00 !important;
-    color: #000 !important; /* Texte noir sur fond jaune pour lisibilité */
-    font-weight: bold;
+    color: #000 !important; /* Texte noir sur jaune */
+    font-weight: bold !important;
+    box-shadow: none !important;
 }
 
-/* Jour actuel (Aujourd'hui) - Petit contour jaune */
+/* Aujourd'hui (Petit contour) */
 .flatpickr-day.today {
-    border-color: #ffce00;
-    color: #ffce00;
+    border-color: #ffce00 !important;
+    color: #ffce00 !important;
 }
 .flatpickr-day.today:hover {
-    background: #333;
-    color: #fff;
+    background: #ffce00 !important;
+    color: #000 !important;
+}
+
+/* --- STYLE PLUGIN MOIS (Pour le mode 31 jours) --- */
+.flatpickr-monthSelect-theme-dark {
+    background: #1e1e1e !important;
+}
+.flatpickr-monthSelect-month {
+    color: #ccc !important;
+    background: #1e1e1e !important; 
+    border: 1px solid transparent;
+}
+.flatpickr-monthSelect-month:hover {
+    background: #333 !important;
+    color: #fff !important;
+}
+/* Le mois sélectionné */
+.flatpickr-monthSelect-month.selected {
+    background: #ffce00 !important;
+    border-color: #ffce00 !important;
+    color: #000 !important;
+    font-weight: bold;
 }
 
 /* MEDIA QUERIES */
