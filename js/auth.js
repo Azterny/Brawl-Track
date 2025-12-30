@@ -35,7 +35,9 @@ async function login() {
         
         if (res.ok) {
             localStorage.setItem('token', data.token);
-            // MODIFICATION ICI : dashboard.html -> userhome.html
+            // AJOUT ICI : On sauvegarde le pseudo pour la navbar
+            if(data.username) localStorage.setItem('username', data.username);
+            
             window.location.href = "userhome.html";
         } else {
             if(msg) msg.innerText = "❌ " + data.message;
