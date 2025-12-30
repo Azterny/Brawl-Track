@@ -4,17 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brawl Track - Dashboard</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
-    
+
     <link rel="stylesheet" href="css/style.css">
     
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://npmcdn.com/flatpickr/dist/l10n/fr.js"></script> <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 </head>
 <body>
@@ -64,13 +66,12 @@
 
                     <div id="chart-navigation" class="chart-nav-bar hidden">
                         <button id="nav-btn-prev" class="nav-arrow" onclick="navigateChart(1)">❮</button>
+                        
                         <span id="chart-period-label" style="font-weight:bold; min-width: 150px; text-align:center;">Aujourd'hui</span>
-                    
+                        
                         <div id="picker-container-main" style="position: relative; display:inline-block;">
-                            <button id="trigger-picker-main" class="nav-arrow" style="width:auto !important; padding: 0 10px !important; border:none !important;" title="Calendrier">
-                                📅
-                            </button>
-                            <input type="text" id="picker-input-main" style="display:none;">
+                            <span id="trigger-picker-main" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</span>
+                            <input type="text" id="picker-input-main" style="display:none;"> 
                         </div>
                     
                         <button id="nav-btn-next" class="nav-arrow" onclick="navigateChart(-1)">❯</button>
@@ -128,8 +129,8 @@
                     
                     <span id="brawler-chart-period-label" style="font-weight:bold; min-width: 150px; text-align:center;">Aujourd'hui</span>
                     
-                    <div id="picker-container-brawler" class="hidden" style="position: relative; display:inline-block; margin-bottom: 10px;">
-                         <button id="trigger-picker-brawler" class="nav-arrow" style="width:auto !important; padding: 0 10px !important; border:none !important;">📅</button>
+                    <div id="picker-container-brawler" style="position: relative; display:inline-block;">
+                        <span id="trigger-picker-brawler" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</span>
                         <input type="text" id="picker-input-brawler" style="display:none;">
                     </div>
                 
