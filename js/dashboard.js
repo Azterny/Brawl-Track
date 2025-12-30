@@ -2,6 +2,8 @@
 let currentChartMode = 0;   // 0=Tout, 1=Jour...
 let currentChartOffset = 0; 
 let currentTagString = null;
+let mainFlatpickr = null;
+let brawlerFlatpickr = null;
 
 // Variables spécifiques Brawlers
 let currentBrawlerHistory = [];
@@ -339,6 +341,7 @@ function updateBrawlerNavigationUI(data) {
         }
     }
     if(picker) picker.value = endDate.toISOString().split('T')[0];
+    if (brawlerFlatpickr) brawlerFlatpickr.setDate(endDate, false);
 }
 
 // =========================================================
@@ -392,6 +395,7 @@ function setChartMode(mode) {
         if (mode === 0) nav.classList.add('hidden');
         else nav.classList.remove('hidden');
     }
+    syncPickerWithMode(false, mode, fullHistoryData);
     renderMainChart();
 }
 
@@ -433,6 +437,8 @@ function setBrawlerChartMode(mode, liveValOverride) {
     // On stocke la valeur live actuelle dans une propriété globale temporaire pour le redraw
     window.currentBrawlerLiveVal = liveVal;
 
+    syncPickerWithMode(true, mode, currentBrawlerHistory)
+    
     // Appel du rendu
     renderBrawlerChart();
 }
@@ -577,6 +583,71 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
         }
     }
     if(picker) picker.value = endDate.toISOString().split('T')[0];
+    if (mainFlatpickr) mainFlatpickr.setDate(endDate, false);
+}
+
+// --- GESTION DU CALENDRIER INTELLIGENT (FLATPICKR) ---
+function syncPickerWithMode(isBrawler, mode, historyData) {
+    const containerId = isBrawler ? 'picker-container-brawler' : 'picker-container-main';
+    const triggerId = isBrawler ? '#trigger-picker-brawler' : '#trigger-picker-main';
+    const inputId = isBrawler ? '#picker-input-brawler' : '#picker-input-main';
+    let currentInstance = isBrawler ? brawlerFlatpickr : mainFlatpickr;
+
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    // 1. Si mode Année (365) ou Tout (0) => On cache le calendrier
+    if (mode === 365 || mode === 0) {
+        container.classList.add('hidden');
+        return;
+    }
+    container.classList.remove('hidden');
+
+    // 2. Calcul de la date Min (Début historique)
+    let minDate = null;
+    if (historyData && historyData.length > 0) {
+        let d = historyData[0].date || historyData[0].recorded_at;
+        minDate = new Date(d.replace(' ', 'T'));
+    }
+
+    // 3. Configuration spécifique (Mois vs Jour)
+    const isMonthMode = (mode === 31);
+    
+    const config = {
+        element: document.querySelector(inputId),
+        positionElement: document.querySelector(triggerId),
+        clickOpens: true,
+        wrap: true, // Permet d'utiliser le trigger externe
+        theme: "dark",
+        maxDate: new Date(), // Pas de futur
+        minDate: minDate,    // Pas avant le début
+        disableMobile: "true", // Force le thème Dark même sur mobile
+        onChange: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length > 0) {
+                if (isBrawler) jumpToBrawlerDate(dateStr);
+                else jumpToDate(dateStr);
+            }
+        }
+    };
+
+    if (isMonthMode) {
+        config.plugins = [new monthSelectPlugin({
+            shorthand: true, 
+            dateFormat: "Y-m-d", // Format interne standard pour notre logique
+            altFormat: "F Y", 
+            theme: "dark"
+        })];
+    } else {
+        config.dateFormat = "Y-m-d";
+    }
+
+    // 4. Reset & Init
+    if (currentInstance) currentInstance.destroy();
+    
+    const newInstance = flatpickr(triggerId, config);
+    
+    if (isBrawler) brawlerFlatpickr = newInstance;
+    else mainFlatpickr = newInstance;
 }
 
 // =========================================================
