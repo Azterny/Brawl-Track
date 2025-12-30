@@ -97,11 +97,6 @@
         <h1>Maintenance</h1>
         <p>Brawl-Track évolue !<br>
         Nous mettons à jour notre infrastructure.</p>
-        <div id="timer">
-            <div class="time-block">
-                <span id="days" class="number">00</span>
-                <span class="label">Jours</span>
-            </div>
             <div class="time-block">
                 <span id="hours" class="number">00</span>
                 <span class="label">Heures</span>
@@ -121,8 +116,6 @@
         <div class="footer">&copy; Brawl Track</div>
     </div>
     <script>
-        // 1. Définir la date cible (Demain 12h00)
-        const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() + 1); // Ajoute 1 jour à aujourd'hui
         targetDate.setHours(12, 0, 0, 0); // Fixe l'heure à 12:00:00
 
@@ -138,7 +131,6 @@
             }
 
             // Calculs mathématiques pour le temps
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
