@@ -6,11 +6,10 @@ function checkAuth() {
         window.location.href = "index.html";
         return;
     }
-    // Si on est sur le dashboard, on active le menu et on charge les stats
-    const burger = document.getElementById('burger-menu');
-    if(burger) burger.classList.remove('hidden');
     
-    // Fonction définie dans dashboard.js
+    const nav = document.getElementById('main-navigation');
+    if(nav) nav.classList.remove('hidden');
+    
     if(typeof loadMyStats === 'function') {
         loadMyStats();
     }
