@@ -248,6 +248,16 @@ async function goToBrawlerStats(id, name) {
 // --- NOUVELLES FONCTIONS NAVIGATION BRAWLER ---
 
 function navigateBrawlerChart(direction) {
+    if (Math.abs(currentBrawlerMode - 0.042) < 0.001) {
+        currentChartOffset += (direction * 24);
+    } else {
+        currentChartOffset += direction;
+    }
+    if (currentChartOffset < 0) currentChartOffset = 0;
+    renderBrawlerChart();
+}
+
+function navigateBrawlerHour(direction) {
     currentChartOffset += direction;
     if (currentChartOffset < 0) currentChartOffset = 0;
     renderBrawlerChart();
@@ -285,20 +295,34 @@ function updateBrawlerNavigationUI(data) {
     const label = document.getElementById('brawler-chart-period-label');
     const picker = document.getElementById('picker-input-brawler');
 
+    // Nouveaux éléments Heure (Brawler)
+    const btnPrevHour = document.getElementById('brawler-nav-btn-prev-hour');
+    const btnNextHour = document.getElementById('brawler-nav-btn-next-hour');
+    const labelHour = document.getElementById('brawler-chart-hour-label');
+
     if (!btnPrev || !btnNext) return;
 
+    // Calcul dates bornes (identique à renderGenericChart / updateNavigationUI)
+    // On doit recalculer ici car cette fonction est appelée séparément parfois
+    // Note : Pour optimiser, on pourrait passer startDate/endDate en arguments comme pour updateNavigationUI.
+    // Mais gardons la logique actuelle basée sur "currentBrawlerMode" et "currentChartOffset".
+    
     let firstDataPointDate = new Date();
     if (data && data.length > 0) {
         let d = data[0].date || data[0].recorded_at;
         firstDataPointDate = new Date(d.replace(' ', 'T'));
     }
 
-    // Recalcul des bornes actuelles (StartDate / EndDate)
     const now = new Date();
     let startDate = new Date();
     let endDate = new Date();
 
-    if (currentBrawlerMode === 1) { // 24H
+    // Recalcul rapide des dates pour l'affichage (Logique miroir de renderGenericChart)
+    if (Math.abs(currentBrawlerMode - 0.042) < 0.001) { // 1H
+         const endMs = now.getTime() - (currentChartOffset * 60 * 60 * 1000);
+         endDate = new Date(endMs);
+         startDate = new Date(endMs - (60 * 60 * 1000));
+    } else if (currentBrawlerMode === 1) { // 24H
         const target = new Date();
         target.setDate(now.getDate() - currentChartOffset);
         startDate = new Date(target.setHours(0,0,0,0));
@@ -323,37 +347,44 @@ function updateBrawlerNavigationUI(data) {
         endDate = new Date(targetYear, 11, 31);
     }
 
-    // Mise à jour UI
-    btnPrev.disabled = (startDate <= firstDataPointDate);
+    // --- APPLICATION UI ---
+    
+    const isAtStart = (startDate <= firstDataPointDate);
+    btnPrev.disabled = isAtStart;
 
-    if (currentChartOffset === 0) {
-        btnNext.disabled = true;
-        
-        // --- LOGIQUE TEXTE DYNAMIQUE ---
-        if (Math.abs(currentBrawlerMode - 0.042) < 0.001) label.innerText = "Dernière heure";
-        else if (currentBrawlerMode === 1) label.innerText = "Aujourd'hui";
-        else if (currentBrawlerMode === 7) label.innerText = "Cette semaine";
-        else if (currentBrawlerMode === 31) label.innerText = "Ce mois";
-        else if (currentBrawlerMode === 365) label.innerText = "Cette année";
-        else label.innerText = "Aujourd'hui";
-        // -------------------------------
-        
-    } else {
-        btnNext.disabled = false;
-        const options = { day: 'numeric', month: 'short' };
-        
-        if (currentBrawlerMode === 1) {
-             label.innerText = startDate.toLocaleDateString('fr-FR', options);
-        } else if (currentBrawlerMode === 31) {
-             label.innerText = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-        } else if (currentBrawlerMode === 365) {
-             label.innerText = startDate.getFullYear();
+    const options = { day: 'numeric', month: 'short' };
+
+    // MODE 1 HEURE
+    if (Math.abs(currentBrawlerMode - 0.042) < 0.001) {
+        label.innerText = startDate.toLocaleDateString('fr-FR', options) + " 📅";
+        btnNext.disabled = (currentChartOffset === 0);
+
+        if (labelHour) {
+            const hStart = startDate.getHours().toString().padStart(2, '0') + ":00";
+            const hEnd = endDate.getHours().toString().padStart(2, '0') + ":00";
+            labelHour.innerText = `${hStart} - ${hEnd} 🕓`;
+        }
+        if (btnPrevHour) btnPrevHour.disabled = isAtStart;
+        if (btnNextHour) btnNextHour.disabled = (currentChartOffset === 0);
+    } 
+    // AUTRES MODES
+    else {
+        btnNext.disabled = (currentChartOffset === 0);
+
+        if (currentChartOffset === 0) {
+            if (currentBrawlerMode === 1) label.innerText = "Aujourd'hui";
+            else if (currentBrawlerMode === 7) label.innerText = "Cette semaine";
+            else if (currentBrawlerMode === 31) label.innerText = "Ce mois";
+            else if (currentBrawlerMode === 365) label.innerText = "Cette année";
+            else label.innerText = "Aujourd'hui";
         } else {
-             label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
+            if (currentBrawlerMode === 1) label.innerText = startDate.toLocaleDateString('fr-FR', options);
+            else if (currentBrawlerMode === 31) label.innerText = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            else if (currentBrawlerMode === 365) label.innerText = startDate.getFullYear();
+            else label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
         }
     }
     
-    // Mise à jour silencieuse du calendrier si ouvert
     if(picker && endDate) picker.value = endDate.toISOString().split('T')[0];
     if (brawlerFlatpickr && endDate) brawlerFlatpickr.setDate(endDate, false);
 }
@@ -404,10 +435,21 @@ function loadHistoryChart(historyData, currentTrophies) {
 function setChartMode(mode) {
     currentChartMode = mode;
     currentChartOffset = 0;
-    const nav = document.getElementById('chart-navigation');
-    if (nav) {
-        if (mode === 0) nav.classList.add('hidden');
-        else nav.classList.remove('hidden');
+    
+    const navMain = document.getElementById('chart-navigation');
+    const navHour = document.getElementById('chart-navigation-hour'); // NOUVEAU
+
+    if (navMain) {
+        if (mode === 0) {
+            navMain.classList.add('hidden');
+            if(navHour) navHour.classList.add('hidden');
+        } else {
+            navMain.classList.remove('hidden');
+            if(navHour) {
+                if(Math.abs(mode - 0.042) < 0.001) navHour.classList.remove('hidden');
+                else navHour.classList.add('hidden');
+            }
+        }
     }
     syncPickerWithMode(false, mode, fullHistoryData);
     renderMainChart();
@@ -431,10 +473,23 @@ function setBrawlerChartMode(mode, liveValOverride) {
 
     // Gestion visibilité Navigation Bar
     const nav = document.getElementById('brawler-chart-navigation');
+    const navHour = document.getElementById('brawler-chart-navigation-hour'); // NOUVEAU
+
     if (nav) {
-        // On cache la nav si on est en mode "Tout" (0) ou "1H" (0.042)
-        if (mode === 0 || Math.abs(mode - 0.042) < 0.001) nav.classList.add('hidden');
-        else nav.classList.remove('hidden');
+        if (mode === 0) {
+            // Mode "Tout" : On cache tout
+            nav.classList.add('hidden');
+            if(navHour) navHour.classList.add('hidden');
+        } else {
+            // Autres modes (1H, 24H, 7J...) : On affiche la nav Principale (Jour)
+            nav.classList.remove('hidden');
+
+            // On affiche la nav Heure SEULEMENT en mode 1H
+            if (navHour) {
+                if (Math.abs(mode - 0.042) < 0.001) navHour.classList.remove('hidden');
+                else navHour.classList.add('hidden');
+            }
+        }
     }
 
     // Gestion valeur Live
@@ -534,6 +589,17 @@ function manageGenericFilters(data, idPrefix) {
 }
 
 function navigateChart(direction) {
+    if (Math.abs(currentChartMode - 0.042) < 0.001) {
+        currentChartOffset += (direction * 24);
+    } else {
+        currentChartOffset += direction;
+    }
+    if (currentChartOffset < 0) currentChartOffset = 0;
+    renderMainChart();
+}
+
+function navigateHour(direction) {
+    // Ici on bouge heure par heure
     currentChartOffset += direction;
     if (currentChartOffset < 0) currentChartOffset = 0;
     renderMainChart();
@@ -573,42 +639,70 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
     const btnPrev = document.getElementById('nav-btn-prev');
     const btnNext = document.getElementById('nav-btn-next');
     const label = document.getElementById('chart-period-label');
-    const picker = document.getElementById('picker-input-main'); // Correction ID input
+    const picker = document.getElementById('picker-input-main');
+
+    // Nouveaux éléments Heure
+    const btnPrevHour = document.getElementById('nav-btn-prev-hour');
+    const btnNextHour = document.getElementById('nav-btn-next-hour');
+    const labelHour = document.getElementById('chart-hour-label');
 
     if (!btnPrev || !btnNext) return;
 
-    // Règle 4: Navigation bornée (Pas avant début)
-    btnPrev.disabled = (startDate <= firstDataPointDate);
+    // Règle générale : On désactive le bouton Précédent si on est avant le début de l'historique
+    const isAtStart = (startDate <= firstDataPointDate);
+    btnPrev.disabled = isAtStart;
 
-    // Cas Offset 0 : C'est le présent
-    if (currentChartOffset === 0) {
-        btnNext.disabled = true;
-        
-        // --- LOGIQUE TEXTE DYNAMIQUE ---
-        if (Math.abs(currentChartMode - 0.042) < 0.001) label.innerText = "Dernière heure";
-        else if (currentChartMode === 1) label.innerText = "Aujourd'hui";
-        else if (currentChartMode === 7) label.innerText = "Cette semaine";
-        else if (currentChartMode === 31) label.innerText = "Ce mois";
-        else if (currentChartMode === 365) label.innerText = "Cette année";
-        else label.innerText = "Aujourd'hui";
-        // -------------------------------
+    const options = { day: 'numeric', month: 'short' };
 
-    } else {
-        btnNext.disabled = false;
-        const options = { day: 'numeric', month: 'short' };
+    // --- MODE 1 HEURE (Premium) ---
+    if (Math.abs(currentChartMode - 0.042) < 0.001) {
         
-        if (currentChartMode === 1 || Math.abs(currentChartMode - 0.042) < 0.001) {
-             label.innerText = startDate.toLocaleDateString('fr-FR', options);
-        } else if (currentChartMode === 31) {
-             label.innerText = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-        } else if (currentChartMode === 365) {
-             label.innerText = startDate.getFullYear();
+        // 1. Barre Principale (JOUR)
+        label.innerText = startDate.toLocaleDateString('fr-FR', options) + " 📅";
+        
+        // Le bouton Suivant [JOUR] est désactivé si on est déjà aujourd'hui (offset < 24h)
+        // Note: On pourrait raffiner pour autoriser le saut si offset >= 24, 
+        // mais simplifions : si offset=0 (maintenant), on bloque.
+        btnNext.disabled = (currentChartOffset === 0);
+
+        // 2. Barre Secondaire (HEURE)
+        if (labelHour) {
+            const hStart = startDate.getHours().toString().padStart(2, '0') + ":00";
+            const hEnd = endDate.getHours().toString().padStart(2, '0') + ":00";
+            labelHour.innerText = `${hStart} - ${hEnd} 🕓`;
+        }
+
+        if (btnPrevHour) btnPrevHour.disabled = isAtStart;
+        if (btnNextHour) btnNextHour.disabled = (currentChartOffset === 0);
+
+    } 
+    // --- AUTRES MODES (Standard) ---
+    else {
+        // Bouton Suivant classique
+        btnNext.disabled = (currentChartOffset === 0);
+
+        if (currentChartOffset === 0) {
+             // Textes "Actuels"
+             if (currentChartMode === 1) label.innerText = "Aujourd'hui";
+             else if (currentChartMode === 7) label.innerText = "Cette semaine";
+             else if (currentChartMode === 31) label.innerText = "Ce mois";
+             else if (currentChartMode === 365) label.innerText = "Cette année";
+             else label.innerText = "Aujourd'hui";
         } else {
-             label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
+            // Textes "Passés"
+            if (currentChartMode === 1) {
+                 label.innerText = startDate.toLocaleDateString('fr-FR', options);
+            } else if (currentChartMode === 31) {
+                 label.innerText = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            } else if (currentChartMode === 365) {
+                 label.innerText = startDate.getFullYear();
+            } else {
+                 label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
+            }
         }
     }
     
-    // Mise à jour silencieuse du calendrier si ouvert
+    // Mise à jour silencieuse du calendrier Flatpickr si ouvert
     if(picker && endDate) picker.value = endDate.toISOString().split('T')[0];
     if (mainFlatpickr && endDate) mainFlatpickr.setDate(endDate, false);
 }
@@ -783,9 +877,10 @@ function renderGenericChart(config) {
     const now = new Date();
 
     if (mode > 0) {
-        if (Math.abs(mode - 0.042) < 0.001) { // 1H
-             startDate = new Date(now.getTime() - (60 * 60 * 1000));
-             endDate = now;
+        if (Math.abs(mode - 0.042) < 0.001) { // HEURE
+             const endMs = now.getTime() - (offset * 60 * 60 * 1000);
+             endDate = new Date(endMs);
+             startDate = new Date(endMs - (60 * 60 * 1000));
         } else if (mode === 1) { // 24H
             const target = new Date();
             target.setDate(now.getDate() - offset);
