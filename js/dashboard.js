@@ -293,6 +293,12 @@ function loadHistoryChart(historyData, currentTrophies) {
 function setChartMode(mode) {
     currentChartMode = mode;
     currentChartOffset = 0;
+    const nav = document.getElementById('chart-navigation');
+    if (nav) {
+        if (mode === 0) nav.classList.add('hidden');
+        else nav.classList.remove('hidden');
+    }
+
     renderMainChart();
 }
 
@@ -396,6 +402,96 @@ function manageGenericFilters(data, idPrefix) {
     toggle('365d', diffDays > 31);
 }
 
+// --- NAVIGATION TEMPORELLE ---
+
+// Appelé par les flèches < et >
+function navigateChart(direction) {
+    // direction = 1 (Vers le passé), direction = -1 (Vers le futur)
+    currentChartOffset += direction;
+    
+    // Sécurité basique (ne pas aller dans le futur au-delà d'aujourd'hui)
+    if (currentChartOffset < 0) currentChartOffset = 0;
+    
+    renderMainChart();
+}
+
+// Appelé par le calendrier
+function jumpToDate(dateString) {
+    if (!dateString) return;
+    
+    const targetDate = new Date(dateString);
+    const now = new Date();
+    
+    // Calcul de la différence en millisecondes
+    const diffTime = now - targetDate;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    
+    if (diffDays < 0) {
+        alert("Impossible de prédire le futur ! 🔮");
+        return;
+    }
+
+    // Conversion de la différence en "unités" selon le mode
+    if (currentChartMode === 1) { // Mode Jour
+        currentChartOffset = diffDays; // (approximatif, car offset 1 = 24h)
+    } else if (currentChartMode === 7) { // Mode Semaine
+        currentChartOffset = Math.floor(diffDays / 7);
+    } else if (currentChartMode === 31) { // Mode Mois
+        // Calcul approximatif en mois
+        let months = (now.getFullYear() - targetDate.getFullYear()) * 12;
+        months -= targetDate.getMonth();
+        months += now.getMonth();
+        currentChartOffset = months <= 0 ? 0 : months;
+    }
+
+    renderMainChart();
+}
+
+// Met à jour les boutons (Grisés ou non) et le texte
+function updateNavigationUI(startDate, endDate) {
+    const btnPrev = document.getElementById('nav-btn-prev');
+    const btnNext = document.getElementById('nav-btn-next');
+    const label = document.getElementById('chart-period-label');
+    const picker = document.getElementById('chart-date-picker');
+
+    if (!btnPrev || !btnNext) return;
+
+    // 1. Gestion des dates limites pour désactiver les boutons
+    // On cherche la date la plus ancienne dans les données
+    let oldestDate = new Date();
+    if (fullHistoryData && fullHistoryData.length > 0) {
+        const d = fullHistoryData[0].date || fullHistoryData[0].recorded_at;
+        oldestDate = new Date(d.replace(' ', 'T'));
+    }
+
+    // Si la fin de la vue est avant ou égale à la plus vieille donnée -> Stop Reculer
+    // Note: startDate est le début de la fenetre affichée
+    if (startDate <= oldestDate) {
+        btnPrev.disabled = true; 
+    } else {
+        btnPrev.disabled = false;
+    }
+
+    // Si l'offset est 0 -> Stop Avancer (on est aujourd'hui)
+    if (currentChartOffset === 0) {
+        btnNext.disabled = true;
+        label.innerText = "Aujourd'hui";
+    } else {
+        btnNext.disabled = false;
+        // Formatage joli de la date
+        const options = { day: 'numeric', month: 'short' };
+        if (currentChartMode === 1) {
+             label.innerText = startDate.toLocaleDateString('fr-FR', options);
+        } else {
+             label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
+        }
+    }
+
+    // Mise à jour du calendrier (pour qu'il indique la date actuelle du graph)
+    // On prend la date de fin de la vue
+    picker.value = endDate.toISOString().split('T')[0];
+}
+
 // --- RENDER GÉNÉRIQUE ---
 function renderGenericChart(config) {
     let { rawData, mode, offset, liveValue, color, canvasId, variationId, isBrawler } = config;
@@ -437,8 +533,11 @@ function renderGenericChart(config) {
             endDate = new Date(targetYear, 11, 31, 23, 59, 59);
         }
     }
-
-    // 2. Filtrage & Décimation
+    if (canvasId === 'trophyChart' && mode > 0) {
+        updateNavigationUI(startDate, endDate);
+    }
+    
+    // 2. Filtrage
     let finalDataPoints = [];
     const shouldHidePoints = (mode === 0 || mode === 365 || mode === 31);
 
