@@ -23,6 +23,9 @@ async function initDashboard() {
 
     currentTagString = tag.toUpperCase().replace('#', '');
     
+    // Modification du Titre de la page
+    document.title = `Brawl Track - #${currentTagString} - Statistiques`;
+    
     // On appelle la fonction de chargement principale
     await loadTagData(currentTagString);
 
