@@ -26,17 +26,30 @@
                 </div>
             </div>
 
-            <div id="burger-menu" class="hidden" style="position: relative;">
-                <div class="burger-icon" onclick="toggleMenu()">☰</div>
-                <div class="menu-overlay" id="menu-dropdown">
-                    <div class="menu-item" onclick="switchView('dashboard')">🏠 Accueil</div>
-                    <div class="menu-item-divider"></div>
-                    <div class="menu-item" onclick="switchView('data')">💾 Données</div>
-                    <div class="menu-item" onclick="switchView('settings')">⚙️ Paramètres</div>
-                    <div class="menu-item-divider"></div>
-                    <div class="menu-item" onclick="loadMyStats()">🔄 Actualiser</div>
-                    <div class="menu-item logout" onclick="logout()">🚪 Déconnexion</div>
+            <div id="main-navigation" class="hidden">
+                
+                <div class="mobile-nav-container">
+                    <div class="burger-icon" onclick="toggleMenu()">☰</div>
+                    <div class="menu-overlay" id="menu-dropdown">
+                        <div class="menu-item" onclick="switchView('dashboard')">🏠 Accueil</div>
+                        <div class="menu-item-divider"></div>
+                        <div class="menu-item" onclick="switchView('data')">💾 Données</div>
+                        <div class="menu-item" onclick="switchView('settings')">⚙️ Paramètres</div>
+                        <div class="menu-item-divider"></div>
+                        <div class="menu-item" onclick="loadMyStats()">🔄 Actualiser</div>
+                        <div class="menu-item logout" onclick="logout()">🚪 Déconnexion</div>
+                    </div>
                 </div>
+            
+                <div class="desktop-nav-container">
+                    <button class="nav-link active" onclick="switchView('dashboard')" id="nav-dashboard">🏠 Accueil</button>
+                    <button class="nav-link" onclick="switchView('data')" id="nav-data">💾 Données</button>
+                    <button class="nav-link" onclick="switchView('settings')" id="nav-settings">⚙️ Paramètres</button>
+                    <div class="nav-separator"></div>
+                    <button class="nav-link icon-only" onclick="loadMyStats()" title="Actualiser">🔄</button>
+                    <button class="nav-link logout" onclick="logout()" title="Déconnexion">🚪</button>
+                </div>
+            
             </div>
 
             <div id="public-actions" class="hidden">
