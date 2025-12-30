@@ -44,9 +44,24 @@
                     </div>
 
                     <div class="chart-filters">
-                        <button id="btn-24h" onclick="setChartMode(1)" class="filter-btn">24H</button>
-                        <button id="btn-7d" onclick="setChartMode(7)" class="filter-btn">Semaine</button>
+                        <button id="btn-1h" onclick="setChartMode(0.042)" class="filter-btn hidden">1H</button> 
+                        <button id="btn-24h" onclick="setChartMode(1)" class="filter-btn">Jour</button>
+                        <button id="btn-7d" onclick="setChartMode(7)" class="filter-btn hidden">Semaine</button>
+                        <button id="btn-31d" onclick="setChartMode(31)" class="filter-btn hidden">Mois</button>
+                        <button id="btn-365d" onclick="setChartMode(365)" class="filter-btn hidden">Année</button>
                         <button id="btn-all" onclick="setChartMode(0)" class="filter-btn active">Tout</button>
+                    </div>
+
+                    <div id="chart-nav-month" class="chart-nav-bar hidden" style="margin-bottom: 5px; background: #222; border:none; padding: 5px;">
+                        <button class="nav-arrow" onclick="navigateMonth(1)">❮❮</button>
+                        <span id="chart-month-label" style="color:#aaa; font-size:0.9em;">Mois</span>
+                        <button class="nav-arrow" onclick="navigateMonth(-1)">❯❯</button>
+                    </div>
+
+                    <div id="chart-navigation" class="chart-nav-bar hidden">
+                        <button class="nav-arrow" onclick="navigateChart(1)">❮</button>
+                        <span id="chart-period-label">Aujourd'hui</span>
+                        <button class="nav-arrow" id="btn-nav-next" onclick="navigateChart(-1)">❯</button>
                     </div>
 
                     <div style="position: relative; height: 300px; width: 100%;">
@@ -64,14 +79,13 @@
                 </select>
             </div>
             
-            <div id="brawlers-grid" style="margin-top: 15px;">
-                </div>
+            <div id="brawlers-grid" style="margin-top: 15px;"></div>
         </div>
 
         <div id="view-brawlers" class="view-section">
             
             <div class="brawler-header-nav">
-                <h2 style="margin:0;">📊 Statistiques Brawler</h2>
+                <h2 style="margin:0;">📊 Statistiques</h2>
                 <button class="btn-back" onclick="switchView('dashboard')">⬅ Retour</button>
             </div>
 
@@ -87,9 +101,14 @@
             <input type="hidden" id="selected-brawler-id">
 
             <div style="background: #222; padding: 15px; border-radius: 10px; position: relative; margin-top: 20px;">
+                
                 <div class="chart-filters">
-                    <button id="btn-brawler-24h" onclick="setBrawlerChartMode(1)" class="filter-btn filter-brawler-btn">24H</button>
-                    <button id="btn-brawler-all" onclick="setBrawlerChartMode(0)" class="filter-btn filter-brawler-btn active">Tout</button>
+                    <button id="btn-brawler-1h" onclick="setBrawlerChartMode(0.042)" class="filter-btn filter-brawler-btn blue-active hidden">1H</button>
+                    <button id="btn-brawler-24h" onclick="setBrawlerChartMode(1)" class="filter-btn filter-brawler-btn blue-active">Jour</button>
+                    <button id="btn-brawler-7d" onclick="setBrawlerChartMode(7)" class="filter-btn filter-brawler-btn blue-active hidden">Semaine</button>
+                    <button id="btn-brawler-31d" onclick="setBrawlerChartMode(31)" class="filter-btn filter-brawler-btn blue-active hidden">Mois</button>
+                    <button id="btn-brawler-365d" onclick="setBrawlerChartMode(365)" class="filter-btn filter-brawler-btn blue-active hidden">Année</button>
+                    <button id="btn-brawler-all" onclick="setBrawlerChartMode(0)" class="filter-btn filter-brawler-btn blue-active active">Tout</button>
                 </div>
 
                 <div style="position: relative; height: 300px; width: 100%;">
@@ -101,19 +120,13 @@
     </div>
 
     <script src="js/config.js"></script>
-    
     <script src="js/utils.js"></script>
-    
     <script src="js/dashboard.js"></script>
     
     <script>
-        // Lancement immédiat au chargement de la page
+        // Lancement immédiat
         window.onload = function() {
-            if(typeof initDashboard === 'function') {
-                initDashboard();
-            } else {
-                console.error("Fonction initDashboard introuvable !");
-            }
+            initDashboard();
         };
     </script>
 </body>
