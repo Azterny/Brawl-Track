@@ -8,6 +8,7 @@ body {
     margin: 0; 
     padding: 0;
     min-height: 100vh;
+    color-scheme: dark;
     overflow-x: hidden; /* Évite le scroll horizontal indésirable */
 }
 
@@ -888,97 +889,3 @@ button.filter-btn.blue-active.active:hover {
     .nav-burger { display: block; }
 }
 
-/* =========================================
-   11. PERSONNALISATION FLATPICKR (CALENDRIER)
-   ========================================= */
-
-/* Fond général et bordures */
-.flatpickr-calendar.theme-dark {
-    background: #1e1e1e !important;
-    border: 1px solid #333 !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
-    border-radius: 12px !important;
-    font-family: 'Roboto', sans-serif !important;
-}
-
-/* En-tête (Mois / Année) */
-.flatpickr-calendar.theme-dark .flatpickr-header {
-    background: #252525 !important;
-    border-bottom: 1px solid #333 !important;
-    border-radius: 12px 12px 0 0 !important;
-}
-
-.flatpickr-calendar.theme-dark .flatpickr-current-month .flatpickr-monthDropdown-months,
-.flatpickr-calendar.theme-dark .flatpickr-current-month input.cur-year {
-    color: #fff !important;
-    font-family: 'Lilita One', cursive !important; /* Rappel du style des titres */
-    letter-spacing: 1px;
-}
-
-/* Flèches de navigation */
-.flatpickr-calendar.theme-dark .flatpickr-prev-month, 
-.flatpickr-calendar.theme-dark .flatpickr-next-month {
-    fill: #ffce00 !important; /* Jaune Brawl Track */
-}
-.flatpickr-calendar.theme-dark .flatpickr-prev-month:hover svg, 
-.flatpickr-calendar.theme-dark .flatpickr-next-month:hover svg {
-    fill: #fff !important;
-}
-
-/* Jours de la semaine */
-.flatpickr-calendar.theme-dark span.flatpickr-weekday {
-    color: #888 !important;
-    font-weight: bold !important;
-}
-
-/* Les jours (Cellules) */
-.flatpickr-calendar.theme-dark .flatpickr-day {
-    color: #ccc !important;
-    border-radius: 8px !important; /* Plus carré/arrondi comme les boutons du site */
-    border: 1px solid transparent !important;
-}
-
-.flatpickr-calendar.theme-dark .flatpickr-day:hover {
-    background: #333 !important;
-    border-color: #555 !important;
-}
-
-/* Jour sélectionné */
-.flatpickr-calendar.theme-dark .flatpickr-day.selected, 
-.flatpickr-calendar.theme-dark .flatpickr-day.startRange, 
-.flatpickr-calendar.theme-dark .flatpickr-day.endRange {
-    background: #ffce00 !important;
-    color: #000 !important; /* Texte noir sur jaune pour lisibilité */
-    font-weight: bold !important;
-    border-color: #ffce00 !important;
-    box-shadow: 0 0 10px rgba(255, 206, 0, 0.4) !important;
-}
-
-/* Aujourd'hui */
-.flatpickr-calendar.theme-dark .flatpickr-day.today {
-    border-color: #ffce00 !important;
-    color: #ffce00 !important;
-}
-.flatpickr-calendar.theme-dark .flatpickr-day.today:hover {
-    background: #ffce00 !important;
-    color: #000 !important;
-}
-
-/* Jours désactivés (Hors historique ou futur) */
-.flatpickr-calendar.theme-dark .flatpickr-day.flatpickr-disabled, 
-.flatpickr-calendar.theme-dark .flatpickr-day.flatpickr-disabled:hover {
-    color: #333 !important;
-    background: transparent !important;
-    border-color: transparent !important;
-    cursor: not-allowed !important;
-}
-
-/* Plugin Mois (Month Select) */
-.flatpickr-monthSelect-theme-dark {
-    background: #1e1e1e !important;
-}
-.flatpickr-monthSelect-month.selected {
-    background: #ffce00 !important;
-    color: #000 !important;
-    box-shadow: 0 0 10px rgba(255, 206, 0, 0.4) !important;
-}
