@@ -10,6 +10,12 @@ let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
 let brawlerChartInstance = null;
 
+
+let globalBrawlersList = [];
+let fullHistoryData = [];
+let currentLiveTrophies = 0;
+let currentUserTier = 'free';
+
 // Vérification API
 const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : '';
 
@@ -34,7 +40,9 @@ async function initDashboard() {
 
     // Si connecté, on propose de Claim
     checkClaimStatus();
+}
 
+function initCustomCalendar() {
     flatpickr("#chart-date-picker", {
         locale: "fr",              // Langue française
         dateFormat: "Y-m-d",       // Format compatible avec votre logique actuelle
