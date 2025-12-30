@@ -245,12 +245,21 @@ async function goToBrawlerStats(id, name) {
 }
 
 // =========================================================
-// === MOTEUR GRAPHIQUE (CONSERVÉ INTACT) ===
+// === MOTEUR GRAPHIQUE (OPTIMISÉ FANTÔMES) ===
 // =========================================================
 
+/**
+ * Calcule la valeur estimée (interpolation linéaire) à une date cible.
+ * Exception : Si la date est AVANT tout historique, renvoie la valeur du 1er point.
+ * Exception : Si la date est APRÈS tout historique, renvoie la valeur du dernier point.
+ */
 function getInterpolatedValue(targetDate, allData) {
+    if (!allData || allData.length === 0) return null;
+    
     const targetTs = targetDate.getTime();
     let prev = null, next = null;
+
+    // 1. Recherche des points encadrants
     for (let pt of allData) {
         let d = pt.date || pt.recorded_at;
         if(d) d = d.replace(' ', 'T'); 
@@ -259,25 +268,27 @@ function getInterpolatedValue(targetDate, allData) {
         if (ptTs <= targetTs) prev = { ...pt, ts: ptTs };
         if (ptTs >= targetTs && !next) { next = { ...pt, ts: ptTs }; break; }
     }
+
+    // 2. Logique d'interpolation et Exceptions
+
+    // Cas : Target est exactement sur un point
     if (prev && next && prev.ts === next.ts) return prev.trophies;
+
+    // Cas Standard : Entre deux points -> Interpolation Linéaire
     if (prev && next) {
         const factor = (targetTs - prev.ts) / (next.ts - prev.ts);
         return prev.trophies + (next.trophies - prev.trophies) * factor;
     }
-    if (prev) return prev.trophies; 
-    if (next) return next.trophies;
-    return null;
-}
 
-function decimateDataPoints(points) {
-    const grouped = {};
-    points.forEach(p => {
-        const dObj = new Date(p.x);
-        if (isNaN(dObj)) return;
-        const dayKey = dObj.toISOString().split('T')[0]; 
-        grouped[dayKey] = p; 
-    });
-    return Object.values(grouped).sort((a,b) => new Date(a.x) - new Date(b.x));
+    // Cas Exception : Avant le début de l'histoire (Prev null, Next existe)
+    // Règle : "Si nous somme sur la toute première plage... prend la valeur du point 'Début'"
+    if (!prev && next) return next.trophies;
+
+    // Cas Exception : Après la fin de l'histoire (Prev existe, Next null)
+    // Règle : Interpolation impossible vers le futur, on prolonge le dernier point connu (plateau)
+    if (prev && !next) return prev.trophies;
+
+    return null;
 }
 
 // --- GESTION GRAPH GLOBAL ---
@@ -292,31 +303,15 @@ function loadHistoryChart(historyData, currentTrophies) {
 
 function setChartMode(mode) {
     currentChartMode = mode;
-    currentChartOffset = 0;
+    currentChartOffset = 0; // Reset offset quand on change de mode
     const nav = document.getElementById('chart-navigation');
+    
+    // Affichage des contrôles de navigation uniquement si pas "Tout"
     if (nav) {
         if (mode === 0) nav.classList.add('hidden');
         else nav.classList.remove('hidden');
     }
 
-    renderMainChart();
-}
-
-function navigateChart(direction) {
-    currentChartOffset += direction;
-    if (currentChartOffset < 0) currentChartOffset = 0;
-    renderMainChart();
-}
-
-function navigateMonth(direction) {
-    if (currentChartMode !== 1) return;
-    const now = new Date();
-    const currentDate = new Date();
-    currentDate.setDate(now.getDate() - currentChartOffset);
-    const targetDate = new Date(currentDate);
-    targetDate.setMonth(targetDate.getMonth() - direction); 
-    currentChartOffset = Math.floor((now - targetDate) / (1000 * 60 * 60 * 24));
-    if (currentChartOffset < 0) currentChartOffset = 0;
     renderMainChart();
 }
 
@@ -328,6 +323,10 @@ function renderMainChart() {
     else if(currentChartMode === 7) btnId = 'btn-7d';
     else if(currentChartMode === 31) btnId = 'btn-31d';
     else if(currentChartMode === 365) btnId = 'btn-365d';
+    
+    // Cas spécial pour 1h (0.042 jour approx)
+    if(Math.abs(currentChartMode - 0.042) < 0.001) btnId = 'btn-1h'; 
+
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
@@ -348,6 +347,7 @@ function renderMainChart() {
 
 function setBrawlerChartMode(mode, liveValOverride) {
     currentBrawlerMode = mode;
+    currentChartOffset = 0; // Reset offset localement si on voulait gérer la nav brawler aussi
     
     document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
     let btnId = 'btn-brawler-all';
@@ -355,7 +355,8 @@ function setBrawlerChartMode(mode, liveValOverride) {
     else if(currentBrawlerMode === 7) btnId = 'btn-brawler-7d'; 
     else if(currentBrawlerMode === 31) btnId = 'btn-brawler-31d';
     else if(currentBrawlerMode === 365) btnId = 'btn-brawler-365d';
-    
+    if(Math.abs(currentBrawlerMode - 0.042) < 0.001) btnId = 'btn-brawler-1h';
+
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
@@ -372,7 +373,7 @@ function setBrawlerChartMode(mode, liveValOverride) {
         canvasId: 'brawlerChartCanvas',
         rawData: currentBrawlerHistory,
         mode: currentBrawlerMode,
-        offset: 0,
+        offset: 0, // Pas de navigation implémentée pour brawler spécifique pour le moment
         liveValue: liveVal,
         color: '#00d2ff',
         variationId: 'brawler-trophy-variation',
@@ -397,6 +398,8 @@ function manageGenericFilters(data, idPrefix) {
             else el.classList.add('hidden');
         }
     };
+    // On affiche toujours 1h et 24h
+    toggle('1h', diffDays > 0); 
     toggle('7d', diffDays >= 1);
     toggle('31d', diffDays > 7);
     toggle('365d', diffDays > 31);
@@ -404,18 +407,22 @@ function manageGenericFilters(data, idPrefix) {
 
 // --- NAVIGATION TEMPORELLE ---
 
-// Appelé par les flèches < et >
 function navigateChart(direction) {
     // direction = 1 (Vers le passé), direction = -1 (Vers le futur)
     currentChartOffset += direction;
-    
-    // Sécurité basique (ne pas aller dans le futur au-delà d'aujourd'hui)
     if (currentChartOffset < 0) currentChartOffset = 0;
-    
     renderMainChart();
 }
 
-// Appelé par le calendrier
+function navigateMonth(direction) {
+    // Helper spécifique pour la vue mensuelle si utilisée
+    if (currentChartMode !== 31) return;
+    // Logique simplifiée : ici on incrémente l'offset global qui représente des "blocs" de temps
+    currentChartOffset += direction; 
+    if (currentChartOffset < 0) currentChartOffset = 0;
+    renderMainChart();
+}
+
 function jumpToDate(dateString) {
     if (!dateString) return;
     
@@ -424,7 +431,7 @@ function jumpToDate(dateString) {
     
     // Calcul de la différence en millisecondes
     const diffTime = now - targetDate;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+    const diffDays = diffTime / (1000 * 60 * 60 * 24); 
     
     if (diffDays < 0) {
         alert("Impossible de prédire le futur ! 🔮");
@@ -433,15 +440,16 @@ function jumpToDate(dateString) {
 
     // Conversion de la différence en "unités" selon le mode
     if (currentChartMode === 1) { // Mode Jour
-        currentChartOffset = diffDays; // (approximatif, car offset 1 = 24h)
+        currentChartOffset = Math.floor(diffDays);
     } else if (currentChartMode === 7) { // Mode Semaine
         currentChartOffset = Math.floor(diffDays / 7);
     } else if (currentChartMode === 31) { // Mode Mois
-        // Calcul approximatif en mois
         let months = (now.getFullYear() - targetDate.getFullYear()) * 12;
         months -= targetDate.getMonth();
         months += now.getMonth();
         currentChartOffset = months <= 0 ? 0 : months;
+    } else if (currentChartMode === 365) {
+        currentChartOffset = now.getFullYear() - targetDate.getFullYear();
     }
 
     renderMainChart();
@@ -457,45 +465,50 @@ function updateNavigationUI(startDate, endDate) {
     if (!btnPrev || !btnNext) return;
 
     // 1. Gestion des dates limites pour désactiver les boutons
-    // On cherche la date la plus ancienne dans les données
     let oldestDate = new Date();
     if (fullHistoryData && fullHistoryData.length > 0) {
         const d = fullHistoryData[0].date || fullHistoryData[0].recorded_at;
         oldestDate = new Date(d.replace(' ', 'T'));
     }
 
-    // Si la fin de la vue est avant ou égale à la plus vieille donnée -> Stop Reculer
-    // Note: startDate est le début de la fenetre affichée
-    if (startDate <= oldestDate) {
-        btnPrev.disabled = true; 
-    } else {
-        btnPrev.disabled = false;
+    // Si la fin de la vue est avant la plus vieille donnée
+    if (endDate < oldestDate) {
+        // Cas extrême, mais on laisse naviguable pour revenir
     }
 
-    // Si l'offset est 0 -> Stop Avancer (on est aujourd'hui)
+    // Bouton Précédent (Aller vers le passé) : Actif tant qu'on n'est pas trop loin avant l'histoire
+    // Ici on simplifie : toujours actif sauf si très loin
+    btnPrev.disabled = false;
+
+    // Bouton Suivant (Aller vers le futur) : Désactivé si offset = 0
     if (currentChartOffset === 0) {
         btnNext.disabled = true;
         label.innerText = "Aujourd'hui";
     } else {
         btnNext.disabled = false;
-        // Formatage joli de la date
         const options = { day: 'numeric', month: 'short' };
-        if (currentChartMode === 1) {
+        
+        // Texte Label
+        if (currentChartMode === 1 || Math.abs(currentChartMode - 0.042) < 0.001) {
              label.innerText = startDate.toLocaleDateString('fr-FR', options);
+        } else if (currentChartMode === 31) {
+             label.innerText = startDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        } else if (currentChartMode === 365) {
+             label.innerText = startDate.getFullYear();
         } else {
              label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
         }
     }
 
-    // Mise à jour du calendrier (pour qu'il indique la date actuelle du graph)
-    // On prend la date de fin de la vue
-    picker.value = endDate.toISOString().split('T')[0];
+    // Mise à jour du calendrier
+    if(picker) picker.value = endDate.toISOString().split('T')[0];
 }
 
-// --- RENDER GÉNÉRIQUE ---
+// --- RENDER GÉNÉRIQUE (COEUR DU SYSTÈME) ---
 function renderGenericChart(config) {
     let { rawData, mode, offset, liveValue, color, canvasId, variationId, isBrawler } = config;
     
+    // 1. Préparation des données brutes
     let processedData = [];
     rawData.forEach(d => {
         processedData.push({
@@ -504,75 +517,126 @@ function renderGenericChart(config) {
         });
     });
 
-    // 1. Bornes temporelles
+    // 2. Définition des bornes temporelles (startDate / endDate)
     let startDate = null;
     let endDate = null;
     const now = new Date();
 
     if (mode > 0) {
-        if (mode === 1) { // 24H
+        // Mode 1H (0.042)
+        if (Math.abs(mode - 0.042) < 0.001) {
+             const target = new Date();
+             // On recule de 'offset' heures (si offset est en heures ici ?)
+             // Pour l'instant offset est en "blocs". 
+             // Si on garde la logique "offset = nombre d'unités", il faudrait adapter jumpToDate.
+             // Simplification : ici offset = nombre de "jours" par défaut dans le reste du code,
+             // mais pour 1H ça n'a pas trop de sens de naviguer par jour.
+             // On va assumer offset = 0 pour 1H pour l'instant (Live view).
+             startDate = new Date(now.getTime() - (60 * 60 * 1000)); // Il y a 1h
+             endDate = now;
+        }
+        else if (mode === 1) { // 24H (Journée civile)
             const target = new Date();
             target.setDate(now.getDate() - offset);
             startDate = new Date(target.setHours(0,0,0,0));
             endDate = new Date(target.setHours(23,59,59,999));
-        } else if (mode === 7) { // Semaine
-            const targetEnd = new Date();
-            targetEnd.setDate(now.getDate() - (offset * 7));
+        } else if (mode === 7) { // Semaine (Lundi - Dimanche)
+            // On calcule le dimanche de la semaine visée
+            const currentDay = now.getDay(); // 0 = Dimanche
+            const distanceToSunday = (currentDay === 0 ? 0 : 7 - currentDay);
+            
+            const targetEnd = new Date(now);
+            targetEnd.setDate(now.getDate() + distanceToSunday - (offset * 7));
+            targetEnd.setHours(23,59,59,999);
             endDate = targetEnd;
+            
             const targetStart = new Date(targetEnd);
-            targetStart.setDate(targetEnd.getDate() - 7);
+            targetStart.setDate(targetEnd.getDate() - 6); // Lundi
+            targetStart.setHours(0,0,0,0);
             startDate = targetStart;
-        } else if (mode === 31) { // Mois
+            
+        } else if (mode === 31) { // Mois civil
             const target = new Date();
             target.setMonth(now.getMonth() - offset);
-            startDate = new Date(target.getFullYear(), target.getMonth(), 1);
+            startDate = new Date(target.getFullYear(), target.getMonth(), 1, 0, 0, 0);
             endDate = new Date(target.getFullYear(), target.getMonth() + 1, 0, 23, 59, 59);
-        } else if (mode === 365) { // Année
+        } else if (mode === 365) { // Année civile
             const targetYear = now.getFullYear() - offset;
-            startDate = new Date(targetYear, 0, 1);
+            startDate = new Date(targetYear, 0, 1, 0, 0, 0);
             endDate = new Date(targetYear, 11, 31, 23, 59, 59);
         }
     }
+
     if (canvasId === 'trophyChart' && mode > 0) {
         updateNavigationUI(startDate, endDate);
     }
     
-    // 2. Filtrage
+    // 3. Filtrage & Construction des Points
     let finalDataPoints = [];
     const shouldHidePoints = (mode === 0 || mode === 365 || mode === 31);
 
-    let sourceData = processedData;
+    // a) Récupération des points RÉELS dans l'intervalle
     if (mode > 0) {
-        sourceData = processedData.filter(pt => {
+        finalDataPoints = processedData.filter(pt => {
             const d = new Date(pt.date);
             return d >= startDate && d <= endDate;
-        });
+        }).map(pt => ({
+            x: new Date(pt.date),
+            y: pt.trophies,
+            type: 'real'
+        }));
+    } else {
+        // Mode "Tout" : on prend tout
+        finalDataPoints = processedData.map(pt => ({
+            x: new Date(pt.date),
+            y: pt.trophies,
+            type: 'real'
+        }));
     }
 
-    sourceData.forEach(h => {
-        finalDataPoints.push({ x: new Date(h.date), y: h.trophies, type: 'real' });
-    });
+    // b) Points FANTÔMES (Ghost Points)
+    if (mode > 0) {
+        // --- FANTÔME GAUCHE (Début de période) ---
+        // On calcule l'interpolation au startDate
+        const valLeft = getInterpolatedValue(startDate, processedData);
+        if (valLeft !== null) {
+            // On ajoute le point au tout début
+            finalDataPoints.unshift({ x: startDate, y: Math.round(valLeft), type: 'ghost' });
+        }
 
-    // Fantômes / Live
-    if (mode > 0 && processedData.length > 0) {
-        // Début
-        if (startDate > new Date(processedData[0].date)) {
-            const val = getInterpolatedValue(startDate, processedData);
-            if (val !== null) finalDataPoints.unshift({ x: new Date(startDate), y: Math.round(val), type: 'ghost' });
+        // --- FANTÔME DROIT vs LIVE (Fin de période) ---
+        if (offset === 0) {
+            // Règle : "Si nous sommes sur la dernière plage... pas de lien à droite, trou jusqu'à la fin"
+            // Donc PAS de ghost point à endDate.
+            // Par contre, on ajoute le point LIVE (maintenant) pour clore la courbe actuelle.
+            if (liveValue !== null && liveValue !== undefined) {
+                finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live' });
+            }
+        } else {
+            // Nous sommes dans le passé (offset > 0)
+            // On veut que le graphique aille jusqu'au bout de la période (ex: dimanche 23h59)
+            const valRight = getInterpolatedValue(endDate, processedData);
+            if (valRight !== null) {
+                finalDataPoints.push({ x: endDate, y: Math.round(valRight), type: 'ghost' });
+            }
+        }
+    } else {
+        // Mode ALL (0)
+        // On ajoute juste le live point à la fin si dispo
+        if (liveValue !== null && liveValue !== undefined) {
+            finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live' });
         }
     }
-    
-    if (liveValue !== null && liveValue !== undefined && offset === 0) {
-        finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live' });
-    }
 
+    // Tri final par sécurité
     finalDataPoints.sort((a,b) => a.x - b.x);
 
-    // 3. Variation
+    // 4. Calcul Variation (Delta affiché)
     if (variationId) {
         const varElem = document.getElementById(variationId);
         if (varElem) {
             if (finalDataPoints.length >= 2) {
+                // On compare le dernier point affiché (Live ou Ghost Fin) au premier (Ghost Début ou Real)
                 const startVal = finalDataPoints[0].y;
                 const endVal = finalDataPoints[finalDataPoints.length - 1].y;
                 const diff = endVal - startVal;
@@ -582,22 +646,28 @@ function renderGenericChart(config) {
         }
     }
 
-    // 4. Styles
+    // 5. Styles des points (Cachés pour Ghost)
     const pointColors = finalDataPoints.map(p => p.type === 'live' ? '#ff5555' : color);
     const pointRadiuses = finalDataPoints.map(p => {
-        if (p.type === 'ghost') return 0;
-        if (p.type === 'live') return 5;
-        if (shouldHidePoints) return 0;
+        if (p.type === 'ghost') return 0; // Invisible
+        if (p.type === 'live') return 5;  // Bien visible
+        if (shouldHidePoints) return 0;   // Masqué si trop de points (Année)
         return 3;
     });
+    
+    const pointHoverRadiuses = finalDataPoints.map(p => {
+        if (p.type === 'ghost') return 0; // Non interactif
+        return 6;
+    });
 
-    // 5. Chart.js
+    // 6. Chart.js Config
     let timeUnit = 'day';
-    if (mode === 1) timeUnit = 'hour';
+    if (Math.abs(mode - 0.042) < 0.001) timeUnit = 'minute';
+    else if (mode === 1) timeUnit = 'hour';
     else if (mode === 0 || mode === 365) timeUnit = 'month';
 
     const ctx = document.getElementById(canvasId).getContext('2d');
-    const lineTension = (mode === 1) ? 0 : 0.2;
+    const lineTension = (mode === 1 || mode < 1) ? 0 : 0.2;
 
     return new Chart(ctx, {
         type: 'line',
@@ -613,7 +683,8 @@ function renderGenericChart(config) {
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointColors,
                 pointRadius: pointRadiuses,
-                pointHoverRadius: 6
+                pointHoverRadius: pointHoverRadiuses,
+                pointHitRadius: pointHoverRadiuses // Empêche le tooltip sur les ghosts
             }] 
         },
         options: {
@@ -624,11 +695,12 @@ function renderGenericChart(config) {
             scales: { 
                 x: { 
                     type: 'time', 
-                    time: { unit: timeUnit, displayFormats: { hour:'HH:mm', day:'dd/MM', month:'MMM yy' }}, 
+                    time: { unit: timeUnit, displayFormats: { minute:'HH:mm', hour:'HH:mm', day:'dd/MM', month:'MMM yy' }}, 
                     grid: {color:'#333'} 
                 }, 
                 y: { grid: {color:'#333'}, ticks: { color: '#888' } } 
             }
         }
     });
+}
 }
