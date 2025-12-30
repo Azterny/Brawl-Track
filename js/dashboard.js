@@ -278,7 +278,7 @@ function updateBrawlerNavigationUI(data) {
     const btnPrev = document.getElementById('brawler-nav-btn-prev');
     const btnNext = document.getElementById('brawler-nav-btn-next');
     const label = document.getElementById('brawler-chart-period-label');
-    const picker = document.getElementById('brawler-chart-date-picker');
+    const picker = document.getElementById('picker-input-brawler'); // Correction ID input
 
     if (!btnPrev || !btnNext) return;
 
@@ -289,8 +289,7 @@ function updateBrawlerNavigationUI(data) {
         firstDataPointDate = new Date(d.replace(' ', 'T'));
     }
 
-    // Recalcul des bornes actuelles (StartDate / EndDate) basé sur le mode et l'offset
-    // C'est une duplication de logique de renderGenericChart nécessaire pour l'UI
+    // Recalcul des bornes actuelles (StartDate / EndDate)
     const now = new Date();
     let startDate = new Date();
     let endDate = new Date();
@@ -325,7 +324,16 @@ function updateBrawlerNavigationUI(data) {
 
     if (currentChartOffset === 0) {
         btnNext.disabled = true;
-        label.innerText = "Aujourd'hui";
+        
+        // --- LOGIQUE TEXTE DYNAMIQUE ---
+        if (Math.abs(currentBrawlerMode - 0.042) < 0.001) label.innerText = "Dernière heure";
+        else if (currentBrawlerMode === 1) label.innerText = "Aujourd'hui";
+        else if (currentBrawlerMode === 7) label.innerText = "Cette semaine";
+        else if (currentBrawlerMode === 31) label.innerText = "Ce mois";
+        else if (currentBrawlerMode === 365) label.innerText = "Cette année";
+        else label.innerText = "Aujourd'hui";
+        // -------------------------------
+        
     } else {
         btnNext.disabled = false;
         const options = { day: 'numeric', month: 'short' };
@@ -340,8 +348,10 @@ function updateBrawlerNavigationUI(data) {
              label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
         }
     }
-    if(picker) picker.value = endDate.toISOString().split('T')[0];
-    if (brawlerFlatpickr) brawlerFlatpickr.setDate(endDate, false);
+    
+    // Mise à jour silencieuse du calendrier si ouvert
+    if(picker && endDate) picker.value = endDate.toISOString().split('T')[0];
+    if (brawlerFlatpickr && endDate) brawlerFlatpickr.setDate(endDate, false);
 }
 
 // =========================================================
@@ -557,17 +567,26 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
     const btnPrev = document.getElementById('nav-btn-prev');
     const btnNext = document.getElementById('nav-btn-next');
     const label = document.getElementById('chart-period-label');
-    const picker = document.getElementById('chart-date-picker');
+    const picker = document.getElementById('picker-input-main'); // Correction ID input
 
     if (!btnPrev || !btnNext) return;
 
     // Règle 4: Navigation bornée (Pas avant début)
     btnPrev.disabled = (startDate <= firstDataPointDate);
 
-    // Pas après maintenant (Offset 0)
+    // Cas Offset 0 : C'est le présent
     if (currentChartOffset === 0) {
         btnNext.disabled = true;
-        label.innerText = "Aujourd'hui";
+        
+        // --- LOGIQUE TEXTE DYNAMIQUE ---
+        if (Math.abs(currentChartMode - 0.042) < 0.001) label.innerText = "Dernière heure";
+        else if (currentChartMode === 1) label.innerText = "Aujourd'hui";
+        else if (currentChartMode === 7) label.innerText = "Cette semaine";
+        else if (currentChartMode === 31) label.innerText = "Ce mois";
+        else if (currentChartMode === 365) label.innerText = "Cette année";
+        else label.innerText = "Aujourd'hui";
+        // -------------------------------
+
     } else {
         btnNext.disabled = false;
         const options = { day: 'numeric', month: 'short' };
@@ -582,24 +601,25 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
              label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
         }
     }
-    if(picker) picker.value = endDate.toISOString().split('T')[0];
-    if (mainFlatpickr) mainFlatpickr.setDate(endDate, false);
+    
+    // Mise à jour silencieuse du calendrier si ouvert
+    if(picker && endDate) picker.value = endDate.toISOString().split('T')[0];
+    if (mainFlatpickr && endDate) mainFlatpickr.setDate(endDate, false);
 }
 
 // --- GESTION DU CALENDRIER INTELLIGENT (FLATPICKR) ---
 function syncPickerWithMode(isBrawler, mode, historyData) {
     const containerId = isBrawler ? 'picker-container-brawler' : 'picker-container-main';
     const triggerId = isBrawler ? 'trigger-picker-brawler' : 'trigger-picker-main'; 
-    const inputId = isBrawler ? '#picker-input-brawler' : '#picker-input-main';
+    const inputId = isBrawler ? 'picker-input-brawler' : 'picker-input-main';
     
-    // Récupération des éléments DOM
     const container = document.getElementById(containerId);
     const trigger = document.getElementById(triggerId);
+    const inputElement = document.getElementById(inputId);
     
-    if (!container || !trigger) return;
+    if (!container || !trigger || !inputElement) return;
 
-    // 1. Gestion Visibilité
-    // Si mode Année (365) ou Tout (0) => On cache le calendrier
+    // 1. Si mode Année (365) ou Tout (0) => On cache le calendrier et on sort
     if (mode === 365 || mode === 0) {
         container.classList.add('hidden');
         return;
@@ -614,7 +634,7 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         else mainFlatpickr = null;
     }
 
-    // 3. Calcul sécurisé de la date Min (Début historique)
+    // 3. Calcul de la date Min (Début historique)
     let minDate = undefined;
     if (historyData && historyData.length > 0) {
         const d = historyData[0].date || historyData[0].recorded_at;
@@ -653,20 +673,23 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         config.dateFormat = "Y-m-d";
     }
 
-    // 5. Initialisation sur l'INPUT CACHÉ (et non le span)
+    // 5. Initialisation
     try {
-        const fp = flatpickr(inputId, config);
+        // Init sur l'input
+        const fp = flatpickr(inputElement, config);
         
-        // Astuce : On recrée le bouton trigger (clone) pour supprimer les anciens événements 'click' accumulés
+        // On recrée le bouton trigger (clone) pour supprimer les anciens événements 'click' accumulés
         const newTrigger = trigger.cloneNode(true);
         trigger.parentNode.replaceChild(newTrigger, trigger);
         
         // On lie l'ouverture du calendrier au clic sur l'icône
         newTrigger.onclick = () => {
+            // Positionnement manuel pour s'aligner sur l'icône
+            fp._positionElement = newTrigger;
             fp.open();
         };
 
-        // Sauvegarde de l'instance globale
+        // Sauvegarde de l'instance
         if (isBrawler) brawlerFlatpickr = fp;
         else mainFlatpickr = fp;
 
@@ -674,6 +697,7 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         console.error("Erreur init Flatpickr:", e);
     }
 }
+
 // =========================================================
 // === COEUR DU RENDU ===
 // =========================================================
