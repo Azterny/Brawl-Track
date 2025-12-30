@@ -109,7 +109,7 @@
             <input type="hidden" id="selected-brawler-id">
 
             <div style="background: #222; padding: 15px; border-radius: 10px; position: relative; margin-top: 20px;">
-                
+    
                 <div class="chart-filters">
                     <button id="btn-brawler-1h" onclick="setBrawlerChartMode(0.042)" class="filter-btn filter-brawler-btn blue-active hidden">1H</button>
                     <button id="btn-brawler-24h" onclick="setBrawlerChartMode(1)" class="filter-btn filter-brawler-btn blue-active">Jour</button>
@@ -118,7 +118,21 @@
                     <button id="btn-brawler-365d" onclick="setBrawlerChartMode(365)" class="filter-btn filter-brawler-btn blue-active hidden">Année</button>
                     <button id="btn-brawler-all" onclick="setBrawlerChartMode(0)" class="filter-btn filter-brawler-btn blue-active active">Tout</button>
                 </div>
-
+            
+                <div id="brawler-chart-navigation" class="chart-nav-bar hidden">
+                    <button id="brawler-nav-btn-prev" class="nav-arrow" onclick="navigateBrawlerChart(1)">❮</button>
+                    
+                    <span id="brawler-chart-period-label" style="font-weight:bold; min-width: 150px; text-align:center;">Aujourd'hui</span>
+                    
+                    <div style="position: relative; display:inline-block;">
+                        <label for="brawler-chart-date-picker" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</label>
+                        <input type="date" id="brawler-chart-date-picker" 
+                               style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;"
+                               onchange="jumpToBrawlerDate(this.value)">
+                    </div>
+                
+                    <button id="brawler-nav-btn-next" class="nav-arrow" onclick="navigateBrawlerChart(-1)">❯</button>
+                </div>
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="brawlerChartCanvas"></canvas>
                 </div>
