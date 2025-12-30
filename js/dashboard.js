@@ -429,8 +429,7 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
 
     if (!btnPrev || !btnNext) return;
 
-    // Règle 4: Navigation bornée
-    // Pas avant le début
+    // Règle 4: Navigation bornée (Pas avant début)
     btnPrev.disabled = (startDate <= firstDataPointDate);
 
     // Pas après maintenant (Offset 0)
@@ -460,42 +459,40 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
 
 function preprocessData(rawData, isBrawler) {
     let processed = [];
-    let lockedSequence = true; // Pour détecter la première séquence de "verrouillé"
     
     rawData.forEach((d, index) => {
-        let val = d.trophies;
+        const rawVal = d.trophies;
+        let displayVal = rawVal;
         let specialType = 'real';
         let specialLabel = null;
 
         // Règle 2: Gestion Points (Brawlers)
+        // Le point "Débloqué" est le DERNIER point à -1, avant que les valeurs passent à >= 0
         if (isBrawler) {
-            if (val === -1) val = 0;
-            
-            // Détection "Débloqué" : Dernier 0 d'une séquence initiale
-            // On regarde si le prochain est > 0 ou si c'est la fin
-            if (val === 0 && lockedSequence) {
-                const nextVal = (index + 1 < rawData.length) ? rawData[index+1].trophies : 1; // 1 fictif pour forcer unlock si fin
-                if (nextVal !== -1 && nextVal !== 0) {
+            if (rawVal === -1) {
+                // On regarde le prochain point dans la liste brute
+                const nextRaw = (index + 1 < rawData.length) ? rawData[index+1].trophies : null;
+                
+                // Si le prochain n'est pas -1 (donc on change d'état), alors C'EST le moment du déblocage
+                if (nextRaw !== null && nextRaw !== -1) {
                     specialType = 'unlocked';
                     specialLabel = "Débloqué";
-                    lockedSequence = false; // Fin de la séquence
                 } else {
                     specialType = 'locked';
                 }
-            } else {
-                lockedSequence = false;
+                displayVal = 0; // Visuellement ramené à 0
             }
         }
 
-        // Règle 2: Le tout premier point est "Début" (Bleu)
+        // Règle 2: Le tout premier point de l'historique est "Début" (Bleu)
         if (index === 0) {
             specialType = 'start';
-            specialLabel = `Début : ${val}`;
+            specialLabel = `Début : ${displayVal}`;
         }
 
         processed.push({
             date: (d.date || d.recorded_at).replace(' ', 'T'),
-            trophies: val,
+            trophies: displayVal,
             customType: specialType,
             customLabel: specialLabel
         });
@@ -591,7 +588,7 @@ function renderGenericChart(config) {
 
         // DROITE : Seulement si offset > 0 (Passé)
         if (offset === 0) {
-            // Live Point
+            // Live Point (Actuel)
             if (liveValue !== null && liveValue !== undefined) {
                 finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live', cLabel: 'Actuel' });
             }
@@ -623,7 +620,6 @@ function renderGenericChart(config) {
     }
 
     // 4. Styles (Couleurs & Segments)
-    // Règle 2: Blanc pour "locked/unlocked", Bleu pour "start"
     const getPointColor = (p) => {
         if (p.type === 'ghost') return 'transparent';
         if (p.cType === 'start') return '#007bff'; // Bleu Début
@@ -634,7 +630,9 @@ function renderGenericChart(config) {
 
     const pointColors = finalDataPoints.map(p => getPointColor(p));
     
-    // Configuration Chart.js
+    // Règle: Cacher points sur grandes périodes (sauf spéciaux)
+    const shouldHidePoints = (mode >= 7); 
+
     const ctx = document.getElementById(canvasId).getContext('2d');
     let timeUnit = 'day';
     if (Math.abs(mode - 0.042) < 0.001) timeUnit = 'minute';
@@ -661,16 +659,21 @@ function renderGenericChart(config) {
                 fill: true,
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointColors,
-                pointRadius: p => (p.raw.type === 'ghost' ? 0 : 4),
+                // Visibilité des points
+                pointRadius: p => {
+                    const r = p.raw;
+                    if (r.type === 'ghost') return 0;
+                    if (r.type === 'live' || r.cType === 'start' || r.cType === 'unlocked') return 5; 
+                    if (shouldHidePoints) return 0; // Masqué si > Jour
+                    return 3;
+                },
                 pointHoverRadius: p => (p.raw.type === 'ghost' ? 0 : 6),
                 
                 // Règle 2: Courbe Blanche si points débloqués
                 segment: {
                     borderColor: ctx => {
-                        // Si le point cible est 'locked' ou 'unlocked', ligne blanche
                         const p1 = finalDataPoints[ctx.p1DataIndex]; 
-                        const p0 = finalDataPoints[ctx.p0DataIndex];
-                        // Exception: Si p0 est START (Bleu), la ligne vers le premier locked est-elle blanche ? Oui.
+                        // Si le point cible est 'locked' ou 'unlocked', ligne blanche
                         if (p1 && (p1.cType === 'locked' || p1.cType === 'unlocked')) return '#ffffff';
                         return color;
                     }
@@ -686,7 +689,7 @@ function renderGenericChart(config) {
                     callbacks: {
                         label: function(context) {
                             const pt = context.raw;
-                            if (pt.cLabel) return pt.cLabel; // "Début: X" ou "Débloqué"
+                            if (pt.cLabel) return pt.cLabel; 
                             return `Trophées: ${pt.y}`;
                         }
                     }
