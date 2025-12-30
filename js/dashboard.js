@@ -1,3 +1,33 @@
+C'est noté. Voici la version finale et complète du fichier js/dashboard.js.
+
+J'ai intégré l'ensemble de tes demandes :
+
+Bouton 1H : J'ai ajouté une vérification du tier de l'utilisateur (via localStorage ou variable globale) dans manageGenericFilters.
+
+Gestion des Points & Couleurs :
+
+J'ai ajouté une étape de pré-traitement des données (preprocessData) pour gérer les Brawlers (conversion -1 vers 0, détection du point "Débloqué").
+
+J'applique des styles spécifiques (Blanc pour le déblocage, Bleu pour le tout premier point historique).
+
+Utilisation de segment dans Chart.js pour colorer la courbe en blanc sur la partie "verrouillée".
+
+Plage Complète : J'ai forcé min et max sur l'axe X dans la configuration du graphique pour toujours afficher la période entière (ex: 00h00 - 23h59).
+
+Limites Navigation & Fantômes :
+
+Les flèches de navigation se désactivent strictement si on atteint le début de l'historique ou le moment présent.
+
+Les points fantômes ne sont générés que si la période affichée est strictement à l'intérieur des bornes de données existantes.
+
+Voici le fichier à remplacer :
+
+JavaScript
+
+{
+type: file_content_processing
+fileName: azterny/brawl-track/Brawl-Track-434017a34cfe17ff9355756da39ec6897120ae1d/js/dashboard.js
+fullContent:
 // --- VARIABLES GLOBALES ---
 let currentChartMode = 0;   // 0=Tout, 1=Jour...
 let currentChartOffset = 0; 
@@ -22,10 +52,11 @@ async function initDashboard() {
     }
 
     currentTagString = tag.toUpperCase().replace('#', '');
-    
-    // Modification du Titre de la page
     document.title = `Brawl Track - #${currentTagString} - Statistiques`;
     
+    // Récupération du Tier Utilisateur (si connecté) pour le bouton 1H
+    await fetchUserTier();
+
     // On appelle la fonction de chargement principale
     await loadTagData(currentTagString);
 
@@ -33,26 +64,32 @@ async function initDashboard() {
     checkClaimStatus();
 }
 
+async function fetchUserTier() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/my-stats`, { 
+            headers: { 'Authorization': `Bearer ${token}` } 
+        });
+        if (res.ok) {
+            const data = await res.json();
+            // On met à jour la variable globale définie dans config.js
+            if(data.tier) currentUserTier = data.tier;
+        }
+    } catch(e) { console.log("Guest mode"); }
+}
+
 // --- CHARGEMENT DONNÉES (Mode Public) ---
 async function loadTagData(tag) {
     try {
-        // Utilisation de la nouvelle route publique
         const res = await fetch(`${API_BASE}/api/public/player/${tag}`);
-        
         if (!res.ok) throw new Error("Joueur introuvable");
-        
         const data = await res.json();
         
-        // 1. Rendu Profil
         renderProfile(data);
-        
-        // 2. Grille Brawlers
         await loadBrawlersGrid(data.brawlers);
         
-        // 3. Graphique Principal
-        // Note: data.history est renvoyé par l'API publique si dispo
         loadHistoryChart(data.history || [], data.trophies);
-
     } catch (e) {
         console.error(e);
         document.getElementById('player-name').innerText = "Erreur / Introuvable";
@@ -76,7 +113,6 @@ function renderProfile(data) {
     }
 
     document.getElementById('player-tag').innerText = '#' + currentTagString;
-
     document.getElementById('stats-area').innerHTML = `
         <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00">🏆 ${data.trophies}</div></div>
         <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff">⚔️ ${data['3vs3Victories']}</div></div>
@@ -85,12 +121,11 @@ function renderProfile(data) {
     `;
 }
 
-// --- LOGIQUE CLAIM (Si connecté) ---
+// --- LOGIQUE CLAIM ---
 function checkClaimStatus() {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    // Ajout bouton claim
     const actionsDiv = document.getElementById('header-actions');
     if(document.getElementById('btn-claim-action')) return;
 
@@ -103,7 +138,6 @@ function checkClaimStatus() {
     claimBtn.style.margin = "0";
     claimBtn.style.padding = "5px 15px";
     claimBtn.style.fontWeight = "bold";
-    
     claimBtn.onclick = () => claimTagAction();
     actionsDiv.prepend(claimBtn);
 }
@@ -132,7 +166,6 @@ async function loadBrawlersGrid(playerBrawlers) {
     const grid = document.getElementById('brawlers-grid');
     if(!grid) return;
     
-    // Chargement liste globale si vide
     if (globalBrawlersList.length === 0) {
         try {
             const res = await fetch(`${API_BASE}/api/brawlers`);
@@ -141,7 +174,6 @@ async function loadBrawlersGrid(playerBrawlers) {
         } catch(e) { console.error(e); }
     }
     
-    // Mapping
     window.currentBrawlersDisplay = globalBrawlersList.map(b => {
         const owned = playerBrawlers.find(pb => pb.id === b.id);
         return { 
@@ -175,7 +207,6 @@ function renderBrawlersGrid() {
     window.currentBrawlersDisplay.forEach(b => {
         const card = document.createElement('div');
         card.className = 'brawler-card';
-
         if (!b.owned) {
             card.style.filter = "grayscale(100%) opacity(0.3)";
             card.style.cursor = "default";
@@ -184,23 +215,20 @@ function renderBrawlersGrid() {
             card.style.cursor = "pointer";
             card.onclick = () => goToBrawlerStats(b.id, b.name);
         }
-
         const img = document.createElement('img');
         img.src = b.imageUrl;
         img.style.width = '100%';
         img.style.aspectRatio = '1/1';
         img.style.objectFit = 'contain';
         img.loading = 'lazy';
-        img.alt = b.name;
-
+        card.appendChild(img);
+        
         const nameDiv = document.createElement('div');
         nameDiv.style.fontSize = '0.8em';
         nameDiv.style.overflow = 'hidden';
         nameDiv.style.textOverflow = 'ellipsis';
         nameDiv.style.whiteSpace = 'nowrap';
         nameDiv.textContent = b.name; 
-
-        card.appendChild(img);
         card.appendChild(nameDiv);
 
         if (b.owned) {
@@ -209,7 +237,6 @@ function renderBrawlersGrid() {
             trophyDiv.style.fontSize = '0.7em';
             trophyDiv.style.marginTop = '2px';
             trophyDiv.textContent = `🏆 ${b.trophies}`;
-            
             if (b.change24h !== 0) {
                  const arrow = document.createElement('span');
                  arrow.textContent = b.change24h > 0 ? ' ↗' : ' ↘';
@@ -236,7 +263,6 @@ async function goToBrawlerStats(id, name) {
         liveVal = b.trophies;
     }
 
-    // Chargement Historique Brawler Public
     try {
         const res = await fetch(`${API_BASE}/api/public/player/${currentTagString}/brawler/${id}`);
         if(res.ok) currentBrawlerHistory = await res.json();
@@ -248,21 +274,16 @@ async function goToBrawlerStats(id, name) {
 }
 
 // =========================================================
-// === MOTEUR GRAPHIQUE (OPTIMISÉ FANTÔMES) ===
+// === MOTEUR GRAPHIQUE AVANCÉ ===
 // =========================================================
 
-/**
- * Calcule la valeur estimée (interpolation linéaire) à une date cible.
- * Exception : Si la date est AVANT tout historique, renvoie la valeur du 1er point.
- * Exception : Si la date est APRÈS tout historique, renvoie la valeur du dernier point.
- */
 function getInterpolatedValue(targetDate, allData) {
     if (!allData || allData.length === 0) return null;
     
     const targetTs = targetDate.getTime();
     let prev = null, next = null;
 
-    // 1. Recherche des points encadrants
+    // Récupération points bornes
     for (let pt of allData) {
         let d = pt.date || pt.recorded_at;
         if(d) d = d.replace(' ', 'T'); 
@@ -272,29 +293,20 @@ function getInterpolatedValue(targetDate, allData) {
         if (ptTs >= targetTs && !next) { next = { ...pt, ts: ptTs }; break; }
     }
 
-    // 2. Logique d'interpolation et Exceptions
+    // Interpolation impossible hors bornes (Respect Règle 4)
+    if (!prev && next) return null; // Avant le début
+    if (prev && !next) return null; // Après la fin
 
-    // Cas : Target est exactement sur un point
-    if (prev && next && prev.ts === next.ts) return prev.trophies;
-
-    // Cas Standard : Entre deux points -> Interpolation Linéaire
+    // Interpolation standard
     if (prev && next) {
+        if(prev.ts === next.ts) return prev.trophies;
         const factor = (targetTs - prev.ts) / (next.ts - prev.ts);
         return prev.trophies + (next.trophies - prev.trophies) * factor;
     }
-
-    // Cas Exception : Avant le début de l'histoire (Prev null, Next existe)
-    // Règle : "Si nous somme sur la toute première plage... prend la valeur du point 'Début'"
-    if (!prev && next) return next.trophies;
-
-    // Cas Exception : Après la fin de l'histoire (Prev existe, Next null)
-    // Règle : Interpolation impossible vers le futur, on prolonge le dernier point connu (plateau)
-    if (prev && !next) return prev.trophies;
-
     return null;
 }
 
-// --- GESTION GRAPH GLOBAL ---
+// --- GESTION GRAPH ---
 
 function loadHistoryChart(historyData, currentTrophies) {
     fullHistoryData = historyData || [];
@@ -306,51 +318,18 @@ function loadHistoryChart(historyData, currentTrophies) {
 
 function setChartMode(mode) {
     currentChartMode = mode;
-    currentChartOffset = 0; // Reset offset quand on change de mode
+    currentChartOffset = 0;
     const nav = document.getElementById('chart-navigation');
-    
-    // Affichage des contrôles de navigation uniquement si pas "Tout"
     if (nav) {
         if (mode === 0) nav.classList.add('hidden');
         else nav.classList.remove('hidden');
     }
-
     renderMainChart();
 }
 
-function renderMainChart() {
-    // Boutons actifs
-    document.querySelectorAll('.filter-btn:not(.filter-brawler-btn)').forEach(btn => btn.classList.remove('active'));
-    let btnId = 'btn-all';
-    if(currentChartMode === 1) btnId = 'btn-24h';
-    else if(currentChartMode === 7) btnId = 'btn-7d';
-    else if(currentChartMode === 31) btnId = 'btn-31d';
-    else if(currentChartMode === 365) btnId = 'btn-365d';
-    
-    // Cas spécial pour 1h (0.042 jour approx)
-    if(Math.abs(currentChartMode - 0.042) < 0.001) btnId = 'btn-1h'; 
-
-    const activeBtn = document.getElementById(btnId);
-    if(activeBtn) activeBtn.classList.add('active');
-
-    if(window.myChart) window.myChart.destroy();
-
-    window.myChart = renderGenericChart({
-        canvasId: 'trophyChart',
-        rawData: fullHistoryData,
-        mode: currentChartMode,
-        offset: currentChartOffset,
-        liveValue: currentLiveTrophies,
-        color: '#ffce00',
-        variationId: 'trophy-variation'
-    });
-}
-
-// --- GESTION GRAPH BRAWLER ---
-
 function setBrawlerChartMode(mode, liveValOverride) {
     currentBrawlerMode = mode;
-    currentChartOffset = 0; // Reset offset localement si on voulait gérer la nav brawler aussi
+    currentChartOffset = 0; 
     
     document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
     let btnId = 'btn-brawler-all';
@@ -376,13 +355,40 @@ function setBrawlerChartMode(mode, liveValOverride) {
         canvasId: 'brawlerChartCanvas',
         rawData: currentBrawlerHistory,
         mode: currentBrawlerMode,
-        offset: 0, // Pas de navigation implémentée pour brawler spécifique pour le moment
+        offset: 0, 
         liveValue: liveVal,
         color: '#00d2ff',
         variationId: 'brawler-trophy-variation',
         isBrawler: true
     });
 }
+
+function renderMainChart() {
+    document.querySelectorAll('.filter-btn:not(.filter-brawler-btn)').forEach(btn => btn.classList.remove('active'));
+    let btnId = 'btn-all';
+    if(currentChartMode === 1) btnId = 'btn-24h';
+    else if(currentChartMode === 7) btnId = 'btn-7d';
+    else if(currentChartMode === 31) btnId = 'btn-31d';
+    else if(currentChartMode === 365) btnId = 'btn-365d';
+    if(Math.abs(currentChartMode - 0.042) < 0.001) btnId = 'btn-1h'; 
+
+    const activeBtn = document.getElementById(btnId);
+    if(activeBtn) activeBtn.classList.add('active');
+
+    if(window.myChart) window.myChart.destroy();
+
+    window.myChart = renderGenericChart({
+        canvasId: 'trophyChart',
+        rawData: fullHistoryData,
+        mode: currentChartMode,
+        offset: currentChartOffset,
+        liveValue: currentLiveTrophies,
+        color: '#ffce00',
+        variationId: 'trophy-variation'
+    });
+}
+
+// --- FILTRES & NAVIGATION ---
 
 function manageGenericFilters(data, idPrefix) {
     let diffDays = 0;
@@ -401,26 +407,24 @@ function manageGenericFilters(data, idPrefix) {
             else el.classList.add('hidden');
         }
     };
-    // On affiche toujours 1h et 24h
-    toggle('1h', diffDays > 0); 
+    
+    // Règle 1: 1H visible uniquement si Premium
+    const isPremium = (typeof currentUserTier !== 'undefined' && currentUserTier === 'premium');
+    toggle('1h', diffDays > 0 && isPremium); 
+    
     toggle('7d', diffDays >= 1);
     toggle('31d', diffDays > 7);
     toggle('365d', diffDays > 31);
 }
 
-// --- NAVIGATION TEMPORELLE ---
-
 function navigateChart(direction) {
-    // direction = 1 (Vers le passé), direction = -1 (Vers le futur)
     currentChartOffset += direction;
     if (currentChartOffset < 0) currentChartOffset = 0;
     renderMainChart();
 }
 
 function navigateMonth(direction) {
-    // Helper spécifique pour la vue mensuelle si utilisée
     if (currentChartMode !== 31) return;
-    // Logique simplifiée : ici on incrémente l'offset global qui représente des "blocs" de temps
     currentChartOffset += direction; 
     if (currentChartOffset < 0) currentChartOffset = 0;
     renderMainChart();
@@ -428,38 +432,26 @@ function navigateMonth(direction) {
 
 function jumpToDate(dateString) {
     if (!dateString) return;
-    
     const targetDate = new Date(dateString);
     const now = new Date();
-    
-    // Calcul de la différence en millisecondes
     const diffTime = now - targetDate;
     const diffDays = diffTime / (1000 * 60 * 60 * 24); 
     
-    if (diffDays < 0) {
-        alert("Impossible de prédire le futur ! 🔮");
-        return;
-    }
+    if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
 
-    // Conversion de la différence en "unités" selon le mode
-    if (currentChartMode === 1) { // Mode Jour
-        currentChartOffset = Math.floor(diffDays);
-    } else if (currentChartMode === 7) { // Mode Semaine
-        currentChartOffset = Math.floor(diffDays / 7);
-    } else if (currentChartMode === 31) { // Mode Mois
+    if (currentChartMode === 1) currentChartOffset = Math.floor(diffDays);
+    else if (currentChartMode === 7) currentChartOffset = Math.floor(diffDays / 7);
+    else if (currentChartMode === 31) {
         let months = (now.getFullYear() - targetDate.getFullYear()) * 12;
         months -= targetDate.getMonth();
         months += now.getMonth();
         currentChartOffset = months <= 0 ? 0 : months;
-    } else if (currentChartMode === 365) {
-        currentChartOffset = now.getFullYear() - targetDate.getFullYear();
-    }
+    } else if (currentChartMode === 365) currentChartOffset = now.getFullYear() - targetDate.getFullYear();
 
     renderMainChart();
 }
 
-// Met à jour les boutons (Grisés ou non) et le texte
-function updateNavigationUI(startDate, endDate) {
+function updateNavigationUI(startDate, endDate, firstDataPointDate) {
     const btnPrev = document.getElementById('nav-btn-prev');
     const btnNext = document.getElementById('nav-btn-next');
     const label = document.getElementById('chart-period-label');
@@ -467,23 +459,11 @@ function updateNavigationUI(startDate, endDate) {
 
     if (!btnPrev || !btnNext) return;
 
-    // 1. Gestion des dates limites pour désactiver les boutons
-    let oldestDate = new Date();
-    if (fullHistoryData && fullHistoryData.length > 0) {
-        const d = fullHistoryData[0].date || fullHistoryData[0].recorded_at;
-        oldestDate = new Date(d.replace(' ', 'T'));
-    }
+    // Règle 4: Navigation bornée
+    // Pas avant le début
+    btnPrev.disabled = (startDate <= firstDataPointDate);
 
-    // Si la fin de la vue est avant la plus vieille donnée
-    if (endDate < oldestDate) {
-        // Cas extrême, mais on laisse naviguable pour revenir
-    }
-
-    // Bouton Précédent (Aller vers le passé) : Actif tant qu'on n'est pas trop loin avant l'histoire
-    // Ici on simplifie : toujours actif sauf si très loin
-    btnPrev.disabled = false;
-
-    // Bouton Suivant (Aller vers le futur) : Désactivé si offset = 0
+    // Pas après maintenant (Offset 0)
     if (currentChartOffset === 0) {
         btnNext.disabled = true;
         label.innerText = "Aujourd'hui";
@@ -491,7 +471,6 @@ function updateNavigationUI(startDate, endDate) {
         btnNext.disabled = false;
         const options = { day: 'numeric', month: 'short' };
         
-        // Texte Label
         if (currentChartMode === 1 || Math.abs(currentChartMode - 0.042) < 0.001) {
              label.innerText = startDate.toLocaleDateString('fr-FR', options);
         } else if (currentChartMode === 31) {
@@ -502,68 +481,99 @@ function updateNavigationUI(startDate, endDate) {
              label.innerText = `${startDate.toLocaleDateString('fr-FR', options)} - ${endDate.toLocaleDateString('fr-FR', options)}`;
         }
     }
-
-    // Mise à jour du calendrier
     if(picker) picker.value = endDate.toISOString().split('T')[0];
 }
 
-// --- RENDER GÉNÉRIQUE (COEUR DU SYSTÈME) ---
+// =========================================================
+// === COEUR DU RENDU ===
+// =========================================================
+
+function preprocessData(rawData, isBrawler) {
+    let processed = [];
+    let lockedSequence = true; // Pour détecter la première séquence de "verrouillé"
+    
+    rawData.forEach((d, index) => {
+        let val = d.trophies;
+        let specialType = 'real';
+        let specialLabel = null;
+
+        // Règle 2: Gestion Points (Brawlers)
+        if (isBrawler) {
+            if (val === -1) val = 0;
+            
+            // Détection "Débloqué" : Dernier 0 d'une séquence initiale
+            // On regarde si le prochain est > 0 ou si c'est la fin
+            if (val === 0 && lockedSequence) {
+                const nextVal = (index + 1 < rawData.length) ? rawData[index+1].trophies : 1; // 1 fictif pour forcer unlock si fin
+                if (nextVal !== -1 && nextVal !== 0) {
+                    specialType = 'unlocked';
+                    specialLabel = "Débloqué";
+                    lockedSequence = false; // Fin de la séquence
+                } else {
+                    specialType = 'locked';
+                }
+            } else {
+                lockedSequence = false;
+            }
+        }
+
+        // Règle 2: Le tout premier point est "Début" (Bleu)
+        if (index === 0) {
+            specialType = 'start';
+            specialLabel = `Début : ${val}`;
+        }
+
+        processed.push({
+            date: (d.date || d.recorded_at).replace(' ', 'T'),
+            trophies: val,
+            customType: specialType,
+            customLabel: specialLabel
+        });
+    });
+    return processed;
+}
+
 function renderGenericChart(config) {
     let { rawData, mode, offset, liveValue, color, canvasId, variationId, isBrawler } = config;
     
-    // 1. Préparation des données brutes
-    let processedData = [];
-    rawData.forEach(d => {
-        processedData.push({
-            date: (d.date || d.recorded_at).replace(' ', 'T'),
-            trophies: d.trophies
-        });
-    });
+    // 1. Pré-traitement (Start, Lock, Unlock)
+    const processedData = preprocessData(rawData, isBrawler);
+    
+    // Récupération borne absolue des données (pour bloquer nav)
+    let firstDataPointDate = new Date();
+    if (processedData.length > 0) firstDataPointDate = new Date(processedData[0].date);
 
-    // 2. Définition des bornes temporelles (startDate / endDate)
+    // 2. Calcul Bornes Temporelles (Start/End View)
     let startDate = null;
     let endDate = null;
     const now = new Date();
 
     if (mode > 0) {
-        // Mode 1H (0.042)
-        if (Math.abs(mode - 0.042) < 0.001) {
-             const target = new Date();
-             // On recule de 'offset' heures (si offset est en heures ici ?)
-             // Pour l'instant offset est en "blocs". 
-             // Si on garde la logique "offset = nombre d'unités", il faudrait adapter jumpToDate.
-             // Simplification : ici offset = nombre de "jours" par défaut dans le reste du code,
-             // mais pour 1H ça n'a pas trop de sens de naviguer par jour.
-             // On va assumer offset = 0 pour 1H pour l'instant (Live view).
-             startDate = new Date(now.getTime() - (60 * 60 * 1000)); // Il y a 1h
+        if (Math.abs(mode - 0.042) < 0.001) { // 1H
+             startDate = new Date(now.getTime() - (60 * 60 * 1000));
              endDate = now;
-        }
-        else if (mode === 1) { // 24H (Journée civile)
+        } else if (mode === 1) { // 24H
             const target = new Date();
             target.setDate(now.getDate() - offset);
             startDate = new Date(target.setHours(0,0,0,0));
             endDate = new Date(target.setHours(23,59,59,999));
-        } else if (mode === 7) { // Semaine (Lundi - Dimanche)
-            // On calcule le dimanche de la semaine visée
-            const currentDay = now.getDay(); // 0 = Dimanche
+        } else if (mode === 7) { // Semaine
+            const currentDay = now.getDay(); 
             const distanceToSunday = (currentDay === 0 ? 0 : 7 - currentDay);
-            
             const targetEnd = new Date(now);
             targetEnd.setDate(now.getDate() + distanceToSunday - (offset * 7));
             targetEnd.setHours(23,59,59,999);
             endDate = targetEnd;
-            
             const targetStart = new Date(targetEnd);
-            targetStart.setDate(targetEnd.getDate() - 6); // Lundi
+            targetStart.setDate(targetEnd.getDate() - 6);
             targetStart.setHours(0,0,0,0);
             startDate = targetStart;
-            
-        } else if (mode === 31) { // Mois civil
+        } else if (mode === 31) { // Mois
             const target = new Date();
             target.setMonth(now.getMonth() - offset);
             startDate = new Date(target.getFullYear(), target.getMonth(), 1, 0, 0, 0);
             endDate = new Date(target.getFullYear(), target.getMonth() + 1, 0, 23, 59, 59);
-        } else if (mode === 365) { // Année civile
+        } else if (mode === 365) { // Année
             const targetYear = now.getFullYear() - offset;
             startDate = new Date(targetYear, 0, 1, 0, 0, 0);
             endDate = new Date(targetYear, 11, 31, 23, 59, 59);
@@ -571,14 +581,13 @@ function renderGenericChart(config) {
     }
 
     if (canvasId === 'trophyChart' && mode > 0) {
-        updateNavigationUI(startDate, endDate);
+        updateNavigationUI(startDate, endDate, firstDataPointDate);
     }
     
-    // 3. Filtrage & Construction des Points
+    // 3. Construction des Points
     let finalDataPoints = [];
-    const shouldHidePoints = (mode === 0 || mode === 365 || mode === 31);
-
-    // a) Récupération des points RÉELS dans l'intervalle
+    
+    // a) Points Réels dans la vue
     if (mode > 0) {
         finalDataPoints = processedData.filter(pt => {
             const d = new Date(pt.date);
@@ -586,91 +595,89 @@ function renderGenericChart(config) {
         }).map(pt => ({
             x: new Date(pt.date),
             y: pt.trophies,
-            type: 'real'
+            type: 'real',
+            cType: pt.customType,
+            cLabel: pt.customLabel
         }));
     } else {
-        // Mode "Tout" : on prend tout
         finalDataPoints = processedData.map(pt => ({
             x: new Date(pt.date),
             y: pt.trophies,
-            type: 'real'
+            type: 'real',
+            cType: pt.customType,
+            cLabel: pt.customLabel
         }));
     }
 
-    // b) Points FANTÔMES (Ghost Points)
+    // b) Points Fantômes (Règle 4: Pas de fantôme hors zone donnée)
     if (mode > 0) {
-        // --- FANTÔME GAUCHE (Début de période) ---
-        // On calcule l'interpolation au startDate
-        const valLeft = getInterpolatedValue(startDate, processedData);
-        if (valLeft !== null) {
-            // On ajoute le point au tout début
-            finalDataPoints.unshift({ x: startDate, y: Math.round(valLeft), type: 'ghost' });
+        // GAUCHE : Seulement si startDate > début historique
+        if (startDate > firstDataPointDate) {
+            const valLeft = getInterpolatedValue(startDate, processedData);
+            if (valLeft !== null) {
+                finalDataPoints.unshift({ x: startDate, y: Math.round(valLeft), type: 'ghost' });
+            }
         }
 
-        // --- FANTÔME DROIT vs LIVE (Fin de période) ---
+        // DROITE : Seulement si offset > 0 (Passé)
         if (offset === 0) {
-            // Règle : "Si nous sommes sur la dernière plage... pas de lien à droite, trou jusqu'à la fin"
-            // Donc PAS de ghost point à endDate.
-            // Par contre, on ajoute le point LIVE (maintenant) pour clore la courbe actuelle.
+            // Live Point
             if (liveValue !== null && liveValue !== undefined) {
-                finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live' });
+                finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live', cLabel: 'Actuel' });
             }
         } else {
-            // Nous sommes dans le passé (offset > 0)
-            // On veut que le graphique aille jusqu'au bout de la période (ex: dimanche 23h59)
-            const valRight = getInterpolatedValue(endDate, processedData);
-            if (valRight !== null) {
-                finalDataPoints.push({ x: endDate, y: Math.round(valRight), type: 'ghost' });
+            // On vérifie qu'on ne dépasse pas "Maintenant" avec le fantôme
+            if (endDate < now) {
+                const valRight = getInterpolatedValue(endDate, processedData);
+                if (valRight !== null) {
+                    finalDataPoints.push({ x: endDate, y: Math.round(valRight), type: 'ghost' });
+                }
             }
         }
     } else {
-        // Mode ALL (0)
-        // On ajoute juste le live point à la fin si dispo
         if (liveValue !== null && liveValue !== undefined) {
-            finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live' });
+            finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live', cLabel: 'Actuel' });
         }
     }
 
-    // Tri final par sécurité
     finalDataPoints.sort((a,b) => a.x - b.x);
 
-    // 4. Calcul Variation (Delta affiché)
-    if (variationId) {
-        const varElem = document.getElementById(variationId);
-        if (varElem) {
-            if (finalDataPoints.length >= 2) {
-                // On compare le dernier point affiché (Live ou Ghost Fin) au premier (Ghost Début ou Real)
-                const startVal = finalDataPoints[0].y;
-                const endVal = finalDataPoints[finalDataPoints.length - 1].y;
-                const diff = endVal - startVal;
-                varElem.innerHTML = diff > 0 ? `<span style="color:#28a745">▲ +${diff}</span>` : 
-                                   (diff < 0 ? `<span style="color:#ff5555">▼ ${diff}</span>` : `<span style="color:#888">= 0</span>`);
-            } else varElem.innerHTML = `<span style="color:#888">--</span>`;
-        }
+    // Variation
+    if (variationId && document.getElementById(variationId)) {
+        const el = document.getElementById(variationId);
+        if (finalDataPoints.length >= 2) {
+            const diff = finalDataPoints[finalDataPoints.length - 1].y - finalDataPoints[0].y;
+            el.innerHTML = diff > 0 ? `<span style="color:#28a745">▲ +${diff}</span>` : 
+                           (diff < 0 ? `<span style="color:#ff5555">▼ ${diff}</span>` : `<span style="color:#888">= 0</span>`);
+        } else el.innerHTML = `<span style="color:#888">--</span>`;
     }
 
-    // 5. Styles des points (Cachés pour Ghost)
-    const pointColors = finalDataPoints.map(p => p.type === 'live' ? '#ff5555' : color);
-    const pointRadiuses = finalDataPoints.map(p => {
-        if (p.type === 'ghost') return 0; // Invisible
-        if (p.type === 'live') return 5;  // Bien visible
-        if (shouldHidePoints) return 0;   // Masqué si trop de points (Année)
-        return 3;
-    });
-    
-    const pointHoverRadiuses = finalDataPoints.map(p => {
-        if (p.type === 'ghost') return 0; // Non interactif
-        return 6;
-    });
+    // 4. Styles (Couleurs & Segments)
+    // Règle 2: Blanc pour "locked/unlocked", Bleu pour "start"
+    const getPointColor = (p) => {
+        if (p.type === 'ghost') return 'transparent';
+        if (p.cType === 'start') return '#007bff'; // Bleu Début
+        if (p.type === 'live') return '#ff5555';
+        if (p.cType === 'locked' || p.cType === 'unlocked') return '#ffffff'; // Blanc
+        return color;
+    };
 
-    // 6. Chart.js Config
+    const pointColors = finalDataPoints.map(p => getPointColor(p));
+    
+    // Configuration Chart.js
+    const ctx = document.getElementById(canvasId).getContext('2d');
     let timeUnit = 'day';
     if (Math.abs(mode - 0.042) < 0.001) timeUnit = 'minute';
     else if (mode === 1) timeUnit = 'hour';
     else if (mode === 0 || mode === 365) timeUnit = 'month';
 
-    const ctx = document.getElementById(canvasId).getContext('2d');
-    const lineTension = (mode === 1 || mode < 1) ? 0 : 0.2;
+    // Règle 3: Plage complète (Min/Max forcés)
+    let scaleMin = undefined;
+    let scaleMax = undefined;
+    if (mode > 0) {
+        scaleMin = startDate;
+        scaleMax = endDate;
+    }
 
     return new Chart(ctx, {
         type: 'line',
@@ -678,26 +685,49 @@ function renderGenericChart(config) {
             datasets: [{ 
                 label: 'Trophées', 
                 data: finalDataPoints, 
-                borderColor: color, 
                 backgroundColor: color + '1A', 
                 borderWidth: 2, 
-                tension: lineTension,
+                tension: (mode === 1 || mode < 1) ? 0 : 0.2,
                 fill: true,
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointColors,
-                pointRadius: pointRadiuses,
-                pointHoverRadius: pointHoverRadiuses,
-                pointHitRadius: pointHoverRadiuses // Empêche le tooltip sur les ghosts
+                pointRadius: p => (p.raw.type === 'ghost' ? 0 : 4),
+                pointHoverRadius: p => (p.raw.type === 'ghost' ? 0 : 6),
+                
+                // Règle 2: Courbe Blanche si points débloqués
+                segment: {
+                    borderColor: ctx => {
+                        // Si le point cible est 'locked' ou 'unlocked', ligne blanche
+                        const p1 = finalDataPoints[ctx.p1DataIndex]; 
+                        const p0 = finalDataPoints[ctx.p0DataIndex];
+                        // Exception: Si p0 est START (Bleu), la ligne vers le premier locked est-elle blanche ? Oui.
+                        if (p1 && (p1.cType === 'locked' || p1.cType === 'unlocked')) return '#ffffff';
+                        return color;
+                    }
+                }
             }] 
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: {display:false} },
+            plugins: { 
+                legend: {display:false},
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const pt = context.raw;
+                            if (pt.cLabel) return pt.cLabel; // "Début: X" ou "Débloqué"
+                            return `Trophées: ${pt.y}`;
+                        }
+                    }
+                }
+            },
             interaction: { mode: 'nearest', axis: 'x', intersect: false },
             scales: { 
                 x: { 
                     type: 'time', 
+                    min: scaleMin, // Règle 3
+                    max: scaleMax, // Règle 3
                     time: { unit: timeUnit, displayFormats: { minute:'HH:mm', hour:'HH:mm', day:'dd/MM', month:'MMM yy' }}, 
                     grid: {color:'#333'} 
                 }, 
