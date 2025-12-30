@@ -268,27 +268,29 @@ function jumpToBrawlerDate(dateString) {
 
     const parts = dateString.split('-');
     const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
-    
     const now = new Date();
     const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
     const diffTime = todayMidnight - targetDate;
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
-    
-    if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
 
-    if (currentBrawlerMode === 1) currentChartOffset = diffDays;
-    else if (currentBrawlerMode === 7) currentChartOffset = Math.floor(diffDays / 7);
-    else if (currentBrawlerMode === 31) {
+    if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
+    if (Math.abs(currentBrawlerMode - 0.042) < 0.001) {
+        currentChartOffset = diffDays * 24;
+    } else if (currentBrawlerMode === 1) {
+        currentChartOffset = diffDays;
+    } else if (currentBrawlerMode === 7) {
+        currentChartOffset = Math.floor(diffDays / 7);
+    } else if (currentBrawlerMode === 31) {
         let months = (todayMidnight.getFullYear() - targetDate.getFullYear()) * 12;
         months -= targetDate.getMonth();
         months += todayMidnight.getMonth();
         currentChartOffset = months <= 0 ? 0 : months;
-    } else if (currentBrawlerMode === 365) currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
+    } else if (currentBrawlerMode === 365) {
+        currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
+    }
 
     renderBrawlerChart();
 }
-
 function updateBrawlerNavigationUI(data) {
     const btnPrev = document.getElementById('brawler-nav-btn-prev');
     const btnNext = document.getElementById('brawler-nav-btn-next');
@@ -614,24 +616,28 @@ function navigateMonth(direction) {
 
 function jumpToDate(dateString) {
     if (!dateString) return;
-    const parts = dateString.split('-'); 
-    const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    const parts = dateString.split('-');
+    const targetDate = new Date(parts[0], parts[1] - 1, parts[2]); 
     const now = new Date();
-    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());    
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const diffTime = todayMidnight - targetDate;
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
 
     if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
-
-    if (currentChartMode === 1) currentChartOffset = diffDays; // Math.floor retiré car diffDays est déjà entier via round
-    else if (currentChartMode === 7) currentChartOffset = Math.floor(diffDays / 7);
-    else if (currentChartMode === 31) {
-        let months = (todayMidnight.getFullYear() - targetDate.getFullYear()) * 12; // Modifié pour utiliser todayMidnight
+    if (Math.abs(currentChartMode - 0.042) < 0.001) 
+        currentChartOffset = diffDays * 24; 
+    } else if (currentChartMode === 1) {
+        currentChartOffset = diffDays;
+    } else if (currentChartMode === 7) {
+        currentChartOffset = Math.floor(diffDays / 7);
+    } else if (currentChartMode === 31) {
+        let months = (todayMidnight.getFullYear() - targetDate.getFullYear()) * 12;
         months -= targetDate.getMonth();
         months += todayMidnight.getMonth();
         currentChartOffset = months <= 0 ? 0 : months;
-    } else if (currentChartMode === 365) currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
-
+    } else if (currentChartMode === 365) {
+        currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
+    }
     renderMainChart();
 }
 
