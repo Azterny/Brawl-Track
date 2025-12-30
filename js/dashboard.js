@@ -589,39 +589,45 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
 // --- GESTION DU CALENDRIER INTELLIGENT (FLATPICKR) ---
 function syncPickerWithMode(isBrawler, mode, historyData) {
     const containerId = isBrawler ? 'picker-container-brawler' : 'picker-container-main';
-    const triggerId = isBrawler ? '#trigger-picker-brawler' : '#trigger-picker-main';
+    const triggerId = isBrawler ? 'trigger-picker-brawler' : 'trigger-picker-main'; 
     const inputId = isBrawler ? '#picker-input-brawler' : '#picker-input-main';
-    let currentInstance = isBrawler ? brawlerFlatpickr : mainFlatpickr;
-
+    
+    // Récupération des éléments DOM
     const container = document.getElementById(containerId);
-    if (!container) return;
+    const trigger = document.getElementById(triggerId);
+    
+    if (!container || !trigger) return;
 
-    // 1. Si mode Année (365) ou Tout (0) => On cache le calendrier
+    // 1. Gestion Visibilité
+    // Si mode Année (365) ou Tout (0) => On cache le calendrier
     if (mode === 365 || mode === 0) {
         container.classList.add('hidden');
         return;
     }
     container.classList.remove('hidden');
 
-    // 2. Calcul de la date Min (Début historique)
-    let minDate = null;
-    if (historyData && historyData.length > 0) {
-        let d = historyData[0].date || historyData[0].recorded_at;
-        minDate = new Date(d.replace(' ', 'T'));
+    // 2. Nettoyage de l'ancienne instance pour éviter les conflits
+    let currentInstance = isBrawler ? brawlerFlatpickr : mainFlatpickr;
+    if (currentInstance) {
+        currentInstance.destroy();
+        if (isBrawler) brawlerFlatpickr = null;
+        else mainFlatpickr = null;
     }
 
-    // 3. Configuration spécifique (Mois vs Jour)
-    const isMonthMode = (mode === 31);
-    
+    // 3. Calcul sécurisé de la date Min (Début historique)
+    let minDate = undefined;
+    if (historyData && historyData.length > 0) {
+        const d = historyData[0].date || historyData[0].recorded_at;
+        if (d) minDate = new Date(d.replace(' ', 'T'));
+    }
+
+    // 4. Configuration Flatpickr
     const config = {
-        element: document.querySelector(inputId),
-        positionElement: document.querySelector(triggerId),
-        clickOpens: true,
-        wrap: true, // Permet d'utiliser le trigger externe
-        theme: "dark",
-        maxDate: new Date(), // Pas de futur
-        minDate: minDate,    // Pas avant le début
         disableMobile: "true", // Force le thème Dark même sur mobile
+        clickOpens: false,     // IMPORTANT: On ouvre manuellement via le trigger
+        theme: "dark",
+        maxDate: new Date(),   // Pas de futur
+        minDate: minDate,      // Pas avant le début
         onChange: function(selectedDates, dateStr, instance) {
             if (selectedDates.length > 0) {
                 if (isBrawler) jumpToBrawlerDate(dateStr);
@@ -630,26 +636,44 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         }
     };
 
-    if (isMonthMode) {
-        config.plugins = [new monthSelectPlugin({
-            shorthand: true, 
-            dateFormat: "Y-m-d", // Format interne standard pour notre logique
-            altFormat: "F Y", 
-            theme: "dark"
-        })];
+    // Configuration spécifique Mode Mois
+    if (mode === 31) {
+        if (typeof monthSelectPlugin !== 'undefined') {
+            config.plugins = [new monthSelectPlugin({
+                shorthand: true, 
+                dateFormat: "Y-m-d", 
+                altFormat: "F Y", 
+                theme: "dark"
+            })];
+        } else {
+            console.warn("Plugin MonthSelect introuvable, chargement mode standard.");
+        }
     } else {
+        // Mode Jour/Semaine/1H
         config.dateFormat = "Y-m-d";
     }
 
-    // 4. Reset & Init
-    if (currentInstance) currentInstance.destroy();
-    
-    const newInstance = flatpickr(triggerId, config);
-    
-    if (isBrawler) brawlerFlatpickr = newInstance;
-    else mainFlatpickr = newInstance;
-}
+    // 5. Initialisation sur l'INPUT CACHÉ (et non le span)
+    try {
+        const fp = flatpickr(inputId, config);
+        
+        // Astuce : On recrée le bouton trigger (clone) pour supprimer les anciens événements 'click' accumulés
+        const newTrigger = trigger.cloneNode(true);
+        trigger.parentNode.replaceChild(newTrigger, trigger);
+        
+        // On lie l'ouverture du calendrier au clic sur l'icône
+        newTrigger.onclick = () => {
+            fp.open();
+        };
 
+        // Sauvegarde de l'instance globale
+        if (isBrawler) brawlerFlatpickr = fp;
+        else mainFlatpickr = fp;
+
+    } catch(e) {
+        console.error("Erreur init Flatpickr:", e);
+    }
+}
 // =========================================================
 // === COEUR DU RENDU ===
 // =========================================================
