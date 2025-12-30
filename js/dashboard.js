@@ -255,21 +255,26 @@ function navigateBrawlerChart(direction) {
 
 function jumpToBrawlerDate(dateString) {
     if (!dateString) return;
-    const targetDate = new Date(dateString);
+
+    const parts = dateString.split('-');
+    const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    
     const now = new Date();
-    const diffTime = now - targetDate;
-    const diffDays = diffTime / (1000 * 60 * 60 * 24); 
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const diffTime = todayMidnight - targetDate;
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
     
     if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
 
-    if (currentBrawlerMode === 1) currentChartOffset = Math.floor(diffDays);
+    if (currentBrawlerMode === 1) currentChartOffset = diffDays;
     else if (currentBrawlerMode === 7) currentChartOffset = Math.floor(diffDays / 7);
     else if (currentBrawlerMode === 31) {
-        let months = (now.getFullYear() - targetDate.getFullYear()) * 12;
+        let months = (todayMidnight.getFullYear() - targetDate.getFullYear()) * 12;
         months -= targetDate.getMonth();
-        months += now.getMonth();
+        months += todayMidnight.getMonth();
         currentChartOffset = months <= 0 ? 0 : months;
-    } else if (currentBrawlerMode === 365) currentChartOffset = now.getFullYear() - targetDate.getFullYear();
+    } else if (currentBrawlerMode === 365) currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
 
     renderBrawlerChart();
 }
@@ -278,11 +283,10 @@ function updateBrawlerNavigationUI(data) {
     const btnPrev = document.getElementById('brawler-nav-btn-prev');
     const btnNext = document.getElementById('brawler-nav-btn-next');
     const label = document.getElementById('brawler-chart-period-label');
-    const picker = document.getElementById('picker-input-brawler'); // Correction ID input
+    const picker = document.getElementById('picker-input-brawler');
 
     if (!btnPrev || !btnNext) return;
 
-    // Calcul de la date du premier point de l'historique pour bloquer "Précédent"
     let firstDataPointDate = new Date();
     if (data && data.length > 0) {
         let d = data[0].date || data[0].recorded_at;
@@ -544,21 +548,23 @@ function navigateMonth(direction) {
 
 function jumpToDate(dateString) {
     if (!dateString) return;
-    const targetDate = new Date(dateString);
+    const parts = dateString.split('-'); 
+    const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
     const now = new Date();
-    const diffTime = now - targetDate;
-    const diffDays = diffTime / (1000 * 60 * 60 * 24); 
-    
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());    
+    const diffTime = todayMidnight - targetDate;
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+
     if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
 
-    if (currentChartMode === 1) currentChartOffset = Math.floor(diffDays);
+    if (currentChartMode === 1) currentChartOffset = diffDays; // Math.floor retiré car diffDays est déjà entier via round
     else if (currentChartMode === 7) currentChartOffset = Math.floor(diffDays / 7);
     else if (currentChartMode === 31) {
-        let months = (now.getFullYear() - targetDate.getFullYear()) * 12;
+        let months = (todayMidnight.getFullYear() - targetDate.getFullYear()) * 12; // Modifié pour utiliser todayMidnight
         months -= targetDate.getMonth();
-        months += now.getMonth();
+        months += todayMidnight.getMonth();
         currentChartOffset = months <= 0 ? 0 : months;
-    } else if (currentChartMode === 365) currentChartOffset = now.getFullYear() - targetDate.getFullYear();
+    } else if (currentChartMode === 365) currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
 
     renderMainChart();
 }
