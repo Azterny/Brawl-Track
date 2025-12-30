@@ -58,9 +58,18 @@
                     </div>
 
                     <div id="chart-navigation" class="chart-nav-bar hidden">
-                        <button class="nav-arrow" onclick="navigateChart(1)">❮</button>
-                        <span id="chart-period-label">Aujourd'hui</span>
-                        <button class="nav-arrow" id="btn-nav-next" onclick="navigateChart(-1)">❯</button>
+                        <button id="nav-btn-prev" class="nav-arrow" onclick="navigateChart(1)">❮</button>
+                        
+                        <span id="chart-period-label" style="font-weight:bold; min-width: 150px; text-align:center;">Aujourd'hui</span>
+                        
+                        <div style="position: relative; display:inline-block;">
+                            <label for="chart-date-picker" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</label>
+                            <input type="date" id="chart-date-picker" 
+                                   style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;"
+                                   onchange="jumpToDate(this.value)">
+                        </div>
+                    
+                        <button id="nav-btn-next" class="nav-arrow" onclick="navigateChart(-1)">❯</button>
                     </div>
 
                     <div style="position: relative; height: 300px; width: 100%;">
