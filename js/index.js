@@ -18,12 +18,11 @@ window.onload = function() {
             loginForm.innerHTML = `
                 <h2 style="color: #28a745;">Bon retour !</h2>
                 <p>Tu es déjà connecté.</p>
-                <button onclick="window.location.href='dashboard.html'">ACCÉDER AU DASHBOARD</button>
+                <button onclick="window.location.href='userhome.html'">ACCÉDER À MES COMPTES</button>
                 <button onclick="logout()" style="background: #444; margin-top: 10px;">Se Déconnecter</button>
             `;
         }
     }
-    // On lance le chargement des événements
     loadEvents();
 };
 
