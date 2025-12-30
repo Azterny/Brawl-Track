@@ -11,6 +11,10 @@ let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
 let brawlerChartInstance = null;
 
+// Vérification de la configuration (Correction 1: API_URL)
+const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : ''; 
+if (!API_BASE) console.error("Erreur critique : API_URL non défini dans config.js");
+
 // --- INITIALISATION DU DASHBOARD ---
 async function initDashboard() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -33,7 +37,7 @@ async function initDashboard() {
 // --- CHARGEMENT DONNÉES ---
 async function loadTagData(tag) {
     try {
-        const res = await fetch(`${API_URL}/api/public/player/${tag}`);
+        const res = await fetch(`${API_BASE}/api/public/player/${tag}`);
         
         if (!res.ok) throw new Error("Joueur introuvable");
         
@@ -51,7 +55,8 @@ async function loadTagData(tag) {
 
     } catch (e) {
         console.error(e);
-        document.getElementById('player-name').innerText = "Erreur / Introuvable";
+        const nameElem = document.getElementById('player-name');
+        if(nameElem) nameElem.innerText = "Erreur / Introuvable";
         alert("Impossible de charger ce tag. Vérifiez qu'il est correct.");
         window.location.href = "index.html";
     }
@@ -59,6 +64,8 @@ async function loadTagData(tag) {
 
 function renderProfile(data) {
     const nameElem = document.getElementById('player-name');
+    if(!nameElem) return;
+    
     nameElem.innerText = data.name;
     
     if (data.nameColor) {
@@ -87,6 +94,8 @@ function checkClaimStatus() {
     if (!token) return;
 
     const actionsDiv = document.getElementById('header-actions');
+    if (!actionsDiv) return;
+    
     // Vérifier si le bouton existe déjà pour éviter doublons
     if(document.getElementById('btn-claim-action')) return;
 
@@ -109,7 +118,7 @@ async function claimTagAction() {
     
     const token = localStorage.getItem('token');
     try {
-        const res = await fetch(`${API_URL}/api/claim-tag`, {
+        const res = await fetch(`${API_BASE}/api/claim-tag`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -137,7 +146,7 @@ async function loadBrawlersGrid(playerBrawlers) {
     
     if (globalBrawlersList.length === 0) {
         try {
-            const res = await fetch(`${API_URL}/api/brawlers`);
+            const res = await fetch(`${API_BASE}/api/brawlers`);
             const data = await res.json();
             globalBrawlersList = data.items || [];
         } catch(e) { console.error("Err brawlers list", e); }
@@ -229,23 +238,31 @@ function renderBrawlersGrid() {
 // --- NAVIGATION BRAWLER & CHARGEMENT API ---
 
 async function goToBrawlerStats(id, name) {
-    switchView('brawlers');
+    // Correction 2: Appel sécurisé à switchView (global)
+    if (typeof window.switchView === 'function') {
+        window.switchView('brawlers');
+    } else {
+        console.warn("switchView non défini");
+    }
+
     document.getElementById('selected-brawler-id').value = id;
     document.getElementById('selected-brawler-name').textContent = name;
+    
+    // Correction 3: Scope "let" au lieu de "var" dans if/else
+    let liveBrawlerTrophies = null;
     
     // Image
     const b = window.currentBrawlersDisplay.find(x => x.id == id);
     if(b) {
         document.getElementById('selected-brawler-img').src = b.imageUrl;
-        // On récupère aussi la valeur "Live" du brawler pour le graph
-        var liveBrawlerTrophies = b.trophies;
+        liveBrawlerTrophies = b.trophies;
     } else {
-        var liveBrawlerTrophies = null;
+        // Reste null
     }
 
     // Chargement de l'historique spécifique via la nouvelle API publique
     try {
-        const res = await fetch(`${API_URL}/api/public/player/${currentTagString}/brawler/${id}`);
+        const res = await fetch(`${API_BASE}/api/public/player/${currentTagString}/brawler/${id}`);
         if(res.ok) {
             currentBrawlerHistory = await res.json();
         } else {
@@ -259,14 +276,13 @@ async function goToBrawlerStats(id, name) {
     // Affichage Graphique Brawler
     manageGenericFilters(currentBrawlerHistory, 'btn-brawler');
     
-    // On force le mode "Tout" au démarrage ou on garde le précédent ? 
-    // Pour l'instant on reset à 0 (Tout)
+    // On force le mode "Tout" au démarrage
     setBrawlerChartMode(0, liveBrawlerTrophies); 
 }
 
 
 // =========================================================
-// === MOTEUR GRAPHIQUE (RESTAURÉ) ===
+// === MOTEUR GRAPHIQUE (RESTAURÉ & CORRIGÉ) ===
 // =========================================================
 
 // --- Utilitaires Mathématiques ---
@@ -297,9 +313,10 @@ function getInterpolatedValue(targetDate, allData) {
 function decimateDataPoints(points) {
     const grouped = {};
     points.forEach(p => {
-        const d = p.x; 
-        if (!d) return; 
-        const dayKey = d.split('T')[0]; 
+        // Correction 4b: Utilisation de getTime() pour le tri et le groupement
+        const dObj = new Date(p.x);
+        if (isNaN(dObj)) return;
+        const dayKey = dObj.toISOString().split('T')[0]; 
         grouped[dayKey] = p; 
     });
     return Object.values(grouped).sort((a,b) => new Date(a.x) - new Date(b.x));
@@ -332,7 +349,6 @@ function renderMainChart() {
     
     if(window.myChart) window.myChart.destroy();
 
-    // APPEL GÉNÉRIQUE RESTAURÉ
     window.myChart = renderGenericChart({
         canvasId: 'trophyChart',
         rawData: fullHistoryData,
@@ -353,12 +369,12 @@ function setBrawlerChartMode(mode, liveValOverride) {
     document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
     let btnId = 'btn-brawler-all';
     if(currentBrawlerMode === 1) btnId = 'btn-brawler-24h';
-    else if(currentBrawlerMode === 7) btnId = 'btn-brawler-7d'; // (Si le bouton existe dans le HTML)
+    else if(currentBrawlerMode === 7) btnId = 'btn-brawler-7d'; 
     
     const activeBtn = document.getElementById(btnId);
     if(activeBtn) activeBtn.classList.add('active');
 
-    // Récupération valeur live si non fournie (via DOM caché ou cache)
+    // Récupération valeur live si non fournie
     let liveVal = liveValOverride;
     if (liveVal === undefined || liveVal === null) {
         const hiddenId = document.getElementById('selected-brawler-id').value;
@@ -399,33 +415,23 @@ function manageGenericFilters(data, idPrefix) {
             else el.classList.add('hidden');
         }
     };
-
-    // Affiche "Semaine" seulement si > 1 jour de données
     toggle('7d', diffDays >= 1);
 }
 
-// --- COEUR DU RENDU (RenderGenericChart Complet) ---
+// --- COEUR DU RENDU ---
 
 function renderGenericChart(config) {
     let { rawData, mode, offset, liveValue, color, canvasId, variationId, isBrawler } = config;
     
-    // Préparation Brawler Unlock (Points blancs)
-    let unlockTs = null;
     let processedData = [];
 
-    // Normalisation des clés (date vs recorded_at)
+    // Normalisation des clés
     rawData.forEach(d => {
         processedData.push({
             date: (d.date || d.recorded_at).replace(' ', 'T'),
             trophies: d.trophies
         });
     });
-
-    if (isBrawler && processedData.length > 0) {
-        // Détection unlock : Si le premier point est -1 (ou 0 implicite avant acquisition)
-        // Ici on suppose que tout point existant = débloqué, sauf si trophées = 0 au début
-        // (Logique simplifiée par rapport à l'ancien dashboard complexe)
-    }
 
     // 1. Calcul des bornes temporelles
     let startDate = null;
@@ -437,8 +443,8 @@ function renderGenericChart(config) {
         if (mode === 1) { // 24H
             const target = new Date();
             target.setDate(now.getDate() - offset);
-            startDate = new Date(target.getTime() - (24 * 60 * 60 * 1000)); // Exactement 24h glissant
-            endDate = new Date(); // Maintenant
+            startDate = new Date(target.getTime() - (24 * 60 * 60 * 1000));
+            endDate = new Date(); 
         } else if (mode === 7) { // Semaine
             const target = new Date();
             startDate = new Date(target.getTime() - (7 * 24 * 60 * 60 * 1000));
@@ -458,8 +464,6 @@ function renderGenericChart(config) {
     });
 
     if (shouldDecimate) {
-        // On décime avant d'ajouter au graph
-        // (Adaptation simple : on map vers format {x, y} d'abord)
         let temp = sourceData.map(p => ({ x: p.date, y: p.trophies }));
         sourceData = decimateDataPoints(temp).map(p => ({ date: p.x, trophies: p.y }));
     }
@@ -467,35 +471,36 @@ function renderGenericChart(config) {
     sourceData.forEach(h => {
         let type = 'real';
         if (absoluteStartDate && new Date(h.date).getTime() === absoluteStartDate.getTime()) type = 'start';
-        finalDataPoints.push({ x: h.date, y: h.trophies, type: type });
+        // Correction 4: Conversion Explicite en Date
+        finalDataPoints.push({ x: new Date(h.date), y: h.trophies, type: type });
     });
 
-    // Gestion Fantômes (Interpolation début/fin de période)
+    // Gestion Fantômes (Interpolation)
     if (mode > 0) {
-        // Point Fantôme Début
         if (absoluteStartDate && startDate > absoluteStartDate) {
-            const hasPoint = finalDataPoints.some(p => new Date(p.x).getTime() >= startDate.getTime() && new Date(p.x).getTime() < startDate.getTime() + 60000);
+            const hasPoint = finalDataPoints.some(p => p.x.getTime() >= startDate.getTime() && p.x.getTime() < startDate.getTime() + 60000);
             if (!hasPoint) {
                 const val = getInterpolatedValue(startDate, processedData);
-                if (val !== null) finalDataPoints.unshift({ x: startDate.toISOString(), y: Math.round(val), type: 'ghost' });
+                // Correction 4: Date explicite ici aussi
+                if (val !== null) finalDataPoints.unshift({ x: new Date(startDate), y: Math.round(val), type: 'ghost' });
             }
         }
     }
 
     // Point Live (Fin)
     if (liveValue !== null && liveValue !== undefined) {
-        finalDataPoints.push({ x: new Date().toISOString(), y: liveValue, type: 'live' });
+        // Correction 4: Date explicite pour le live
+        finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live' });
     }
 
     // Tri final
-    finalDataPoints.sort((a,b) => new Date(a.x) - new Date(b.x));
+    finalDataPoints.sort((a,b) => a.x - b.x);
 
     // 3. Calcul Variation
     if (variationId) {
         const varElem = document.getElementById(variationId);
         if (varElem) {
             if (finalDataPoints.length >= 2) {
-                // On compare le dernier point (Live) avec le premier de la période affichée
                 const startVal = finalDataPoints[0].y;
                 const endVal = finalDataPoints[finalDataPoints.length - 1].y;
                 const diff = endVal - startVal;
@@ -511,13 +516,13 @@ function renderGenericChart(config) {
 
     // 4. Styles Points
     const pointColors = finalDataPoints.map(p => {
-        if (p.type === 'live') return '#ff5555'; // Rouge pour le live
+        if (p.type === 'live') return '#ff5555'; 
         if (p.type === 'start') return '#007bff'; 
         return color;
     });
     
     const pointRadiuses = finalDataPoints.map(p => {
-        if (p.type === 'ghost') return 0; // Invisible
+        if (p.type === 'ghost') return 0;
         if (p.type === 'live') return 5;
         if (shouldDecimate) return 2;
         return 3;
@@ -528,7 +533,6 @@ function renderGenericChart(config) {
     if (!ctx) return null;
     const ctx2d = ctx.getContext('2d');
 
-    // Tension de ligne : Droite si vue courte (24h), Courbe si vue longue
     const lineTension = (mode === 1) ? 0 : 0.2;
 
     return new Chart(ctx2d, {
@@ -536,7 +540,7 @@ function renderGenericChart(config) {
         data: { 
             datasets: [{ 
                 label: 'Trophées', 
-                data: finalDataPoints, 
+                data: finalDataPoints, // Contient maintenant des objets Date en x
                 borderColor: color, 
                 backgroundColor: color + '1A', 
                 borderWidth: 2, 
@@ -570,7 +574,8 @@ function renderGenericChart(config) {
                     type: 'time', 
                     time: { 
                         unit: mode === 1 ? 'hour' : 'day',
-                        displayFormats: { hour:'HH:mm', day:'dd/MM' }
+                        displayFormats: { hour:'HH:mm', day:'dd/MM' },
+                        tooltipFormat: 'dd/MM HH:mm'
                     }, 
                     grid: {color:'#333'} 
                 }, 
