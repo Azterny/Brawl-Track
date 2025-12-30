@@ -1,33 +1,3 @@
-C'est noté. Voici la version finale et complète du fichier js/dashboard.js.
-
-J'ai intégré l'ensemble de tes demandes :
-
-Bouton 1H : J'ai ajouté une vérification du tier de l'utilisateur (via localStorage ou variable globale) dans manageGenericFilters.
-
-Gestion des Points & Couleurs :
-
-J'ai ajouté une étape de pré-traitement des données (preprocessData) pour gérer les Brawlers (conversion -1 vers 0, détection du point "Débloqué").
-
-J'applique des styles spécifiques (Blanc pour le déblocage, Bleu pour le tout premier point historique).
-
-Utilisation de segment dans Chart.js pour colorer la courbe en blanc sur la partie "verrouillée".
-
-Plage Complète : J'ai forcé min et max sur l'axe X dans la configuration du graphique pour toujours afficher la période entière (ex: 00h00 - 23h59).
-
-Limites Navigation & Fantômes :
-
-Les flèches de navigation se désactivent strictement si on atteint le début de l'historique ou le moment présent.
-
-Les points fantômes ne sont générés que si la période affichée est strictement à l'intérieur des bornes de données existantes.
-
-Voici le fichier à remplacer :
-
-JavaScript
-
-{
-type: file_content_processing
-fileName: azterny/brawl-track/Brawl-Track-434017a34cfe17ff9355756da39ec6897120ae1d/js/dashboard.js
-fullContent:
 // --- VARIABLES GLOBALES ---
 let currentChartMode = 0;   // 0=Tout, 1=Jour...
 let currentChartOffset = 0; 
