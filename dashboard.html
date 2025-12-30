@@ -62,14 +62,13 @@
 
                     <div id="chart-navigation" class="chart-nav-bar hidden">
                         <button id="nav-btn-prev" class="nav-arrow" onclick="navigateChart(1)">❮</button>
-                        
                         <span id="chart-period-label" style="font-weight:bold; min-width: 150px; text-align:center;">Aujourd'hui</span>
-                        
-                        <div style="position: relative; display:inline-block;">
-                            <button id="calendar-trigger" style="background:none; border:none; font-size:1.2em; cursor:pointer; padding:0; width:auto; box-shadow:none; margin:0;" title="Choisir une date">
+                    
+                        <div id="picker-container-main" style="position: relative; display:inline-block;">
+                            <button id="trigger-picker-main" class="nav-arrow" style="width:auto !important; padding: 0 10px !important; border:none !important;" title="Calendrier">
                                 📅
                             </button>
-                            <input type="text" id="chart-date-picker" style="display:none;">
+                            <input type="text" id="picker-input-main" style="display:none;">
                         </div>
                     
                         <button id="nav-btn-next" class="nav-arrow" onclick="navigateChart(-1)">❯</button>
