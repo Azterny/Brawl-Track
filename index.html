@@ -6,7 +6,7 @@
     <title>Maintenance - Brawl Track</title>
     <style>
         body {
-            background-color: #181818; /* Fond sombre */
+            background-color: #181818;
             color: #e0e0e0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
@@ -26,7 +26,7 @@
             width: 500px;
         }
         h1 {
-            color: #ffce00; /* Jaune Brawl Stars */
+            color: #ffce00;
             font-size: 2rem;
             margin-bottom: 10px;
             margin-top: 0;
@@ -41,7 +41,7 @@
         }
         .loader {
             border: 4px solid #333;
-            border-top: 4px solid #ffce00; /* Jaune */
+            border-top: 4px solid #ffce00;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -58,6 +58,7 @@
             color: #666;
         }
 
+        /* Conteneur du compte à rebours */
         #timer {
             display: flex;
             justify-content: center;
@@ -66,11 +67,12 @@
             margin-bottom: 20px;
         }
         
+        /* Les boîtes individuelles (Jours, Heures, etc.) */
         .time-box {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: #2a2a2a; /* Légèrement plus clair que le container */
+            background: #2a2a2a;
             padding: 10px;
             border-radius: 8px;
             min-width: 70px;
@@ -80,7 +82,7 @@
         .number {
             font-size: 1.8rem;
             font-weight: bold;
-            color: #ffce00; /* Utilisation de ton jaune */
+            color: #ffce00;
         }
 
         .label {
@@ -88,6 +90,14 @@
             text-transform: uppercase;
             color: #888;
             margin-top: 5px;
+        }
+
+        /* Message de fin caché par défaut */
+        #message {
+            display: none;
+            font-size: 1.2rem;
+            color: #ffce00;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -97,27 +107,43 @@
         <h1>Maintenance</h1>
         <p>Brawl-Track évolue !<br>
         Nous mettons à jour notre infrastructure.</p>
-            <div class="time-block">
+        
+        <div id="timer">
+            <div class="time-box">
+                <span id="days" class="number">00</span>
+                <span class="label">Jours</span>
+            </div>
+            <div class="time-box">
                 <span id="hours" class="number">00</span>
                 <span class="label">Heures</span>
             </div>
-            <div class="time-block">
+            <div class="time-box">
                 <span id="minutes" class="number">00</span>
-                <span class="label">Minutes</span>
+                <span class="label">Min</span>
             </div>
-            <div class="time-block">
+            <div class="time-box">
                 <span id="seconds" class="number">00</span>
-                <span class="label">Secondes</span>
+                <span class="label">Sec</span>
             </div>
         </div>
         
-        <div id="message">Le site sera de retour très bientôt.</div>
+        <div id="message">Le site est de retour ! Actualisez la page.</div>
         
         <div class="footer">&copy; Brawl Track</div>
     </div>
+
     <script>
-        targetDate.setDate(targetDate.getDate() + 1); // Ajoute 1 jour à aujourd'hui
-        targetDate.setHours(12, 0, 0, 0); // Fixe l'heure à 12:00:00
+        // --- CONFIGURATION DE LA DATE DE FIN ---
+        // Modifiez la date ci-dessous (Format: Année, Mois (0-11), Jour, Heure, Minute)
+        // Note: Les mois commencent à 0 (Janvier = 0, Décembre = 11)
+        
+        // EXEMPLE : Pour finir le 30 Décembre 2025 à 14h30 :
+        // const targetDate = new Date(2025, 11, 30, 12, 30, 0).getTime();
+
+        // PAR DÉFAUT (pour le test) : Je mets une date à "Demain même heure"
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + 1); 
+        // ----------------------------------------
 
         function updateCountdown() {
             const now = new Date().getTime();
@@ -127,10 +153,13 @@
             if (distance < 0) {
                 document.getElementById("timer").style.display = "none";
                 document.getElementById("message").style.display = "block";
+                // Optionnel : Arrêter l'intervalle pour économiser des ressources
+                // clearInterval(intervalId); 
                 return;
             }
 
             // Calculs mathématiques pour le temps
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -143,7 +172,7 @@
         }
 
         // Mise à jour chaque seconde
-        setInterval(updateCountdown, 1000);
+        const intervalId = setInterval(updateCountdown, 1000);
         
         // Appel initial pour éviter le délai d'une seconde à l'affichage
         updateCountdown();
