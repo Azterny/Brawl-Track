@@ -72,14 +72,14 @@
                             <input type="text" id="picker-input-main" style="display:none;"> 
                         </div>
                         <button id="nav-btn-next" class="nav-arrow" onclick="navigateChart(-1)">❯</button>
-
-                        <div id="chart-navigation-hour" class="chart-nav-bar hidden" style="margin-top: 5px;">
+                    </div>
+                    
+                    <div id="chart-navigation-hour" class="chart-nav-bar hidden" style="margin-top: 5px;">
                             <button id="nav-btn-prev-hour" class="nav-arrow" onclick="navigateHour(1)">❮</button>
                             <span id="chart-hour-label" style="font-weight:bold; min-width: 120px; text-align:center;">--:--</span>
                             <button id="nav-btn-next-hour" class="nav-arrow" onclick="navigateHour(-1)">❯</button>
-                        </div>
                     </div>
-
+                    
                     <div style="position: relative; height: 300px; width: 100%;">
                         <canvas id="trophyChart"></canvas>
                     </div>
@@ -138,12 +138,12 @@
                     </div>
                 
                     <button id="brawler-nav-btn-next" class="nav-arrow" onclick="navigateBrawlerChart(-1)">❯</button>
-                    
-                    <div id="brawler-chart-navigation-hour" class="chart-nav-bar hidden" style="margin-top: 5px;">
-                        <button id="brawler-nav-btn-prev-hour" class="nav-arrow" onclick="navigateBrawlerHour(1)">❮</button>
-                        <span id="brawler-chart-hour-label" style="font-weight:bold; min-width: 120px; text-align:center;">--:--</span>
-                        <button id="brawler-nav-btn-next-hour" class="nav-arrow" onclick="navigateBrawlerHour(-1)">❯</button>
-                    </div>
+                </div>
+                
+                <div id="brawler-chart-navigation-hour" class="chart-nav-bar hidden" style="margin-top: 5px;">
+                    <button id="brawler-nav-btn-prev-hour" class="nav-arrow" onclick="navigateBrawlerHour(1)">❮</button>
+                    <span id="brawler-chart-hour-label" style="font-weight:bold; min-width: 120px; text-align:center;">--:--</span>
+                    <button id="brawler-nav-btn-next-hour" class="nav-arrow" onclick="navigateBrawlerHour(-1)">❯</button>
                 </div>
                 
                 <div style="position: relative; height: 300px; width: 100%;">
