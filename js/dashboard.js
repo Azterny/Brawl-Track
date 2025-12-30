@@ -42,33 +42,6 @@ async function initDashboard() {
     checkClaimStatus();
 }
 
-function initCustomCalendar() {
-    flatpickr("#chart-date-picker", {
-        locale: "fr",              // Langue française
-        dateFormat: "Y-m-d",       // Format compatible avec votre logique actuelle
-        disableMobile: true,       // Force le thème personnalisé même sur mobile
-        theme: "dark",             // Base sombre
-        position: "auto center",   // Centré par rapport à l'élément
-        
-        // Lier le bouton Emoji pour ouvrir le calendrier
-        positionElement: document.getElementById('calendar-trigger'),
-        onReady: function(selectedDates, dateStr, instance) {
-            const trigger = document.getElementById('calendar-trigger');
-            if(trigger) {
-                trigger.addEventListener('click', () => {
-                    instance.open();
-                });
-            }
-        },
-
-        // Quand l'utilisateur choisit une date
-        onChange: function(selectedDates, dateStr, instance) {
-            // Appel de votre fonction existante
-            jumpToDate(dateStr);
-        }
-    });
-}
-
 async function fetchUserTier() {
     const token = localStorage.getItem('token');
     if (!token) return;
