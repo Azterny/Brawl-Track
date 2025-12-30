@@ -11,6 +11,12 @@
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 </head>
 <body>
     <div id="global-navbar"></div>
@@ -62,11 +68,9 @@
                         
                         <span id="chart-period-label" style="font-weight:bold; min-width: 150px; text-align:center;">Aujourd'hui</span>
                         
-                        <div style="position: relative; display:inline-block;">
-                            <label for="chart-date-picker" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</label>
-                            <input type="date" id="chart-date-picker" 
-                                   style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;"
-                                   onchange="jumpToDate(this.value)">
+                        <div id="picker-container-main" style="position: relative; display:inline-block;">
+                            <span id="trigger-picker-main" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</span>
+                            <input type="text" id="picker-input-main" style="display:none;"> 
                         </div>
                     
                         <button id="nav-btn-next" class="nav-arrow" onclick="navigateChart(-1)">❯</button>
@@ -124,15 +128,14 @@
                     
                     <span id="brawler-chart-period-label" style="font-weight:bold; min-width: 150px; text-align:center;">Aujourd'hui</span>
                     
-                    <div style="position: relative; display:inline-block;">
-                        <label for="brawler-chart-date-picker" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</label>
-                        <input type="date" id="brawler-chart-date-picker" 
-                               style="position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;"
-                               onchange="jumpToBrawlerDate(this.value)">
+                    <div id="picker-container-brawler" style="position: relative; display:inline-block;">
+                        <span id="trigger-picker-brawler" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</span>
+                        <input type="text" id="picker-input-brawler" style="display:none;">
                     </div>
                 
                     <button id="brawler-nav-btn-next" class="nav-arrow" onclick="navigateBrawlerChart(-1)">❯</button>
                 </div>
+                
                 <div style="position: relative; height: 300px; width: 100%;">
                     <canvas id="brawlerChartCanvas"></canvas>
                 </div>
