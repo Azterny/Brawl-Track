@@ -2,720 +2,474 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Brawl Track</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Admin Brut - Brawl Track</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <style>
+        /* --- STYLE PRIMAIRE & FONCTIONNEL --- */
         body {
-            background-color: #050505; /* Fond très sombre pour la page */
-            color: #e0e0e0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center; /* Centre la box principale */
+            background-color: #000;
+            color: #ccc;
+            font-family: monospace, sans-serif;
+            margin: 0; padding: 20px;
+            font-size: 14px;
         }
 
-        /* --- CONTENEUR PRINCIPAL (LA "BOX") --- */
-        .main-container {
-            width: 100%;
-            max-width: 1200px;
-            background-color: #121212; /* Fond de la box */
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        /* Cadre Principal */
+        #main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            border: 1px solid #444;
+            background: #111;
+            padding: 10px;
         }
 
-        /* --- LOGIN OVERLAY (REMPLACE LE PROMPT) --- */
+        /* Login Overlay Simple */
         #login-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
-        .login-box {
-            background: #1e1e1e;
-            padding: 30px;
-            border-radius: 10px;
-            border: 1px solid #ffce00;
-            text-align: center;
-            width: 300px;
-        }
+        .login-box { border: 2px solid #ffce00; padding: 20px; text-align: center; background: #111; }
 
-        /* --- STATS GRID --- */
+        /* Header */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #ffce00; padding-bottom: 10px; margin-bottom: 15px;
+        }
+        h1 { margin: 0; color: #ffce00; font-size: 1.5em; text-transform: uppercase; }
+
+        /* Stats Grid (Simple) */
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;
         }
-        .stat-card {
-            background: #1e1e1e;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            text-align: center;
+        .stat-box {
+            border: 1px solid #333; background: #0a0a0a; padding: 10px;
         }
-        .stat-card h3 {
-            font-size: 0.8em;
-            color: #888;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .stat-card p {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #fff;
-            margin: 0;
-        }
-        
-        /* --- CONTROLS --- */
-        .controls-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-            background: #181818;
-            padding: 12px;
-            border-radius: 8px;
-            align-items: center;
-            border: 1px solid #2a2a2a;
-        }
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #252525;
-            padding: 6px 12px;
-            border-radius: 4px;
-            border: 1px solid #333;
-        }
-        
-        /* --- ELEMENTS UI --- */
-        select, input[type="text"], input[type="password"] {
-            background: #111;
-            color: #fff;
-            border: 1px solid #444;
-            padding: 6px 10px;
-            border-radius: 4px;
-            outline: none;
-        }
-        select:focus, input:focus { border-color: #ffce00; }
+        .stat-box h3 { margin: 0 0 5px 0; font-size: 0.8em; color: #888; text-transform: uppercase; }
+        .stat-box p { margin: 0; font-size: 1.2em; color: #fff; font-weight: bold; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
-        th { background: #1a1a1a; color: #888; font-size: 0.85em; text-transform: uppercase; }
+        /* Barre de Contrôle */
+        .controls {
+            background: #222; border: 1px solid #444; padding: 10px; margin-bottom: 10px;
+            display: flex; flex-wrap: wrap; gap: 15px; align-items: center;
+        }
+        
+        /* Inputs & Boutons */
+        input, select, button {
+            background: #000; color: #fff; border: 1px solid #555;
+            padding: 5px 10px; font-family: monospace; font-size: 1em; cursor: pointer;
+        }
+        input:focus, select:focus { border-color: #ffce00; outline: none; }
+        
+        button:hover { background: #333; }
+        button.active { background: #ffce00; color: #000; font-weight: bold; border-color: #ffce00; }
+        
+        .btn-green { color: #28a745; border-color: #28a745; }
+        .btn-green:hover { background: #28a745; color: #000; }
+        .btn-red { color: #ff5555; border-color: #ff5555; }
+        .btn-red:hover { background: #ff5555; color: #000; }
+
+        /* Tableaux */
+        table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
+        th { text-align: left; border-bottom: 2px solid #444; padding: 8px; color: #888; text-transform: uppercase; }
+        td { border-bottom: 1px solid #222; padding: 6px 8px; vertical-align: middle; }
         tr:hover { background: #1a1a1a; }
-        
-        .action-btn { background: #333; border: none; color: #fff; cursor: pointer; padding: 5px 10px; border-radius: 4px; transition: 0.2s; }
-        .action-btn:hover { background: #555; }
-        .btn-add { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 4px 8px;}
-        .btn-del { background: transparent; color: #ff5555; border: 1px solid #ff5555; border-radius: 4px; cursor: pointer; padding: 4px 8px; }
-        .btn-del:hover { background: #ff5555; color: white; }
-        
-        .badge-tag { background: #222; padding: 2px 6px; border-radius: 4px; border: 1px solid #444; font-family: monospace; color: #ffce00; }
-        .hidden { display: none !important; }
-        
-        /* Switch Mode Vue */
-        .view-switch {
-            display: flex;
-            background: #111;
-            border-radius: 4px;
-            overflow: hidden;
-            border: 1px solid #444;
-        }
-        .view-btn {
-            padding: 8px 16px;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            color: #888;
-            font-weight: 500;
-        }
-        .view-btn.active {
-            background: #333;
-            color: #fff;
-            font-weight: bold;
-        }
 
-        /* Checkbox Style Custom */
-        .filter-label { font-size: 0.9em; display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none;}
+        .hidden { display: none !important; }
+        .badge { display: inline-block; padding: 2px 5px; border: 1px solid #444; color: #ffce00; font-size: 0.9em; }
+        
+        /* Checkboxes Labels */
+        .filter-label { display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; color: #aaa; }
+        .filter-label input:checked + span { color: #fff; text-decoration: underline; }
+
+        /* Détails */
+        .details-row { background: #080808; border-bottom: 1px solid #444; }
+        .details-table td { border: none; color: #888; font-size: 0.9em; padding: 3px 10px; }
     </style>
 </head>
 <body>
 
     <div id="login-overlay">
         <div class="login-box">
-            <h2 style="color: #ffce00; margin-top: 0;">🛡️ Accès Admin</h2>
-            <p style="color: #ccc; font-size: 0.9em;">Veuillez vous identifier</p>
-            <input type="password" id="admin-pass-input" placeholder="Mot de passe" style="width: 80%; margin-bottom: 15px; padding: 10px;">
+            <h2 style="color:#ffce00; margin-top:0;">ADMIN ACCESS</h2>
+            <input type="password" id="admin-pass" placeholder="Password" style="margin-bottom:10px;">
             <br>
-            <button onclick="attemptLogin()" style="background: #ffce00; color: #000; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer;">Entrer</button>
+            <button onclick="login()" style="width:100%">ENTER</button>
         </div>
     </div>
 
-    <div class="main-container">
+    <div id="main-container">
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 15px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <h1 style="color: #ffce00; margin: 0; font-size: 1.8em;">🛡️ Administration</h1>
-                <span style="background: #222; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; border: 1px solid #444;">v2.0 Multi-Tag</span>
-            </div>
+        <header>
+            <h1>Admin Panel <span style="font-size:0.5em; color:#666;">v3.0 RAW</span></h1>
             <div>
-                <button onclick="loadData()" class="action-btn">Actualiser</button>
-                <button onclick="logout()" style="padding: 8px 15px; background: #8b0000; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">Déconnexion</button>
+                <button onclick="loadData()">REFRESH</button>
+                <button onclick="logout()" class="btn-red">LOGOUT</button>
             </div>
-        </div>
+        </header>
 
-        <div id="stats-container">
-            <div style="text-align:center; padding: 20px; color: #666;">Chargement des statistiques...</div>
-        </div>
+        <div id="stats-area" class="stats-grid">Loading Stats...</div>
 
-        <div class="controls-bar">
-            <div class="view-switch">
-                <button class="view-btn active" id="btn-view-users" onclick="switchView('users')">Utilisateurs</button>
-                <button class="view-btn" id="btn-view-tags" onclick="switchView('tags')">Tous les Tags</button>
+        <div class="controls">
+            <div style="border-right: 1px solid #444; padding-right: 15px;">
+                <button id="btn-users" onclick="setView('users')" class="active">UTILISATEURS</button>
+                <button id="btn-tags" onclick="setView('tags')">TAGS</button>
             </div>
 
-            <div class="filter-group">
-                <span>🔍</span>
-                <input type="text" id="search-input" placeholder="Pseudo, ID, Tag..." onkeyup="renderTable()" style="background:transparent; border:none; color:white; padding:0;">
+            <div>
+                <input type="text" id="search" placeholder="Recherche..." onkeyup="renderTable()" style="width: 150px;">
             </div>
 
-            <div class="filter-group">
-                <span style="color:#888; font-size:0.9em;">Filtres:</span>
-                
-                <span id="filters-users" style="display:flex; gap:10px;">
-                    <label class="filter-label"><input type="checkbox" onchange="toggleFilter('premium')"> Premium</label>
-                    <label class="filter-label"><input type="checkbox" onchange="toggleFilter('active_24h')"> Actif 24h</label>
-                </span>
-
-                <span id="filters-tags" class="hidden" style="display:flex; gap:10px;">
-                    <label class="filter-label"><input type="checkbox" onchange="toggleFilter('unclaimed')"> Non Claim</label>
-                    <label class="filter-label"><input type="checkbox" onchange="toggleFilter('claimed')"> Claimed</label>
-                </span>
+            <div id="filters-users" style="display:flex; gap:15px; flex-wrap:wrap;">
+                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('premium')"> <span>Premium</span></label>
+                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('subscriber')"> <span>Abonnés</span></label>
+                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('basic')"> <span>Basics</span></label>
+                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('single_tag')"> <span>1 Seul Tag</span></label>
+                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('never_connected')"> <span>Jamais Connectés</span></label>
+                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('connected_today')"> <span>Connecté Aujourd'hui</span></label>
             </div>
 
-            <div style="margin-left: auto; display: flex; gap: 5px;">
+            <div id="filters-tags" class="hidden" style="display:flex; gap:15px;">
+                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('claimed')"> <span>Claimed</span></label>
+                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('unclaimed')"> <span>Unclaimed</span></label>
+            </div>
+
+            <div style="margin-left:auto; display:flex; gap:5px;">
+                <span>Tri:</span>
                 <select id="sort-select" onchange="renderTable()">
-                    <option value="id">ID / Alpha</option>
-                    <option value="last_archive">Dernière Archive</option>
-                    <option value="next_archive">Prochaine Archive</option>
-                    <option value="total_archives">Nb Archives</option>
-                    <option value="trophies">Trophées</option>
-                    <option value="owner">Propriétaire</option>
-                </select>
-                <button onclick="toggleSortOrder()" id="sort-order-btn" class="action-btn" style="min-width: 30px;">▼</button>
+                    </select>
+                <button onclick="toggleSort()">▼</button>
             </div>
         </div>
 
-        <table id="main-table">
-            <thead id="table-head"></thead>
-            <tbody id="table-body"></tbody>
+        <table>
+            <thead id="thead"></thead>
+            <tbody id="tbody"></tbody>
         </table>
 
     </div>
 
     <script src="js/config.js"></script>
     <script>
-        // --- GESTION LOGIN ---
-        const storedKey = localStorage.getItem('admin_key');
-        if (storedKey) {
+        // --- AUTH & INIT ---
+        const ADMIN_KEY_KEY = 'admin_key_v3';
+        let ADMIN_PASS = localStorage.getItem(ADMIN_KEY_KEY);
+
+        if(ADMIN_PASS) {
             document.getElementById('login-overlay').classList.add('hidden');
-            loadData(); // Charge les données si déjà connecté
+            loadData();
         }
 
-        async function attemptLogin() {
-            const pass = document.getElementById('admin-pass-input').value;
-            // Test simple via API Stats pour vérifier le pass
+        async function login() {
+            const p = document.getElementById('admin-pass').value;
+            // Test auth rapide
             try {
                 const res = await fetch(`${API_URL}/api/admin/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pass })
+                    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password:p})
                 });
-                
-                if (res.ok) {
-                    localStorage.setItem('admin_key', pass);
+                if(res.ok) {
+                    ADMIN_PASS = p;
+                    localStorage.setItem(ADMIN_KEY_KEY, p);
                     document.getElementById('login-overlay').classList.add('hidden');
                     loadData();
-                } else {
-                    alert("Mot de passe incorrect");
-                }
-            } catch (e) {
-                // Fallback si l'API Login n'existe pas encore : on stocke et on essaie
-                localStorage.setItem('admin_key', pass);
-                document.getElementById('login-overlay').classList.add('hidden');
-                loadData();
-            }
+                } else alert("INVALID PASSWORD");
+            } catch(e) { alert("CONNECTION ERROR"); }
         }
 
         function logout() {
-            localStorage.removeItem('admin_key');
+            localStorage.removeItem(ADMIN_KEY_KEY);
             location.reload();
         }
 
-        // --- GLOBAL VARIABLES ---
-        let rawUsersData = [];
-        let rawTagsData = []; 
-        let currentFilters = new Set();
-        let sortOrder = 1; 
-        let currentView = 'users'; 
+        // --- DATA ---
+        let rawUsers = [], rawTags = [];
+        let view = 'users'; // 'users' or 'tags'
+        let filters = new Set();
+        let sortDir = 1; // 1 asc, -1 desc
 
-        // --- NAVIGATION ---
-        function switchView(mode) {
-            currentView = mode;
+        async function loadData() {
+            if(!ADMIN_PASS) return;
+            document.getElementById('tbody').innerHTML = '<tr><td colspan="8" style="text-align:center">Loading data...</td></tr>';
             
-            // UI Boutons
-            document.getElementById('btn-view-users').className = mode === 'users' ? 'view-btn active' : 'view-btn';
-            document.getElementById('btn-view-tags').className = mode === 'tags' ? 'view-btn active' : 'view-btn';
+            // Stats
+            fetch(`${API_URL}/api/admin/stats`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
+                .then(r=>r.json()).then(renderStats).catch(e=>console.error(e));
             
-            // Gestion Visibilité Filtres
-            const userFilters = document.getElementById('filters-users');
-            const tagFilters = document.getElementById('filters-tags');
+            // Users
+            fetch(`${API_URL}/api/admin/users`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
+                .then(r=>r.json()).then(data => {
+                    // Mapper proprement
+                    const map = new Map();
+                    data.forEach(r => {
+                        if(!map.has(r.id)) map.set(r.id, { ...r, tags: [] });
+                        if(r.brawl_tag) map.get(r.id).tags.push({ 
+                            id: r.tag_id, str: r.brawl_tag, interval: r.rec_temp, 
+                            last: r.last_archive, total: r.total_archives || 0
+                        });
+                    });
+                    rawUsers = Array.from(map.values());
+                    if(view === 'users') renderTable();
+                });
 
-            if(mode === 'tags') {
-                userFilters.classList.add('hidden');
-                tagFilters.classList.remove('hidden');
-                // On reset les filtres pour éviter la confusion
-                currentFilters.clear();
-                // On décoche tout visuellement
-                document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+            // Tags
+            fetch(`${API_URL}/api/admin/tags`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
+                .then(r=>r.json()).then(data => {
+                    rawTags = data;
+                    if(view === 'tags') renderTable();
+                });
+        }
+
+        // --- LOGIQUE VUE & TRI ---
+        function setView(v) {
+            view = v;
+            document.getElementById('btn-users').className = v==='users'?'active':'';
+            document.getElementById('btn-tags').className = v==='tags'?'active':'';
+            
+            document.getElementById('filters-users').className = v==='users'?'':'hidden';
+            document.getElementById('filters-tags').className = v==='tags'?'':'hidden';
+            
+            // Reset filtres
+            filters.clear();
+            document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);
+            
+            // Update Sort Options
+            const sel = document.getElementById('sort-select');
+            sel.innerHTML = '';
+            if(v === 'users') {
+                sel.innerHTML += '<option value="id">ID</option>';
+                sel.innerHTML += '<option value="name">Nom (Alpha)</option>';
+                sel.innerHTML += '<option value="last_login">Dernière Connexion</option>';
+                sel.innerHTML += '<option value="nb_archives">Nombre d\'archives</option>';
+                sel.innerHTML += '<option value="nb_tags">Nombre de Tags</option>';
             } else {
-                userFilters.classList.remove('hidden');
-                tagFilters.classList.add('hidden');
-                currentFilters.clear();
-                document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+                sel.innerHTML += '<option value="id">ID</option>';
+                sel.innerHTML += '<option value="owner">Nom Propriétaire</option>';
+                sel.innerHTML += '<option value="next_archive">Prochaine Archive</option>';
+                sel.innerHTML += '<option value="last_archive">Dernière Archive</option>';
+                sel.innerHTML += '<option value="nb_archives">Nombre d\'archives</option>';
+                sel.innerHTML += '<option value="trophies">Nombre de Trophées</option>';
             }
-
             renderTable();
         }
 
-        // --- LOAD DATA ---
-        function loadData() {
-            const ADMIN_KEY = localStorage.getItem('admin_key');
-            if(!ADMIN_KEY) return; // Sécurité
-
-            loadStats(ADMIN_KEY);
-            loadUsersList(ADMIN_KEY);
-            loadTagsList(ADMIN_KEY);
+        function toggleFilter(f) {
+            if(filters.has(f)) filters.delete(f); else filters.add(f);
+            renderTable();
         }
+        function toggleSort() { sortDir *= -1; renderTable(); }
 
-        async function loadStats(key) {
-            try {
-                const res = await fetch(`${API_URL}/api/admin/stats`, { headers: { 'X-Admin-Pass': key } });
-                if (res.status === 403) throw new Error("Auth Failed");
-                const data = await res.json();
-                renderStats(data);
-            } catch (e) {
-                if(e.message === "Auth Failed") logout();
-            }
-        }
-
-        async function loadUsersList(key) {
-            try {
-                const res = await fetch(`${API_URL}/api/admin/users`, { headers: { 'X-Admin-Pass': key } });
-                const rawApiData = await res.json();
-                
-                const map = new Map();
-                rawApiData.forEach(row => {
-                    if (!map.has(row.id)) {
-                        map.set(row.id, {
-                            id: row.id, username: row.username, tier: row.tier, last_login: row.last_login, 
-                            user_interval: row.user_default_interval, tags: []
-                        });
-                    }
-                    if (row.brawl_tag) {
-                        map.get(row.id).tags.push({
-                            id: row.tag_id,
-                            tag_str: row.brawl_tag,
-                            interval: row.rec_temp,
-                            last_archive: row.last_archive,
-                            total_archives: row.total_archives || 0,
-                            trophies: 0 
-                        });
-                    }
-                });
-                rawUsersData = Array.from(map.values());
-                if(currentView === 'users') renderTable();
-            } catch(e) { console.error("Err Users", e); }
-        }
-
-        async function loadTagsList(key) {
-            try {
-                const res = await fetch(`${API_URL}/api/admin/tags`, { headers: { 'X-Admin-Pass': key } });
-                rawTagsData = await res.json();
-                if(currentView === 'tags') renderTable();
-            } catch(e) { console.error("Err Tags", e); }
-        }
-
-        // --- RENDER STATS ---
-        function renderStats(data) {
-            const container = document.getElementById('stats-container');
-            
-            let nextArchiveText = "En attente...";
-            let nextArchiveColor = "#888";
-            if (data.next_archive_date) {
-                const now = new Date();
-                const target = new Date(data.next_archive_date.replace(' ', 'T')); 
-                const diffMs = target - now;
-                const diffMins = Math.ceil(diffMs / 60000);
-
-                if (diffMins <= 0) {
-                    nextArchiveText = "Imminent";
-                    nextArchiveColor = "#ffce00";
-                } else {
-                    nextArchiveText = `dans ${diffMins} min`;
-                    nextArchiveColor = "#28a745";
-                }
-            }
-            const lastArchText = data.last_archive_date ? formatDate(data.last_archive_date) : "Aucune";
-
-            container.innerHTML = `
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Utilisateurs Inscrits</h3>
-                        <p>${data.users}</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Points d'Historique</h3>
-                        <p>${data.records}</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Moy. Archives/User</h3>
-                        <p>${data.avg_archives}</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Tags (Claim / Total)</h3>
-                        <p>${data.claimed_tags} <span style="font-size:0.6em; color:#888;">/ ${data.total_tags}</span></p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Dernière Archive</h3>
-                        <p style="font-size:0.9em">${lastArchText}</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Prochaine Auto</h3>
-                        <p style="color:${nextArchiveColor}">${nextArchiveText}</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Stockage (Utilisé/Max)</h3>
-                        <p style="font-size:0.8em">${data.disk_str} <span style="font-size:0.8em; color:${data.disk_percent > 80 ? '#ff5555' : '#888'}">(${data.disk_percent}%)</span></p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Charge CPU / RAM</h3>
-                        <div style="font-size: 0.8rem; text-align: left; margin-top: 5px; padding-left: 20px;">
-                            CPU: <div style="display:inline-block; width:60px; height:8px; background:#333; border-radius:4px;">
-                                    <div style="width:${data.cpu}%; height:100%; background:${getColor(data.cpu)}; border-radius:4px;"></div>
-                                 </div> ${data.cpu}%<br>
-                            RAM: <div style="display:inline-block; width:60px; height:8px; background:#333; border-radius:4px; margin-top:3px;">
-                                    <div style="width:${data.ram}%; height:100%; background:${getColor(data.ram)}; border-radius:4px;"></div>
-                                 </div> ${data.ram}%
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- RENDER TABLE ---
-        function renderTable() {
-            const thead = document.getElementById('table-head');
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-            
-            const data = getProcessedData(currentView);
-
-            if (currentView === 'users') renderUsersTable(data, thead, tbody);
-            else renderTagsTable(data, thead, tbody);
-        }
-
-        function renderUsersTable(data, thead, tbody) {
-            thead.innerHTML = `<tr><th style="width:30px"></th><th>ID</th><th>Utilisateur</th><th>Grade</th><th>Dernière Connexion</th><th>Total Archives</th><th style="text-align:right">Actions</th></tr>`;
-            
-            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#666;">Aucun utilisateur trouvé</td></tr>`; return; }
-
-            data.forEach(u => {
-                const row = document.createElement('tr');
-                const lastLog = u.last_login ? formatDate(u.last_login) : 'Jamais';
-                const totArch = u.tags.reduce((acc, t) => acc + t.total_archives, 0);
-
-                row.innerHTML = `
-                    <td><button class="action-btn" onclick="toggleDetails(${u.id})">▼</button></td>
-                    <td style="color:#888">#${u.id}</td>
-                    <td style="font-weight:bold; color:white">${u.username}</td>
-                    <td><select onchange="updateTier(${u.id}, this.value)" style="padding:2px; font-size:0.9em;">
-                        <option value="basic" ${u.tier==='basic'?'selected':''}>Basic</option>
-                        <option value="subscriber" ${u.tier==='subscriber'?'selected':''}>Abonné</option>
-                        <option value="premium" ${u.tier==='premium'?'selected':''}>Premium</option>
-                    </select></td>
-                    <td style="color:#aaa; font-size:0.9em">${lastLog}</td>
-                    <td><span style="color:#ffce00">${totArch}</span></td>
-                    <td style="text-align:right; display:flex; gap:5px; justify-content:flex-end;">
-                        <button class="action-btn" title="Renommer" onclick="renameUser(${u.id}, '${u.username}')">✏️</button>
-                        <button class="btn-add" title="Ajouter un Tag" onclick="adminAddTag(${u.id})">➕</button>
-                        <button class="btn-del" title="Supprimer User" onclick="deleteUser(${u.id})">🗑️</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-
-                // Détails
-                const detailRow = document.createElement('tr');
-                detailRow.id = `detail-${u.id}`;
-                detailRow.className = 'hidden details-row';
-                detailRow.style.background = '#0e0e0e';
-                
-                let tagsHtml = u.tags.map(t => `
-                    <tr style="background:transparent; border-bottom:1px solid #222;">
-                        <td colspan="2" style="text-align:right; color:#444;">↳</td>
-                        <td><span class="badge-tag">${t.tag_str}</span></td>
-                        <td>
-                            <input type="number" value="${t.interval}" 
-                                style="width:50px; background:#111; color:#ffce00; border:1px solid #444; border-radius:4px; text-align:center;" 
-                                onchange="updateTagFreq(${t.id}, this)" title="Freq (min)"> min
-                        </td>
-                        <td style="font-size:0.9em">Last: ${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
-                        <td style="color:#aaa; font-size:0.9em">Next: ${getNextTime(t.last_archive, t.interval)}</td>
-                        <td style="text-align:right">
-                            <button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'">📝</button>
-                            <button class="btn-del" title="Détacher" onclick="adminUnclaimTag(${t.id})">🔗✖</button>
-                        </td>
-                    </tr>
-                `).join('');
-
-                if(!tagsHtml) tagsHtml = `<tr><td colspan="7" style="text-align:center; color:#444; font-style:italic; padding:10px;">Aucun tag associé</td></tr>`;
-
-                detailRow.innerHTML = `<td colspan="7"><table style="width:95%; margin:auto; margin-bottom:10px;">${tagsHtml}</table></td>`;
-                tbody.appendChild(detailRow);
-            });
-        }
-
-        function renderTagsTable(data, thead, tbody) {
-            thead.innerHTML = `<tr><th>Propriétaire</th><th>Tag</th><th>Freq</th><th>Last Arch.</th><th>Next Arch.</th><th>Trophées</th><th style="text-align:right">Actions</th></tr>`;
-            
-            if(data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#666;">Aucun tag trouvé</td></tr>`; return; }
-            
-            data.forEach(item => {
-                const u = item.user;
-                const t = item.tag;
-                
-                const ownerDisplay = u 
-                    ? `<span style="font-weight:bold; color:white;">${u.username}</span>` 
-                    : `<span style="color:#555; font-style:italic;">-- Unclaimed --</span>`;
-                    
-                const editBtn = u
-                    ? `<button class="action-btn" onclick="window.location.href='admin_edit.html?id=${u.id}'" title="Voir User">📝</button>`
-                    : `<button class="action-btn" style="opacity:0.3; cursor:not-allowed;">📝</button>`;
-
-                const unclaimBtn = u
-                    ? `<button class="btn-del" onclick="adminUnclaimTag(${t.id})" title="Détacher">🔗✖</button>`
-                    : ``;
-
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${ownerDisplay}</td>
-                    <td><span class="badge-tag">${t.tag_str}</span></td>
-                    <td>
-                        <input type="number" value="${t.interval}" 
-                               style="width:60px; background:#111; color:#ffce00; border:1px solid #444; border-radius:4px; text-align:center; padding:5px;" 
-                               onchange="updateTagFreq(${t.id}, this)"> min
-                    </td>
-                    <td>${t.last_archive ? formatDate(t.last_archive) : 'N/A'}</td>
-                    <td>${getNextTime(t.last_archive, t.interval)}</td>
-                    <td style="color:#ffce00; font-weight:bold;">${t.trophies || 0} 🏆</td>
-                    <td style="text-align:right">
-                        ${editBtn}
-                        ${unclaimBtn}
-                        <button class="btn-del" style="background:#8b0000; border:1px solid #ff5555;" onclick="adminDeleteTag(${t.id})">🗑️ Tag</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        // --- UTILS & ACTIONS ---
-        const ADMIN_KEY = localStorage.getItem('admin_key');
-
-        async function renameUser(uid, currentName) {
-            const newName = prompt("Nouveau pseudo :", currentName);
-            if (!newName || newName === currentName) return;
-            try {
-                const res = await fetch(`${API_URL}/api/admin/user/${uid}/rename`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
-                    body: JSON.stringify({ username: newName })
-                });
-                if(res.ok) { alert("✅ Renommé"); loadUsersList(ADMIN_KEY); }
-            } catch(e) { alert("Erreur réseau"); }
-        }
-
-        async function adminAddTag(uid) {
-            const tag = prompt("Tag à ajouter (ex: #ABC) :");
-            if (!tag) return;
-            try {
-                const res = await fetch(`${API_URL}/api/admin/user/${uid}/claim`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
-                    body: JSON.stringify({ tag: tag })
-                });
-                const d = await res.json();
-                alert(d.message);
-                if(res.ok) loadUsersList(ADMIN_KEY);
-            } catch(e) { alert("Erreur réseau"); }
-        }
-
-        async function adminUnclaimTag(tagId) {
-            if (!confirm("Détacher ce tag ?")) return;
-            try {
-                const res = await fetch(`${API_URL}/api/admin/tag/${tagId}/unclaim`, {
-                    method: 'POST', headers: { 'X-Admin-Pass': ADMIN_KEY }
-                });
-                if(res.ok) loadData();
-            } catch(e) { alert("Erreur"); }
-        }
-
-        async function adminDeleteTag(tagId) {
-            if (!confirm("⚠️ SUPPRIMER DÉFINITIVEMENT CE TAG ?")) return;
-            try {
-                const res = await fetch(`${API_URL}/api/admin/tag/${tagId}`, {
-                    method: 'DELETE', headers: { 'X-Admin-Pass': ADMIN_KEY }
-                });
-                if(res.ok) { alert("Supprimé"); loadData(); }
-            } catch(e) { alert("Erreur"); }
-        }
-
-        async function updateTagFreq(tagId, input) {
-            const val = parseInt(input.value);
-            if(isNaN(val) || val < 0) return;
-            input.style.borderColor = "#ffce00";
-            try {
-                const res = await fetch(`${API_URL}/api/admin/tag/${tagId}/frequency`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
-                    body: JSON.stringify({ minutes: val })
-                });
-                if(res.ok) { 
-                    input.style.borderColor = "#28a745";
-                    setTimeout(() => input.style.borderColor = "#444", 1000);
-                } else input.style.borderColor = "red";
-            } catch(e) { input.style.borderColor = "red"; }
-        }
-
-        async function updateTier(uid, tier) {
-            try {
-                const res = await fetch(`${API_URL}/api/admin/update-tier`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
-                    body: JSON.stringify({ user_id: uid, tier: tier })
-                });
-                if(res.ok) loadUsersList(ADMIN_KEY);
-            } catch(e) { console.error(e); }
-        }
-
-        async function deleteUser(uid) {
-            if(!confirm("Supprimer l'utilisateur et détacher ses tags ?")) return;
-            alert("Veuillez implémenter la suppression utilisateur dans le backend (app_admin.py) si nécessaire.");
-        }
-
-        function getProcessedData(mode) {
+        // --- PROCESSING CORE ---
+        function getProcessedData() {
             let data = [];
-            const search = document.getElementById('search-input').value.toLowerCase();
+            const search = document.getElementById('search').value.toLowerCase();
             const now = new Date();
 
-            if (mode === 'users') {
-                data = rawUsersData.filter(u => 
-                    u.username.toLowerCase().includes(search) || 
-                    u.tags.some(t => t.tag_str.toLowerCase().includes(search))
-                );
-                if (currentFilters.has('premium')) data = data.filter(u => u.tier === 'premium');
-                if (currentFilters.has('active_24h')) data = data.filter(u => u.last_login && (now - new Date(u.last_login)) < 86400000);
+            if(view === 'users') {
+                // Copie
+                data = rawUsers.map(u => ({...u})); // Shallow copy
+
+                // 1. Recherche
+                if(search) data = data.filter(u => u.username.toLowerCase().includes(search) || u.id.toString().includes(search));
+
+                // 2. Filtres
+                // Logique: Si un filtre de TYPE est coché, on filtre. Si PLUSIEURS types sont cochés, c'est inclusif (OR).
+                // Si filtre d'ETAT est coché, c'est restrictif (AND).
                 
-                // Tri
+                const typeFilters = ['premium', 'subscriber', 'basic'];
+                const hasTypeFilter = typeFilters.some(f => filters.has(f));
+                
+                if(hasTypeFilter) {
+                    data = data.filter(u => {
+                        if(filters.has('premium') && u.tier === 'premium') return true;
+                        if(filters.has('subscriber') && u.tier === 'subscriber') return true;
+                        if(filters.has('basic') && u.tier === 'basic') return true;
+                        return false;
+                    });
+                }
+
+                if(filters.has('single_tag')) data = data.filter(u => u.tags.length === 1);
+                if(filters.has('never_connected')) data = data.filter(u => !u.last_login);
+                if(filters.has('connected_today')) data = data.filter(u => u.last_login && (now - new Date(u.last_login) < 86400000));
+
+                // 3. Tri
                 const crit = document.getElementById('sort-select').value;
                 data.sort((a,b) => {
-                    let vA = a.username.toLowerCase(), vB = b.username.toLowerCase();
-                    if(crit === 'id') { vA = a.id; vB = b.id; } // Tri par ID user
-                    return (vA < vB ? -1 : 1) * sortOrder;
+                    let vA, vB;
+                    if(crit === 'id') { vA = a.id; vB = b.id; }
+                    else if(crit === 'name') { vA = a.username.toLowerCase(); vB = b.username.toLowerCase(); }
+                    else if(crit === 'last_login') { vA = a.last_login || ''; vB = b.last_login || ''; }
+                    else if(crit === 'nb_archives') { 
+                        vA = a.tags.reduce((s,t)=>s+t.total,0); 
+                        vB = b.tags.reduce((s,t)=>s+t.total,0); 
+                    }
+                    else if(crit === 'nb_tags') { vA = a.tags.length; vB = b.tags.length; }
+                    
+                    if(vA < vB) return -1 * sortDir;
+                    if(vA > vB) return 1 * sortDir;
+                    return 0;
                 });
 
             } else {
-                data = rawTagsData.map(t => ({
-                    user: t.owner_id ? { id: t.owner_id, username: t.owner_name } : null,
-                    tag: {
-                        id: t.id, tag_str: t.tag_str, interval: t.rec_temp,
-                        last_archive: t.last_archive, total_archives: t.total_archives,
-                        trophies: t.current_trophies || 0
-                    }
-                }));
+                // TAGS VIEW
+                data = rawTags.map(t => ({...t}));
 
-                data = data.filter(item => {
-                    if (search && !item.tag.tag_str.toLowerCase().includes(search) && !(item.user && item.user.username.toLowerCase().includes(search))) return false;
-                    if (currentFilters.has('claimed') && !item.user) return false; 
-                    if (currentFilters.has('unclaimed') && item.user) return false;
-                    return true;
-                });
+                if(search) data = data.filter(t => t.tag_str.toLowerCase().includes(search) || (t.owner_name && t.owner_name.toLowerCase().includes(search)));
+
+                if(filters.has('claimed')) data = data.filter(t => t.claimer_id);
+                if(filters.has('unclaimed')) data = data.filter(t => !t.claimer_id);
 
                 const crit = document.getElementById('sort-select').value;
-                data.sort((a, b) => {
+                data.sort((a,b) => {
                     let vA, vB;
-                    const tA = a.tag, tB = b.tag;
-                    if (crit === 'id') { vA = tA.tag_str; vB = tB.tag_str; }
-                    else if (crit === 'trophies') { vA = tA.trophies; vB = tB.trophies; }
-                    else if (crit === 'next_archive') {
-                         vA = tA.last_archive ? new Date(tA.last_archive).getTime() + (tA.interval*60000) : 0;
-                         vB = tB.last_archive ? new Date(tB.last_archive).getTime() + (tB.interval*60000) : 0;
+                    if(crit === 'id') { vA = a.tag_str; vB = b.tag_str; }
+                    else if(crit === 'owner') { vA = a.owner_name ? a.owner_name.toLowerCase() : 'zzzz'; vB = b.owner_name ? b.owner_name.toLowerCase() : 'zzzz'; }
+                    else if(crit === 'last_archive') { vA = a.last_archive || ''; vB = b.last_archive || ''; }
+                    else if(crit === 'nb_archives') { vA = a.total_archives; vB = b.total_archives; }
+                    else if(crit === 'trophies') { vA = a.current_trophies || 0; vB = b.current_trophies || 0; }
+                    else if(crit === 'next_archive') {
+                        const getNext = (t) => t.last_archive ? new Date(t.last_archive.replace(' ', 'T')).getTime() + (t.rec_temp*60000) : 0;
+                        vA = getNext(a); vB = getNext(b);
                     }
-                    else if (crit === 'owner') { 
-                        vA = a.user ? a.user.username : 'zzz'; 
-                        vB = b.user ? b.user.username : 'zzz'; 
-                    }
-                    else { vA = tA.last_archive || ''; vB = tB.last_archive || ''; }
-                    
-                    if (vA < vB) return -1 * sortOrder;
-                    if (vA > vB) return 1 * sortOrder;
+
+                    if(vA < vB) return -1 * sortDir;
+                    if(vA > vB) return 1 * sortDir;
                     return 0;
                 });
             }
             return data;
         }
 
-        function toggleFilter(f) {
-            if(currentFilters.has(f)) currentFilters.delete(f);
-            else currentFilters.add(f);
-            renderTable();
+        // --- RENDER ---
+        function renderTable() {
+            const tbody = document.getElementById('tbody');
+            const thead = document.getElementById('thead');
+            tbody.innerHTML = '';
+            
+            const data = getProcessedData();
+
+            if(view === 'users') {
+                thead.innerHTML = `<tr><th>+</th><th>ID</th><th>NOM</th><th>GRADE</th><th>CONNEXION</th><th>TAGS</th><th>TOTAL ARCH.</th><th>ACTIONS</th></tr>`;
+                
+                data.forEach(u => {
+                    const row = document.createElement('tr');
+                    const totTags = u.tags.length;
+                    const totArch = u.tags.reduce((acc, t) => acc + t.total, 0);
+                    
+                    row.innerHTML = `
+                        <td><button style="padding:0 5px" onclick="toggleDetails(${u.id})">▼</button></td>
+                        <td>${u.id}</td>
+                        <td style="font-weight:bold; color:#fff">${u.username}</td>
+                        <td>
+                            <select onchange="updateTier(${u.id}, this.value)" style="padding:0;">
+                                <option value="basic" ${u.tier==='basic'?'selected':''}>Basic</option>
+                                <option value="subscriber" ${u.tier==='subscriber'?'selected':''}>Subscriber</option>
+                                <option value="premium" ${u.tier==='premium'?'selected':''}>Premium</option>
+                            </select>
+                        </td>
+                        <td>${u.last_login || '-'}</td>
+                        <td>${totTags}</td>
+                        <td>${totArch}</td>
+                        <td>
+                            <button onclick="addTag(${u.id})" class="btn-green">+</button>
+                            <button onclick="renameUser(${u.id}, '${u.username}')">R</button>
+                            <button onclick="deleteUser(${u.id})" class="btn-red">X</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+
+                    // Tags Details
+                    if(totTags > 0) {
+                        const dr = document.createElement('tr');
+                        dr.id = `d-${u.id}`;
+                        dr.className = 'hidden details-row';
+                        let h = '<td colspan="8"><table class="details-table" style="width:90%; margin:auto;">';
+                        u.tags.forEach(t => {
+                            h += `<tr>
+                                <td style="width:20px;">↳</td>
+                                <td class="badge">${t.str}</td>
+                                <td>Freq: <input type="number" value="${t.interval}" style="width:40px; text-align:center" onchange="updFreq(${t.id}, this)">m</td>
+                                <td>Last: ${t.last || 'Never'}</td>
+                                <td>Arch: ${t.total}</td>
+                                <td style="text-align:right"><button onclick="unclaim(${t.id})" class="btn-red">UNCLAIM</button></td>
+                            </tr>`;
+                        });
+                        h += '</table></td>';
+                        dr.innerHTML = h;
+                        tbody.appendChild(dr);
+                    }
+                });
+            } else {
+                // TAGS
+                thead.innerHTML = `<tr><th>PROPRIÉTAIRE</th><th>TAG</th><th>FREQ</th><th>LAST ARCH.</th><th>NEXT ARCH.</th><th>TROPHÉES</th><th>ARCHIVES</th><th>ACTIONS</th></tr>`;
+                
+                data.forEach(t => {
+                    const row = document.createElement('tr');
+                    const owner = t.owner_name ? `<span style="color:#fff; font-weight:bold">${t.owner_name}</span>` : '<span style="color:#555">-- UNCLAIMED --</span>';
+                    
+                    // Calcul Next
+                    let nextStr = '-';
+                    if(t.last_archive) {
+                        const d = new Date(t.last_archive.replace(' ', 'T')).getTime();
+                        const n = d + (t.rec_temp * 60000);
+                        const diff = Math.ceil((n - Date.now()) / 60000);
+                        nextStr = diff > 0 ? diff + ' min' : 'Maintenant';
+                    }
+
+                    row.innerHTML = `
+                        <td>${owner}</td>
+                        <td class="badge">${t.tag_str}</td>
+                        <td><input type="number" value="${t.rec_temp}" style="width:50px" onchange="updFreq(${t.id}, this)"></td>
+                        <td>${t.last_archive || '-'}</td>
+                        <td>${nextStr}</td>
+                        <td style="color:#ffce00">${t.current_trophies || 0}</td>
+                        <td>${t.total_archives}</td>
+                        <td>
+                            ${t.claimer_id ? `<button onclick="unclaim(${t.id})" class="btn-red">UNCLAIM</button>` : ''}
+                            <button onclick="delTag(${t.id})" class="btn-red">DEL</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
         }
 
-        function toggleSortOrder() {
-            sortOrder *= -1;
-            document.getElementById('sort-order-btn').innerText = sortOrder === 1 ? '▼' : '▲';
-            renderTable();
+        function renderStats(d) {
+            const h = document.getElementById('stats-area');
+            h.innerHTML = `
+                <div class="stat-box"><h3>USERS</h3><p>${d.users}</p></div>
+                <div class="stat-box"><h3>ARCHIVES</h3><p>${d.records}</p></div>
+                <div class="stat-box"><h3>TAGS (C/T)</h3><p>${d.claimed_tags}/${d.total_tags}</p></div>
+                <div class="stat-box"><h3>STORAGE</h3><p>${d.disk_str}</p></div>
+                <div class="stat-box"><h3>LAST ARCH.</h3><p style="font-size:0.9em">${d.last_archive_date||'-'}</p></div>
+                <div class="stat-box"><h3>NEXT ARCH.</h3><p style="color:#28a745; font-size:0.9em">${d.next_archive_date||'-'}</p></div>
+                <div class="stat-box"><h3>CPU</h3><p>${d.cpu}%</p></div>
+                <div class="stat-box"><h3>RAM</h3><p>${d.ram}%</p></div>
+            `;
         }
 
-        function toggleDetails(uid) {
-            const row = document.getElementById(`detail-${uid}`);
-            if(row) row.classList.toggle('hidden');
+        // --- ACTIONS ---
+        function toggleDetails(id) { const r=document.getElementById('d-'+id); if(r) r.classList.toggle('hidden'); }
+        
+        async function api(url, method='POST', body={}) {
+            const res = await fetch(`${API_URL}/api/admin/${url}`, {
+                method: method, headers:{'Content-Type':'application/json', 'X-Admin-Pass':ADMIN_PASS}, body:JSON.stringify(body)
+            });
+            if(res.ok) { loadData(); return true; }
+            else { alert("ERROR"); return false; }
         }
 
-        function formatDate(str) {
-            if(!str) return 'N/A';
-            const d = new Date(str.replace(' ', 'T'));
-            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        function renameUser(id, old) { const n=prompt("Name:", old); if(n && n!==old) api(`user/${id}/rename`, 'POST', {username:n}); }
+        function addTag(id) { const t=prompt("Tag (#...):"); if(t) api(`user/${id}/claim`, 'POST', {tag:t}); }
+        function deleteUser(id) { if(confirm("Supprimer User ?")) alert("Backend Impl needed"); } // A implémenter backend
+        function unclaim(tid) { if(confirm("Unclaim Tag ?")) api(`tag/${tid}/unclaim`); }
+        function delTag(tid) { if(confirm("DELETE TAG DEFINITELY?")) fetch(`${API_URL}/api/admin/tag/${tid}`, {method:'DELETE', headers:{'X-Admin-Pass':ADMIN_PASS}}).then(loadData); }
+        function updateTier(uid, tier) { api(`update-tier`, 'POST', {user_id:uid, tier:tier}); }
+        function updFreq(tid, el) { 
+            api(`tag/${tid}/frequency`, 'POST', {minutes: el.value}).then(ok => el.style.borderColor = ok?'green':'red'); 
         }
 
-        function getNextTime(lastStr, interval) {
-            if(!lastStr || !interval) return 'Pause';
-            const next = new Date(new Date(lastStr.replace(' ', 'T')).getTime() + interval*60000);
-            const diff = Math.round((next - new Date()) / 60000);
-            if(diff < 0) return 'En retard';
-            return diff + ' min';
-        }
-
-        function getColor(val) {
-            if(val < 50) return '#28a745';
-            if(val < 80) return '#ffce00';
-            return '#ff5555';
-        }
+        // Init view
+        setView('users');
     </script>
 </body>
 </html>
