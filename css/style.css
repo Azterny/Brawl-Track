@@ -697,14 +697,19 @@ button.filter-btn.blue-active.active:hover {
 
 /* LOGO */
 .nav-logo {
-    font-family: 'Lilita One', cursive;
+    font-family: 'Audiowide', cursive; /* MODIFICATION ICI */
     font-size: 1.5rem;
     color: #ffce00;
     text-decoration: none;
     letter-spacing: 1px;
+    text-transform: uppercase; /* Optionnel : force les majuscules */
 }
-.nav-logo:hover { color: #fff; text-decoration: none; }
 
+.nav-logo:hover { 
+    color: #fff; 
+    text-decoration: none; 
+    text-shadow: 0 0 10px rgba(255, 206, 0, 0.5); /* Petit effet néon au survol */
+}
 /* LIENS BUREAU */
 .nav-links, .nav-actions {
     display: flex;
