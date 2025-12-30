@@ -464,33 +464,37 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
     justify-content: center;
     gap: 15px;
     background: #181818;
-    margin: 10px 0 15px 0;
-    padding: 8px;
-    border-radius: 8px;
+    margin: 10px auto 15px auto; /* Auto permet de bien centrer le bloc */
+    padding: 8px 20px;
+    border-radius: 20px; /* Un peu plus arrondi pour le look "capsule" */
     border: 1px solid #333;
+    width: fit-content;  /* Le conteneur s'adapte à la largeur du contenu */
 }
 
+/* Texte de la date (ex: "Aujourd'hui") */
 #chart-period-label {
     font-weight: bold;
     color: #fff;
     font-size: 0.95em;
-    min-width: 150px;
+    min-width: 140px;
     text-align: center;
+    user-select: none;
 }
 
+/* --- BOUTONS FLÈCHES (< >) --- */
 .nav-arrow {
     background: transparent !important;
     border: 1px solid #444 !important;
     color: #ffce00 !important;
-    width: 30px !important;
-    height: 30px !important;
+    width: 32px !important;
+    height: 32px !important;
     padding: 0 !important;
     margin: 0 !important;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    font-size: 1.2em;
+    font-size: 1.1em;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: none !important;
@@ -498,11 +502,12 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
 
 .nav-arrow:hover { 
     background: #333 !important; 
+    border-color: #ffce00 !important;
     transform: scale(1.1);
 }
 
 .nav-arrow:active {
-    transform: scale(0.9);
+    transform: scale(0.95);
 }
 
 .nav-arrow:disabled {
@@ -514,6 +519,28 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
     pointer-events: none;
 }
 
+/* --- SÉLECTEUR DE DATE (CALENDRIER 📅) --- */
+/* Style pour l'icône calendrier et son input caché */
+.date-picker-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.date-picker-wrapper:hover {
+    transform: scale(1.2);
+}
+
+/* L'input est invisible mais couvre l'icône pour intercepter le clic */
+#chart-date-picker {
+    cursor: pointer;
+}
+
+/* --- BOUTONS FILTRES (BRAWLERS) --- */
+/* (On garde ton code intact ici) */
 button.filter-btn.blue-active.active {
     background-color: #00d2ff !important;
     border-color: #00d2ff !important;
@@ -529,6 +556,11 @@ button.filter-btn.blue-active:hover {
 button.filter-btn.blue-active.active:hover {
     background-color: #33cfff !important;
     color: #000 !important;
+}
+
+/* Utilitaire pour cacher la barre quand nécessaire */
+.hidden {
+    display: none !important;
 }
 
 /* --- VUE BRAWLER DÉTAILS --- */
