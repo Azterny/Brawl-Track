@@ -714,7 +714,7 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         trigger.parentNode.replaceChild(newTrigger, trigger);
         
         newTrigger.onclick = () => {
-            // Positionnement manuel si besoin, ou automatique
+            fp._positionElement = newTrigger;
             fp.open();
         };
 
