@@ -602,6 +602,7 @@ function renderGenericChart(config) {
             }
         }
     } else {
+        // Mode 0 (Tout)
         if (liveValue !== null && liveValue !== undefined) {
             finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live', cLabel: 'Actuel' });
         }
@@ -631,7 +632,8 @@ function renderGenericChart(config) {
     const pointColors = finalDataPoints.map(p => getPointColor(p));
     
     // Règle: Cacher points sur grandes périodes (sauf spéciaux)
-    const shouldHidePoints = (mode >= 7); 
+    // Mode 0 inclus
+    const shouldHidePoints = (mode >= 7 || mode === 0); 
 
     const ctx = document.getElementById(canvasId).getContext('2d');
     let timeUnit = 'day';
@@ -655,7 +657,9 @@ function renderGenericChart(config) {
                 data: finalDataPoints, 
                 backgroundColor: color + '1A', 
                 borderWidth: 2, 
-                tension: (mode === 1 || mode < 1) ? 0 : 0.2,
+                // Tension (Courbe) : Arrondie pour mode 0 aussi (mode !== 0 enlevé)
+                // Seul 1H et 24H (mode <= 1 mais > 0) restent carrés
+                tension: (mode === 1 || (mode < 1 && mode > 0)) ? 0 : 0.2,
                 fill: true,
                 pointBackgroundColor: pointColors,
                 pointBorderColor: pointColors,
@@ -664,7 +668,7 @@ function renderGenericChart(config) {
                     const r = p.raw;
                     if (r.type === 'ghost') return 0;
                     if (r.type === 'live' || r.cType === 'start' || r.cType === 'unlocked') return 5; 
-                    if (shouldHidePoints) return 0; // Masqué si > Jour
+                    if (shouldHidePoints) return 0; // Masqué si > Jour OU Tout
                     return 3;
                 },
                 pointHoverRadius: p => (p.raw.type === 'ghost' ? 0 : 6),
