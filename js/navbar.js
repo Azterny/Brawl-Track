@@ -3,7 +3,8 @@ document.addEventListener("DOMContentLoaded", function() {
     if (!navContainer) return;
 
     const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username') || 'Joueur'; // Pensez à stocker le username au login si possible
+    // On récupère le nom sauvegardé, sinon 'Joueur' par défaut
+    const username = localStorage.getItem('username') || 'Joueur'; 
     
     // Structure de base
     let html = `
@@ -44,22 +45,14 @@ document.addEventListener("DOMContentLoaded", function() {
 // --- GÉNÉRATEURS DE HTML ---
 
 function getCenterLinks(token) {
-    let links = `<a href="index.html#events-section" class="nav-link">🔥 Événements</a>`;
+    // Lien Leaderboard (Commun à tous)
+    let links = `<a href="#" onclick="alert('🏆 Leaderboard : Bientôt Disponible !')" class="nav-link">🏆 Leaderboard</a>`;
     
-    if (token) {
-        // Menu Déroulant Ressources (Simple pour l'instant)
-        links += `
-            <div class="dropdown">
-                <span class="nav-link dropdown-trigger">📚 Ressources ▾</span>
-                <div class="dropdown-menu">
-                    <a href="#" onclick="alert('Bientôt disponible !')">Liste Brawlers</a>
-                    <a href="#" onclick="alert('Bientôt disponible !')">Rotation Maps</a>
-                </div>
-            </div>
-        `;
-    } else {
+    // Si pas connecté, on garde la recherche accessible
+    if (!token) {
         links += `<a href="#" onclick="focusSearch()" class="nav-link">🔎 Recherche</a>`;
     }
+    
     return links;
 }
 
@@ -70,7 +63,8 @@ function getRightActions(token, username) {
                 <button class="nav-btn-user">👤 ${username} ▾</button>
                 <div class="dropdown-menu right-aligned">
                     <a href="userhome.html">🏠 Mes Comptes</a>
-                    <a href="#" onclick="alert('Page Paramètres à créer')">⚙️ Paramètres</a>
+                    <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')">⭐ Abonnement</a>
+                    <a href="#" onclick="alert('Paramètres : Bientôt Disponible !')">⚙️ Paramètres</a>
                     <div class="dropdown-divider"></div>
                     <a href="#" onclick="logoutNav()">🚪 Déconnexion</a>
                 </div>
@@ -90,16 +84,16 @@ function getMobileLinks(token, username) {
         html += `
             <div class="mobile-user-info">Connecté en tant que <strong>${username}</strong></div>
             <a href="userhome.html" class="mobile-link">🏠 Mes Comptes</a>
+            <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link">⭐ Abonnement</a>
+            <a href="#" class="mobile-link">🏆 Leaderboard</a>
             <a href="#" class="mobile-link">⚙️ Paramètres</a>
             <hr style="border-color:#333; width:100%; opacity:0.3;">
-            <a href="#" class="mobile-link">📚 Brawlers</a>
-            <a href="index.html#events-section" class="mobile-link">🔥 Événements</a>
             <button onclick="logoutNav()" class="btn-danger" style="margin-top:20px;">Déconnexion</button>
         `;
     } else {
         html += `
             <a href="index.html" class="mobile-link">🔎 Recherche</a>
-            <a href="index.html#events-section" class="mobile-link">🔥 Événements</a>
+            <a href="#" onclick="alert('🏆 Leaderboard : Bientôt Disponible !')" class="mobile-link">🏆 Leaderboard</a>
             <hr style="border-color:#333; width:100%; opacity:0.3;">
             <a href="index.html" class="nav-btn-cta" style="text-align:center; display:block;">Se Connecter</a>
         `;
@@ -116,7 +110,7 @@ function toggleMobileNav() {
 
 function logoutNav() {
     localStorage.removeItem('token');
-    localStorage.removeItem('username');
+    localStorage.removeItem('username'); // On nettoie le nom aussi
     window.location.href = 'index.html';
 }
 
