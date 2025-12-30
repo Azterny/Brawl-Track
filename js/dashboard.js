@@ -619,14 +619,44 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
     
     if (!container || !trigger || !inputElement) return;
 
-    // 1. Si mode Année (365) ou Tout (0) => On cache le calendrier et on sort
-    if (mode === 365 || mode === 0) {
+    // 1. Calcul de la date Min (Début historique) et durée disponible
+    let minDate = undefined;
+    let daysOfHistory = 0;
+    
+    if (historyData && historyData.length > 0) {
+        const d = historyData[0].date || historyData[0].recorded_at;
+        if (d) {
+            minDate = new Date(d.replace(' ', 'T'));
+            const now = new Date();
+            // Calcul du nombre de jours entre le premier point et maintenant
+            daysOfHistory = (now - minDate) / (1000 * 60 * 60 * 24);
+        }
+    }
+
+    // 2. Gestion Visibilité Intelligente
+    // Règle A : Si mode Année (365) ou Tout (0) => Toujours caché (navigation inutile)
+    // Règle B : Si l'historique est plus court que la vue demandée (ex: 3 jours d'historique pour une vue Semaine/7j)
+    //           alors on cache le calendrier car on voit déjà "tout" ou presque.
+    
+    // Note : On garde une marge de sécurité (ex: si mode=7 et historique=7.1 jours, on affiche pour voir le 0.1 caché)
+    const isHistoryTooShort = (mode > 0 && daysOfHistory < mode);
+
+    if (mode === 365 || mode === 0 || isHistoryTooShort) {
         container.classList.add('hidden');
+        // On détruit l'instance si elle existe pour nettoyer
+        let currentInstance = isBrawler ? brawlerFlatpickr : mainFlatpickr;
+        if (currentInstance) {
+            currentInstance.destroy();
+            if (isBrawler) brawlerFlatpickr = null;
+            else mainFlatpickr = null;
+        }
         return;
     }
+    
+    // Sinon, on affiche
     container.classList.remove('hidden');
 
-    // 2. Nettoyage de l'ancienne instance pour éviter les conflits
+    // 3. Nettoyage de l'ancienne instance
     let currentInstance = isBrawler ? brawlerFlatpickr : mainFlatpickr;
     if (currentInstance) {
         currentInstance.destroy();
@@ -634,20 +664,13 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         else mainFlatpickr = null;
     }
 
-    // 3. Calcul de la date Min (Début historique)
-    let minDate = undefined;
-    if (historyData && historyData.length > 0) {
-        const d = historyData[0].date || historyData[0].recorded_at;
-        if (d) minDate = new Date(d.replace(' ', 'T'));
-    }
-
     // 4. Configuration Flatpickr
     const config = {
-        disableMobile: "true", // Force le thème Dark même sur mobile
-        clickOpens: false,     // IMPORTANT: On ouvre manuellement via le trigger
+        disableMobile: "true", 
+        clickOpens: false,     
         theme: "dark",
-        maxDate: new Date(),   // Pas de futur
-        minDate: minDate,      // Pas avant le début
+        maxDate: new Date(),   
+        minDate: minDate,      
         onChange: function(selectedDates, dateStr, instance) {
             if (selectedDates.length > 0) {
                 if (isBrawler) jumpToBrawlerDate(dateStr);
@@ -656,7 +679,6 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         }
     };
 
-    // Configuration spécifique Mode Mois
     if (mode === 31) {
         if (typeof monthSelectPlugin !== 'undefined') {
             config.plugins = [new monthSelectPlugin({
@@ -666,30 +688,24 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
                 theme: "dark"
             })];
         } else {
-            console.warn("Plugin MonthSelect introuvable, chargement mode standard.");
+            console.warn("Plugin MonthSelect introuvable");
         }
     } else {
-        // Mode Jour/Semaine/1H
         config.dateFormat = "Y-m-d";
     }
 
     // 5. Initialisation
     try {
-        // Init sur l'input
         const fp = flatpickr(inputElement, config);
         
-        // On recrée le bouton trigger (clone) pour supprimer les anciens événements 'click' accumulés
         const newTrigger = trigger.cloneNode(true);
         trigger.parentNode.replaceChild(newTrigger, trigger);
         
-        // On lie l'ouverture du calendrier au clic sur l'icône
         newTrigger.onclick = () => {
-            // Positionnement manuel pour s'aligner sur l'icône
             fp._positionElement = newTrigger;
             fp.open();
         };
 
-        // Sauvegarde de l'instance
         if (isBrawler) brawlerFlatpickr = fp;
         else mainFlatpickr = fp;
 
