@@ -602,3 +602,71 @@ button.filter-btn.blue-active.active:hover {
     font-size: 1.8em;
     line-height: 1.2;
 }
+
+/* =========================================
+   10. NAVIGATION HYBRIDE (MOBILE / DESKTOP)
+   ========================================= */
+
+/* Par défaut (Mobile) : On cache la version Desktop */
+.desktop-nav-container {
+    display: none;
+}
+.mobile-nav-container {
+    display: block;
+    position: relative;
+}
+
+/* Style des liens Desktop */
+.nav-link {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #aaa;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: auto; /* Annule le width:100% global des boutons */
+    margin-top: 0;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.nav-link.active {
+    color: #ffce00;
+    background: rgba(255, 206, 0, 0.1);
+    border: 1px solid #ffce00;
+    box-shadow: 0 0 10px rgba(255, 206, 0, 0.2);
+}
+
+.nav-link.logout:hover {
+    color: #ff5555;
+    background: rgba(255, 85, 85, 0.1);
+}
+
+.nav-separator {
+    width: 1px;
+    height: 25px;
+    background: #444;
+    margin: 0 10px;
+}
+
+/* MEDIA QUERY : Écrans larges (Tablette paysage / PC > 768px) */
+@media (min-width: 769px) {
+    .mobile-nav-container {
+        display: none; /* Cache le burger */
+    }
+    
+    .desktop-nav-container {
+        display: flex; /* Affiche la barre */
+        align-items: center;
+        gap: 5px;
+    }
+}
