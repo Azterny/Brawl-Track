@@ -1,30 +1,38 @@
-// --- GESTION DU MENU ---
+// --- GESTION DU MENU MOBILE ---
 function toggleMenu() {
     const menu = document.getElementById('menu-dropdown');
     if(menu) menu.classList.toggle('active');
 }
 
-// Fermer le menu si on clique ailleurs
+// Fermer le menu si on clique ailleurs (Mise à jour sélecteur)
 window.addEventListener('click', function(e) {
-    const burger = document.getElementById('burger-menu');
+    // On cible le conteneur mobile spécifique
+    const mobileContainer = document.querySelector('.mobile-nav-container');
     const menu = document.getElementById('menu-dropdown');
-    if (burger && !burger.contains(e.target) && menu) {
+    
+    // Si on clique en dehors du conteneur mobile et que le menu est ouvert
+    if (mobileContainer && !mobileContainer.contains(e.target) && menu && menu.classList.contains('active')) {
         menu.classList.remove('active');
     }
 });
 
 // --- NAVIGATION (VUES) ---
 function switchView(viewName) {
-    // Masquer toutes les sections
+    // 1. Masquer toutes les sections
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
     
-    // Afficher la cible
+    // 2. Afficher la cible
     const target = document.getElementById(`view-${viewName}`);
     if(target) target.classList.add('active');
 
-    // Fermer le menu après clic
+    // 3. Fermer le menu mobile après clic
     const menu = document.getElementById('menu-dropdown');
     if(menu) menu.classList.remove('active');
+
+    // 4. (NOUVEAU) Mettre à jour la classe 'active' sur les boutons Desktop
+    document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById(`nav-${viewName}`);
+    if(activeBtn) activeBtn.classList.add('active');
 }
 
 // --- OUTILS DIVERS ---
