@@ -1,19 +1,19 @@
 // --- VARIABLES GLOBALES ---
-let currentChartMode = 0;   // 0=Tout, 1=Jour, 7=Semaine
-let currentChartOffset = 0;
-let currentTagString = null; // Le tag affiché (ex: #XXXX)
-let fullHistoryData = [];    // Historique global chargé
-let currentLiveTrophies = null;
-let globalBrawlersList = []; // Cache des infos brawlers
+var currentChartMode = 0;   // 0=Tout, 1=Jour, 7=Semaine
+var currentChartOffset = 0;
+var currentTagString = null; 
+var fullHistoryData = [];    
+var currentLiveTrophies = null;
+var globalBrawlersList = []; 
 
 // Variables spécifiques Brawlers
-let currentBrawlerHistory = [];
-let currentBrawlerMode = 0;
-let brawlerChartInstance = null;
+var currentBrawlerHistory = [];
+var currentBrawlerMode = 0;
+var brawlerChartInstance = null;
 
-// Vérification de la configuration (Correction 1: API_URL)
-const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : ''; 
-if (!API_BASE) console.error("Erreur critique : API_URL non défini dans config.js");
+// Sécurité pour API_URL
+var API_BASE = (typeof API_URL !== 'undefined') ? API_URL : ''; 
+if (!API_BASE) console.warn("Attention : API_URL non défini dans config.js");
 
 // --- INITIALISATION DU DASHBOARD ---
 async function initDashboard() {
