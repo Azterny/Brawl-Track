@@ -10,12 +10,6 @@ let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
 let brawlerChartInstance = null;
 
-
-let globalBrawlersList = [];
-let fullHistoryData = [];
-let currentLiveTrophies = 0;
-let currentUserTier = 'free';
-
 // Vérification API
 const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : '';
 
@@ -625,7 +619,7 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
     
     if (!container || !trigger || !inputElement) return;
 
-    // 1. Calcul MinDate
+    // 1. Calcul de la date Min (Début historique) et durée disponible
     let minDate = undefined;
     let daysOfHistory = 0;
     
@@ -633,19 +627,23 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         const d = historyData[0].date || historyData[0].recorded_at;
         if (d) {
             minDate = new Date(d.replace(' ', 'T'));
-            // Sécurité : Si date invalide, on ignore
-            if (isNaN(minDate.getTime())) minDate = undefined;
-            else {
-                const now = new Date();
-                daysOfHistory = (now - minDate) / (1000 * 60 * 60 * 24);
-            }
+            const now = new Date();
+            // Calcul du nombre de jours entre le premier point et maintenant
+            daysOfHistory = (now - minDate) / (1000 * 60 * 60 * 24);
         }
     }
 
-    // 2. Visibilité
+    // 2. Gestion Visibilité Intelligente
+    // Règle A : Si mode Année (365) ou Tout (0) => Toujours caché (navigation inutile)
+    // Règle B : Si l'historique est plus court que la vue demandée (ex: 3 jours d'historique pour une vue Semaine/7j)
+    //           alors on cache le calendrier car on voit déjà "tout" ou presque.
+    
+    // Note : On garde une marge de sécurité (ex: si mode=7 et historique=7.1 jours, on affiche pour voir le 0.1 caché)
     const isHistoryTooShort = (mode > 0 && daysOfHistory < mode);
+
     if (mode === 365 || mode === 0 || isHistoryTooShort) {
         container.classList.add('hidden');
+        // On détruit l'instance si elle existe pour nettoyer
         let currentInstance = isBrawler ? brawlerFlatpickr : mainFlatpickr;
         if (currentInstance) {
             currentInstance.destroy();
@@ -655,9 +653,10 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         return;
     }
     
+    // Sinon, on affiche
     container.classList.remove('hidden');
 
-    // 3. Nettoyage
+    // 3. Nettoyage de l'ancienne instance
     let currentInstance = isBrawler ? brawlerFlatpickr : mainFlatpickr;
     if (currentInstance) {
         currentInstance.destroy();
@@ -665,41 +664,31 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
         else mainFlatpickr = null;
     }
 
-    // 4. Configuration
+    // 4. Configuration Flatpickr
     const config = {
-        disableMobile: true, // Boolean, pas string "true"
-        clickOpens: false,   // On gère l'ouverture manuellement
-        locale: "fr",
-        maxDate: new Date(),
-        minDate: minDate,
+        disableMobile: "true", 
+        clickOpens: false,     
+        theme: "dark",
+        maxDate: new Date(),   
+        minDate: minDate,      
         onChange: function(selectedDates, dateStr, instance) {
             if (selectedDates.length > 0) {
-                if (isBrawler) {
-                    if(typeof jumpToBrawlerDate === 'function') jumpToBrawlerDate(dateStr);
-                } else {
-                    if(typeof jumpToDate === 'function') jumpToDate(dateStr);
-                }
+                if (isBrawler) jumpToBrawlerDate(dateStr);
+                else jumpToDate(dateStr);
             }
         }
     };
 
-    // Gestion Plugin Mois
     if (mode === 31) {
-        // Détection robuste du plugin (CDN vs Module)
-        const MonthPlugin = window.monthSelectPlugin || (window.flatpickr && window.flatpickr.plugins && window.flatpickr.plugins.monthSelect);
-        
-        if (MonthPlugin) {
-            config.plugins = [
-                new MonthPlugin({
-                    shorthand: true, 
-                    dateFormat: "Y-m-d", 
-                    altFormat: "F Y", 
-                    theme: "dark"
-                })
-            ];
+        if (typeof monthSelectPlugin !== 'undefined') {
+            config.plugins = [new monthSelectPlugin({
+                shorthand: true, 
+                dateFormat: "Y-m-d", 
+                altFormat: "F Y", 
+                theme: "dark"
+            })];
         } else {
-            console.warn("⚠️ Plugin MonthSelect introuvable. Mode standard utilisé.");
-            config.dateFormat = "Y-m-d";
+            console.warn("Plugin MonthSelect introuvable");
         }
     } else {
         config.dateFormat = "Y-m-d";
@@ -709,19 +698,12 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
     try {
         const fp = flatpickr(inputElement, config);
         
-        // Remplacement du bouton pour nettoyer les anciens clics
         const newTrigger = trigger.cloneNode(true);
         trigger.parentNode.replaceChild(newTrigger, trigger);
         
-        newTrigger.onclick = (e) => {
-            e.preventDefault(); // Empêche le comportement par défaut
-            e.stopPropagation(); // Empêche la propagation qui pourrait fermer le calendrier
-            
-            // CORRECTION CRITIQUE DE POSITIONNEMENT
-            // On force Flatpickr à se coller au bouton, pas à l'input caché
-            fp._positionElement = newTrigger; 
-            
-            fp.toggle(); // toggle() est souvent plus sûr que open()
+        newTrigger.onclick = () => {
+            fp._positionElement = newTrigger;
+            fp.open();
         };
 
         if (isBrawler) brawlerFlatpickr = fp;
