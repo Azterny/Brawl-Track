@@ -64,13 +64,14 @@
                 </select>
             </div>
             
-            <div id="brawlers-grid" style="margin-top: 15px;"></div>
+            <div id="brawlers-grid" style="margin-top: 15px;">
+                </div>
         </div>
 
         <div id="view-brawlers" class="view-section">
             
             <div class="brawler-header-nav">
-                <h2 style="margin:0;">📊 Statistiques</h2>
+                <h2 style="margin:0;">📊 Statistiques Brawler</h2>
                 <button class="btn-back" onclick="switchView('dashboard')">⬅ Retour</button>
             </div>
 
@@ -87,8 +88,8 @@
 
             <div style="background: #222; padding: 15px; border-radius: 10px; position: relative; margin-top: 20px;">
                 <div class="chart-filters">
-                    <button id="btn-brawler-24h" onclick="setBrawlerChartMode(1)" class="filter-btn filter-brawler-btn blue-active">Jour</button>
-                    <button id="btn-brawler-all" onclick="setBrawlerChartMode(0)" class="filter-btn filter-brawler-btn blue-active active">Tout</button>
+                    <button id="btn-brawler-24h" onclick="setBrawlerChartMode(1)" class="filter-btn filter-brawler-btn">24H</button>
+                    <button id="btn-brawler-all" onclick="setBrawlerChartMode(0)" class="filter-btn filter-brawler-btn active">Tout</button>
                 </div>
 
                 <div style="position: relative; height: 300px; width: 100%;">
@@ -100,13 +101,19 @@
     </div>
 
     <script src="js/config.js"></script>
+    
     <script src="js/utils.js"></script>
+    
     <script src="js/dashboard.js"></script>
     
     <script>
-        // Lancement immédiat au chargement
+        // Lancement immédiat au chargement de la page
         window.onload = function() {
-            initDashboard();
+            if(typeof initDashboard === 'function') {
+                initDashboard();
+            } else {
+                console.error("Fonction initDashboard introuvable !");
+            }
         };
     </script>
 </body>
