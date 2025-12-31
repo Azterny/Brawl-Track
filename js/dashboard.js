@@ -377,7 +377,7 @@ function updateBrawlerNavigationUI(data) {
 
     // MODE 1 HEURE
     if (Math.abs(currentBrawlerMode - 0.042) < 0.001) {
-        label.innerText = startDate.toLocaleDateString('fr-FR', options) + " 📅";
+        label.innerText = startDate.toLocaleDateString('fr-FR', options);
         btnNext.disabled = (currentChartOffset === 0);
 
         if (labelHour) {
