@@ -339,22 +339,18 @@ function updateBrawlerNavigationUI(data) {
     let endDate = new Date();
 
     // Recalcul rapide des dates pour l'affichage (Logique miroir de renderGenericChart)
-    if (Math.abs(currentBrawlerMode - 0.042) < 0.001) { // 1H
-         const target = new Date(now);
-         target.setHours(target.getHours() - currentChartOffset);
-         startDate = new Date(target);
-         startDate.setMinutes(0, 0, 0);
-         endDate = new Date(target);
-         endDate.setMinutes(59, 59, 999);
-         if (data && data.length > 0) {
-              const firstArchiveHour = new Date(firstDataPointDate);
-              firstArchiveHour.setMinutes(0, 0, 0);
-              if (startDate < firstArchiveHour) {
-                  startDate = new Date(firstArchiveHour);
-                  endDate = new Date(firstArchiveHour);
-                  endDate.setMinutes(59, 59, 999);
-              }
-         }
+    if (Math.abs(currentBrawlerMode - 0.042) < 0.001) {
+        label.innerText = startDate.toLocaleDateString('fr-FR', options);
+        btnNext.disabled = (currentChartOffset === 0);
+        if (labelHour) {
+            const hStart = startDate.getHours().toString().padStart(2, '0') + ":00";
+            const nextHourDate = new Date(startDate);
+            nextHourDate.setHours(startDate.getHours() + 1);
+            const hEnd = nextHourDate.getHours().toString().padStart(2, '0') + ":00";
+            labelHour.innerText = `${hStart} - ${hEnd} 🕓`;
+        }
+        if (btnPrevHour) btnPrevHour.disabled = isAtStart;
+        if (btnNextHour) btnNextHour.disabled = (currentChartOffset === 0);
     } else if (currentBrawlerMode === 1) { // 24H
         const target = new Date();
         target.setDate(now.getDate() - currentChartOffset);
