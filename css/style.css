@@ -277,6 +277,55 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
 .brawler-card[style*="grayscale"] { opacity: 0.5; filter: grayscale(100%); }
 .brawler-card[style*="grayscale"]:hover { filter: grayscale(0%); opacity: 1; }
 
+/* --- BOUTONS D'ACTION DASHBOARD --- */
+
+/* État 4 : CLAIM (Standard) */
+.btn-action-yellow {
+    background: linear-gradient(to bottom, #ffce00, #e6b800);
+    color: black;
+    box-shadow: 0 4px 0 #b38f00;
+}
+.btn-action-yellow:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #b38f00;
+}
+.btn-action-yellow:active {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 #b38f00;
+}
+
+/* État 5 : UNCLAIM (Rouge) */
+.btn-action-red {
+    background: linear-gradient(to bottom, #dc3545, #c82333);
+    color: white;
+    box-shadow: 0 4px 0 #bd2130;
+}
+.btn-action-red:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #bd2130;
+}
+.btn-action-red:active {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 #bd2130;
+}
+
+/* État 2 : CLAIMED (Gris désactivé) */
+.btn-disabled-grey {
+    background: #444;
+    color: #888;
+    border: 1px solid #555 !important;
+    box-shadow: none !important;
+}
+
+/* État 3 : RESERVED (Violet désactivé) */
+.btn-disabled-purple {
+    background: #4a148c; /* Violet sombre */
+    color: #e1bee7; /* Violet clair */
+    border: 1px solid #7b1fa2 !important;
+    box-shadow: none !important;
+}
 
 /* =========================================
    6. PAGE D'ACCUEIL (SPLIT LAYOUT)
