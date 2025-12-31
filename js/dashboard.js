@@ -32,9 +32,6 @@ async function initDashboard() {
 
     // On appelle la fonction de chargement principale
     await loadTagData(currentTagString);
-
-    // Si connecté, on propose de Claim
-    checkClaimStatus();
 }
 
 async function fetchUserTier() {
