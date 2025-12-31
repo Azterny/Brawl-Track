@@ -71,31 +71,42 @@ async function loadTagData(tag) {
 }
 
 function renderProfile(data) {
-    // 1. Nom du joueur & Couleur
+    // 1. Mise à jour du Nom et Couleur (Votre code d'origine)
     const nameElem = document.getElementById('player-name');
     nameElem.innerText = data.name;
-    // Gestion couleur hexadécimale (ex: 0xFF... -> #FF...)
-    nameElem.style.color = data.nameColor ? '#' + data.nameColor.replace('0x', '') : '#ffffff';
-
-    // 2. Tag (Affichage formaté sous le nom)
-    const tagElem = document.getElementById('player-tag-display');
-    if(tagElem) tagElem.innerText = data.tag;
-
-    // 3. Icône de Profil (Via CDN Brawlify)
-    const iconImg = document.getElementById('player-icon');
-    // ID 28000000 = Icône par défaut (Shelly) si null
-    const iconId = (data.icon && data.icon.id) ? data.icon.id : "Unknown";
-    if(iconImg) iconImg.src = `https://cdn.brawlify.com/profile-icons/regular/${iconId}.png`;
-
-    const statsArea = document.getElementById('stats-area');
-    if(statsArea) {
-        statsArea.innerHTML = `
-            <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00">🏆 ${data.trophies}</div></div>
-            <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff">⚔️ ${data['3vs3Victories']}</div></div>
-            <div class="stat-card"><div>Solo</div><div class="stat-value" style="color:#28a745">🥇 ${data.soloVictories}</div></div>
-            <div class="stat-card"><div>Duo</div><div class="stat-value" style="color:#17a2b8">🤝 ${data.duoVictories}</div></div>
-        `;
+    
+    if (data.nameColor) {
+        let color = data.nameColor;
+        // Correction format 0xFF -> #FF
+        if (color.startsWith('0x')) color = '#' + (color.length >= 10 ? color.slice(4) : color.slice(2));
+        nameElem.style.color = color;
+        nameElem.style.textShadow = `0 0 15px ${color}66`;
+    } else {
+        nameElem.style.color = '#ffffff';
+        nameElem.style.textShadow = 'none';
     }
+
+    // 2. Mise à jour du Tag
+    // Note: data.tag contient déjà le '#' fourni par l'API généralement, 
+    // mais on force '#' + currentTagString pour être sûr du format affiché.
+    document.getElementById('player-tag').innerText = '#' + currentTagString;
+
+    // 3. Mise à jour de l'Icône (NOUVEAU)
+    const iconImg = document.getElementById('player-icon');
+    if (iconImg) {
+        // ID 28000000 est l'icône par défaut (Shelly) si l'API ne renvoie rien
+        const iconId = (data.icon && data.icon.id) ? data.icon.id : 28000000;
+        iconImg.src = `https://cdn.brawlify.com/profile-icons/regular/${iconId}.png`;
+        iconImg.style.display = 'block'; // On l'affiche maintenant qu'elle est chargée
+    }
+
+    // 4. Mise à jour des Stats (Votre code d'origine)
+    document.getElementById('stats-area').innerHTML = `
+        <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00">🏆 ${data.trophies}</div></div>
+        <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff">⚔️ ${data['3vs3Victories']}</div></div>
+        <div class="stat-card"><div>Solo</div><div class="stat-value" style="color:#28a745">🥇 ${data.soloVictories}</div></div>
+        <div class="stat-card"><div>Duo</div><div class="stat-value" style="color:#17a2b8">🤝 ${data.duoVictories}</div></div>
+    `;
 }
 
 // --- LOGIQUE CLAIM ---
