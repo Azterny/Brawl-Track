@@ -222,6 +222,13 @@ function renderBrawlersGrid() {
 }
 
 // --- NAVIGATION BRAWLER ---
+function getMonday(d) {
+    const date = new Date(d);
+    const day = date.getDay(); // 0=Dimanche, 1=Lundi...
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Ajustement pour Lundi
+    return new Date(date.setDate(diff));
+}
+
 async function goToBrawlerStats(id, name) {
     if(typeof switchView === 'function') switchView('brawlers');
     
@@ -270,27 +277,39 @@ function jumpToBrawlerDate(dateString) {
     const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
     const now = new Date();
     const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     const diffTime = todayMidnight - targetDate;
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
 
     if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
-    if (Math.abs(currentBrawlerMode - 0.042) < 0.001) {
-        currentChartOffset = diffDays * 24;
-    } else if (currentBrawlerMode === 1) {
+
+    if (Math.abs(currentBrawlerMode - 0.042) < 0.001) { // MODE 1H (Brawler)
+        // Préservation de l'heure
+        const currentHourOffset = currentChartOffset % 24;
+        currentChartOffset = (diffDays * 24) + currentHourOffset;
+    }
+    else if (currentBrawlerMode === 1) {
         currentChartOffset = diffDays;
-    } else if (currentBrawlerMode === 7) {
-        currentChartOffset = Math.floor(diffDays / 7);
-    } else if (currentBrawlerMode === 31) {
+    }
+    else if (currentBrawlerMode === 7) {
+        const currentMonday = getMonday(todayMidnight);
+        const targetMonday = getMonday(targetDate);
+        const diffWeeks = (currentMonday - targetMonday) / (1000 * 60 * 60 * 24 * 7);
+        currentChartOffset = Math.round(diffWeeks);
+    }
+    else if (currentBrawlerMode === 31) {
         let months = (todayMidnight.getFullYear() - targetDate.getFullYear()) * 12;
         months -= targetDate.getMonth();
         months += todayMidnight.getMonth();
         currentChartOffset = months <= 0 ? 0 : months;
-    } else if (currentBrawlerMode === 365) {
+    } 
+    else if (currentBrawlerMode === 365) {
         currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
     }
 
     renderBrawlerChart();
 }
+
 function updateBrawlerNavigationUI(data) {
     const btnPrev = document.getElementById('brawler-nav-btn-prev');
     const btnNext = document.getElementById('brawler-nav-btn-next');
@@ -616,28 +635,46 @@ function navigateMonth(direction) {
 
 function jumpToDate(dateString) {
     if (!dateString) return;
+
+    // 1. Normalisation des dates à Minuit (Heure Locale)
     const parts = dateString.split('-');
     const targetDate = new Date(parts[0], parts[1] - 1, parts[2]); 
     const now = new Date();
     const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // 2. Calcul du nombre de jours de différence
     const diffTime = todayMidnight - targetDate;
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
 
     if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
-    if (Math.abs(currentChartMode - 0.042) < 0.001) 
-        currentChartOffset = diffDays * 24; 
-    } else if (currentChartMode === 1) {
+
+    // --- APPLICATION DE L'OFFSET ---
+
+    if (Math.abs(currentChartMode - 0.042) < 0.001) { // MODE 1H
+        // CORRECTION : On préserve l'heure intra-journalière actuelle
+        // Ex: Si je regarde 14h-15h (offset 5 par rapport à 20h), je veux rester à 14h-15h le jour cible.
+        const currentHourOffset = currentChartOffset % 24;
+        currentChartOffset = (diffDays * 24) + currentHourOffset; 
+    }
+    else if (currentChartMode === 1) { // JOUR
         currentChartOffset = diffDays;
-    } else if (currentChartMode === 7) {
-        currentChartOffset = Math.floor(diffDays / 7);
-    } else if (currentChartMode === 31) {
+    }
+    else if (currentChartMode === 7) { // SEMAINE (Lundi-Dimanche)
+        const currentMonday = getMonday(todayMidnight);
+        const targetMonday = getMonday(targetDate);
+        const diffWeeks = (currentMonday - targetMonday) / (1000 * 60 * 60 * 24 * 7);
+        currentChartOffset = Math.round(diffWeeks);
+    }
+    else if (currentChartMode === 31) { // MOIS
         let months = (todayMidnight.getFullYear() - targetDate.getFullYear()) * 12;
         months -= targetDate.getMonth();
         months += todayMidnight.getMonth();
         currentChartOffset = months <= 0 ? 0 : months;
-    } else if (currentChartMode === 365) {
+    } 
+    else if (currentChartMode === 365) { // ANNÉE
         currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
     }
+
     renderMainChart();
 }
 
