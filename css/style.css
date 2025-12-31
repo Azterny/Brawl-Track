@@ -172,76 +172,6 @@ input:focus, select:focus {
     background: #333;
 }
 
-/* --- HEADER DASHBOARD AVEC ICONE --- */
-
-.player-header-container {
-    display: flex;
-    justify-content: space-between; /* Infos à gauche, Bouton à droite */
-    align-items: center;            /* Centrage vertical */
-    background-color: rgba(0, 0, 0, 0.4); /* Fond sombre transparent */
-    padding: 15px 20px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(5px);
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 15px; /* Espace entre l'image et le texte */
-}
-
-.profile-icon {
-    width: 64px;       /* Taille de l'icône */
-    height: 64px;
-    border-radius: 8px; /* Coins légèrement arrondis comme dans le jeu */
-    border: 2px solid #fff; /* Bordure blanche */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-    background-color: #333; /* Fond gris en attendant l'image */
-    object-fit: cover;
-}
-
-.header-info {
-    display: flex;
-    flex-direction: column; /* Nom au-dessus, Tag en-dessous */
-    justify-content: center;
-}
-
-#player-name {
-    margin: 0;
-    font-size: 2rem;
-    line-height: 1.1;
-    font-weight: 900;
-    text-shadow: 2px 2px 0 #000;
-}
-
-#player-tag-display {
-    color: #ddd;
-    font-family: 'Courier New', monospace; /* Police style "code" pour le tag */
-    font-size: 1rem;
-    font-weight: bold;
-    opacity: 0.8;
-    margin-top: 2px;
-}
-
-/* Ajustement responsive pour mobile */
-@media (max-width: 600px) {
-    .player-header-container {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
-    .header-left {
-        flex-direction: column;
-    }
-    #header-actions {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-    }
-}
-
 /* Boutons Style 3D */
 button { 
     width: 100%; 
@@ -1119,4 +1049,3 @@ span.flatpickr-weekday {
     .desktop-only { display: none !important; }
     .nav-burger { display: block; }
 }
-
