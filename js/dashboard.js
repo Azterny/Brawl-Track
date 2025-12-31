@@ -346,6 +346,15 @@ function updateBrawlerNavigationUI(data) {
          startDate.setMinutes(0, 0, 0);
          endDate = new Date(target);
          endDate.setMinutes(59, 59, 999);
+         if (data && data.length > 0) {
+              const firstArchiveHour = new Date(firstDataPointDate);
+              firstArchiveHour.setMinutes(0, 0, 0);
+              if (startDate < firstArchiveHour) {
+                  startDate = new Date(firstArchiveHour);
+                  endDate = new Date(firstArchiveHour);
+                  endDate.setMinutes(59, 59, 999);
+              }
+         }
     } else if (currentBrawlerMode === 1) { // 24H
         const target = new Date();
         target.setDate(now.getDate() - currentChartOffset);
@@ -929,6 +938,15 @@ function renderGenericChart(config) {
              startDate.setMinutes(0, 0, 0);
              endDate = new Date(target);
              endDate.setMinutes(59, 59, 999);
+             if (processedData.length > 0) {
+                 const firstArchiveHour = new Date(firstDataPointDate);
+                 firstArchiveHour.setMinutes(0, 0, 0);
+                 if (startDate < firstArchiveHour) {
+                     startDate = new Date(firstArchiveHour);
+                     endDate = new Date(firstArchiveHour);
+                     endDate.setMinutes(59, 59, 999);
+                 }
+             }
         } else if (mode === 1) { // 24H
             const target = new Date();
             target.setDate(now.getDate() - offset);
