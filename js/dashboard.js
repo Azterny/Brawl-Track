@@ -4,6 +4,7 @@ let currentChartOffset = 0;
 let currentTagString = null;
 let mainFlatpickr = null;
 let brawlerFlatpickr = null;
+let currentUserId = null;
 
 // Variables spécifiques Brawlers
 let currentBrawlerHistory = [];
@@ -45,8 +46,8 @@ async function fetchUserTier() {
         });
         if (res.ok) {
             const data = await res.json();
-            // On met à jour la variable globale définie dans config.js
             if(data.tier) currentUserTier = data.tier;
+            if(data.user_id) currentUserId = data.user_id;
         }
     } catch(e) { console.log("Guest mode"); }
 }
@@ -60,8 +61,10 @@ async function loadTagData(tag) {
         
         renderProfile(data);
         await loadBrawlersGrid(data.brawlers);
-        
         loadHistoryChart(data.history || [], data.trophies);
+
+        checkClaimStatus(data); 
+
     } catch (e) {
         console.error(e);
         document.getElementById('player-name').innerText = "Erreur / Introuvable";
@@ -94,24 +97,65 @@ function renderProfile(data) {
 }
 
 // --- LOGIQUE CLAIM ---
-function checkClaimStatus() {
+function checkClaimStatus(tagData) {
     const token = localStorage.getItem('token');
+    
+    // 1. INVISIBLE : Si pas connecté, on ne fait rien (pas de bouton)
     if (!token) return;
 
     const actionsDiv = document.getElementById('header-actions');
-    if(document.getElementById('btn-claim-action')) return;
+    // On nettoie l'ancien bouton s'il existe pour mise à jour dynamique
+    const existingBtn = document.getElementById('btn-claim-action');
+    if(existingBtn) existingBtn.remove();
 
-    const claimBtn = document.createElement('button');
-    claimBtn.id = 'btn-claim-action';
-    claimBtn.innerText = "⚡ CLAIM";
-    claimBtn.style.background = "linear-gradient(to bottom, #ffce00, #e6b800)";
-    claimBtn.style.color = "black";
-    claimBtn.style.width = "auto";
-    claimBtn.style.margin = "0";
-    claimBtn.style.padding = "5px 15px";
-    claimBtn.style.fontWeight = "bold";
-    claimBtn.onclick = () => claimTagAction();
-    actionsDiv.prepend(claimBtn);
+    const btn = document.createElement('button');
+    btn.id = 'btn-claim-action';
+    btn.style.width = "auto";
+    btn.style.margin = "0";
+    btn.style.padding = "6px 16px";
+    btn.style.fontWeight = "bold";
+    btn.style.fontSize = "0.9rem";
+    btn.style.borderRadius = "8px";
+    btn.style.border = "none";
+    btn.style.transition = "all 0.2s";
+
+    // LOGIQUE DES ÉTATS
+
+    // État 3 : RESERVED (Violet)
+    if (tagData.is_reserved) {
+        btn.innerText = "🔒 RESERVED";
+        btn.className = "btn-disabled-purple";
+        btn.disabled = true;
+        btn.style.cursor = "not-allowed";
+        actionsDiv.prepend(btn);
+        return;
+    }
+
+    // État 5 : UNCLAIM (Rouge - C'est mon tag)
+    if (tagData.claimer_id === currentUserId) {
+        btn.innerText = "❌ UNCLAIM";
+        btn.className = "btn-action-red"; 
+        btn.onclick = () => unclaimTagAction();
+        actionsDiv.prepend(btn);
+        return;
+    }
+
+    // État 2 : CLAIMED (Gris - À quelqu'un d'autre)
+    if (tagData.claimer_id && tagData.claimer_id !== currentUserId) {
+        btn.innerText = "👤 CLAIMED";
+        btn.className = "btn-disabled-grey";
+        btn.disabled = true;
+        btn.style.cursor = "not-allowed";
+        actionsDiv.prepend(btn);
+        return;
+    }
+
+    // État 4 : CLAIM (Jaune - Libre)
+    // C'est le cas par défaut si claimer_id est null
+    btn.innerText = "⚡ CLAIM";
+    btn.className = "btn-action-yellow"; // Classe CSS définie plus bas
+    btn.onclick = () => claimTagAction();
+    actionsDiv.prepend(btn);
 }
 
 async function claimTagAction() {
@@ -125,8 +169,30 @@ async function claimTagAction() {
         });
         const data = await res.json();
         if(res.ok) {
-            alert("✅ " + data.message);
-            window.location.href = "userhome.html";
+        alert("✅ Tag lié avec succès !");
+        window.location.reload(); // On reload pour voir le bouton passer en UNCLAIM
+        } else {
+            alert("⚠️ " + data.message);
+        }
+    } catch(e) { alert("Erreur connexion"); }
+}
+
+async function unclaimTagAction() {
+    if(!confirm("Ne plus suivre ce compte ?\nL'historique automatique sera arrêté.")) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`${API_BASE}/api/unclaim-tag`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ tag: currentTagString })
+        });
+        const data = await res.json();
+        
+        if(res.ok) {
+            // On recharge la page ou juste le status pour mettre à jour le bouton
+            // Recharger permet de rafraîchir les données proprement
+            window.location.reload(); 
         } else {
             alert("⚠️ " + data.message);
         }
