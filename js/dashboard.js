@@ -340,9 +340,12 @@ function updateBrawlerNavigationUI(data) {
 
     // Recalcul rapide des dates pour l'affichage (Logique miroir de renderGenericChart)
     if (Math.abs(currentBrawlerMode - 0.042) < 0.001) { // 1H
-         const endMs = now.getTime() - (currentChartOffset * 60 * 60 * 1000);
-         endDate = new Date(endMs);
-         startDate = new Date(endMs - (60 * 60 * 1000));
+         const target = new Date(now);
+         target.setHours(target.getHours() - currentChartOffset);
+         startDate = new Date(target);
+         startDate.setMinutes(0, 0, 0);
+         endDate = new Date(target);
+         endDate.setMinutes(59, 59, 999);
     } else if (currentBrawlerMode === 1) { // 24H
         const target = new Date();
         target.setDate(now.getDate() - currentChartOffset);
@@ -711,10 +714,12 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
         // 2. Barre Secondaire (HEURE)
         if (labelHour) {
             const hStart = startDate.getHours().toString().padStart(2, '0') + ":00";
-            const hEnd = endDate.getHours().toString().padStart(2, '0') + ":00";
+            const nextHourDate = new Date(startDate);
+            nextHourDate.setHours(startDate.getHours() + 1);
+            const hEnd = nextHourDate.getHours().toString().padStart(2, '0') + ":00";
             labelHour.innerText = `${hStart} - ${hEnd} 🕓`;
         }
-
+        
         if (btnPrevHour) btnPrevHour.disabled = isAtStart;
         if (btnNextHour) btnNextHour.disabled = (currentChartOffset === 0);
 
@@ -918,9 +923,12 @@ function renderGenericChart(config) {
 
     if (mode > 0) {
         if (Math.abs(mode - 0.042) < 0.001) { // HEURE
-             const endMs = now.getTime() - (offset * 60 * 60 * 1000);
-             endDate = new Date(endMs);
-             startDate = new Date(endMs - (60 * 60 * 1000));
+             const target = new Date(now);
+             target.setHours(target.getHours() - offset);
+             startDate = new Date(target);
+             startDate.setMinutes(0, 0, 0);
+             endDate = new Date(target);
+             endDate.setMinutes(59, 59, 999);
         } else if (mode === 1) { // 24H
             const target = new Date();
             target.setDate(now.getDate() - offset);
