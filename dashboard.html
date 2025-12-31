@@ -23,21 +23,18 @@
     <div id="global-navbar"></div>
 
     <div class="container wide">
-        <div class="player-header-container">
-            <div class="header-left">
-                <div class="profile-icon-wrapper">
-                    <img id="player-icon" src="" alt="Profile Icon" class="profile-icon" onerror="this.style.display='none'">
+        <div class="header-bar">
+            <div style="text-align: left;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h1 id="player-name" style="margin: 0;">Chargement...</h1>
                 </div>
-                
-                <div class="header-info">
-                    <h1 id="player-name">Chargement...</h1>
-                    <span id="player-tag-display">#-------</span>
-                </div>
+                <div id="player-tag" style="color: #888; font-size: 0.9em; margin-top: 5px;">#...</div>
             </div>
-        
-            <div id="header-actions"></div>
+
+            <div id="header-actions" style="display: flex; gap: 10px; align-items: center;">
+            </div>
         </div>
-        
+
         <div id="view-dashboard" class="view-section active">
             
             <div id="stats-area" class="stats-grid"></div>
