@@ -704,7 +704,7 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
     if (Math.abs(currentChartMode - 0.042) < 0.001) {
         
         // 1. Barre Principale (JOUR)
-        label.innerText = startDate.toLocaleDateString('fr-FR', options) + " 📅";
+        label.innerText = startDate.toLocaleDateString('fr-FR', options);
         
         // Le bouton Suivant [JOUR] est désactivé si on est déjà aujourd'hui (offset < 24h)
         // Note: On pourrait raffiner pour autoriser le saut si offset >= 24, 
