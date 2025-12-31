@@ -841,11 +841,8 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
     try {
         const fp = flatpickr(inputElement, config);
         
-        const newTrigger = trigger.cloneNode(true);
-        trigger.parentNode.replaceChild(newTrigger, trigger);
-        
-        newTrigger.onclick = () => {
-            fp._positionElement = newTrigger;
+        trigger.onclick = () => {
+            fp._positionElement = trigger;
             fp.open();
         };
 
