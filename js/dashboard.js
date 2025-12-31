@@ -1076,12 +1076,13 @@ function renderGenericChart(config) {
                 // Visibilité des points
                 pointRadius: p => {
                     const r = p.raw;
+                    if (!r) return 0; // Si pas de données, on ne dessine rien
                     if (r.type === 'ghost') return 0;
                     if (r.type === 'live' || r.cType === 'start' || r.cType === 'unlocked') return 5; 
-                    if (shouldHidePoints) return 0; // Masqué si > Jour OU Tout
+                    if (shouldHidePoints) return 0; 
                     return 3;
                 },
-                pointHoverRadius: p => (p.raw.type === 'ghost' ? 0 : 6),
+                pointHoverRadius: p => (p.raw && p.raw.type === 'ghost' ? 0 : 6),
                 
                 // Règle 2: Courbe Blanche si points débloqués
                 segment: {
