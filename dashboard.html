@@ -23,24 +23,22 @@
     <div id="global-navbar"></div>
 
     <div class="container wide">
-        <div class="header-bar">
-            <div style="text-align: left;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <h1 id="player-name" style="margin: 0;">Chargement...</h1>
+        <div class="header-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
+            <div id="header-left-group" style="display: flex; align-items: center; gap: 15px;">
+                <img id="player-icon" src="" alt="" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); display: none;">
+                <div style="text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <h1 id="player-name" style="margin: 0; font-size: 1.5rem;">Chargement...</h1>
+                    </div>
+                    <div id="player-tag" style="color: #888; font-size: 0.9em; margin-top: 2px;">#...</div>
                 </div>
-                <div id="player-tag" style="color: #888; font-size: 0.9em; margin-top: 5px;">#...</div>
             </div>
-
             <div id="header-actions" style="display: flex; gap: 10px; align-items: center;">
             </div>
         </div>
-
         <div id="view-dashboard" class="view-section active">
-            
             <div id="stats-area" class="stats-grid"></div>
-
             <div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px; position: relative;">
-                
                 <div id="chart-content-wrapper">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -48,7 +46,6 @@
                             <span id="trophy-variation" style="font-weight: bold; font-size: 1em;"></span>
                         </div>
                     </div>
-
                     <div class="chart-filters">
                         <button id="btn-1h" onclick="setChartMode(0.042)" class="filter-btn hidden">1H</button> 
                         <button id="btn-24h" onclick="setChartMode(1)" class="filter-btn">Jour</button>
