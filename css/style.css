@@ -1124,7 +1124,7 @@ span.flatpickr-weekday {
 
 
 /* 2. DISPOSITION PC / TABLETTE (Écrans > 768px) : FLEXBOX */
-@media (min-width: 768px) {
+@media (min-width: 600px) {
     #dashboard-header {
         display: flex;       /* On passe en Flex pour aligner tout sur une ligne */
         flex-direction: row;
