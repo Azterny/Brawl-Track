@@ -423,7 +423,7 @@
             const h = document.getElementById('stats-area');
             h.innerHTML = `
                 <div class="stat-box"><h3>USERS</h3><p>${d.users}</p></div>
-                <div class="stat-box"><h3>ARCHIVES</h3><p>${d.records}</p></div>
+                <div class="stat-box"><h3>ARCHIVE G/B</h3><p>${d.records_global} / ${d.records_brawlers}</p></div>
                 <div class="stat-box"><h3>TAGS (C/T)</h3><p>${d.claimed_tags}/${d.total_tags}</p></div>
                 <div class="stat-box"><h3>STORAGE</h3><p>${d.disk_str}</p></div>
                 <div class="stat-box"><h3>LAST ARCH.</h3><p style="font-size:0.9em">${d.last_archive_date||'-'}</p></div>
@@ -432,7 +432,6 @@
                 <div class="stat-box"><h3>RAM</h3><p>${d.ram}%</p></div>
             `;
         }
-
         // --- ACTIONS ---
         function toggleDetails(id) { const r=document.getElementById('d-'+id); if(r) r.classList.toggle('hidden'); }
         
