@@ -1050,94 +1050,95 @@ span.flatpickr-weekday {
     .nav-burger { display: block; }
 }
 
-/* =========================================
-   === HEADER DASHBOARD (Profil & Actions) ===
-   ========================================= */
+/* --- HEADER DASHBOARD (Nouvelle Version) --- */
 
-/* Le conteneur principal */
-.header-bar {
-    display: flex;
-    justify-content: space-between; /* Infos à gauche, Actions à droite */
-    align-items: center;            /* Alignement vertical centré */
-    padding: 15px 20px;
-    background-color: rgba(0, 0, 0, 0.4); /* Fond sombre semi-transparent */
-    border-radius: 12px;            /* Coins arrondis */
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Bordure subtile */
-    margin-bottom: 25px;
-    backdrop-filter: blur(5px);     /* Effet de flou arrière-plan (glassmorphism) */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+/* 1. DISPOSITION MOBILE (Par défaut) : GRID */
+#dashboard-header {
+    display: grid;
+    /* Colonnes : Icone (auto) | Espace vide | Actions (auto) */
+    grid-template-columns: auto 1fr auto; 
+    /* Lignes : Icone/Actions (Ligne 1) | Textes (Ligne 2) */
+    grid-template-rows: auto auto;
+    
+    gap: 10px 15px; /* Espace vertical 10px, Horizontal 15px */
+    align-items: center; /* Centrer verticalement */
 }
 
-/* Le groupe de gauche (Icône + Textes) */
-#header-left-group {
-    display: flex;
-    align-items: center;
-    gap: 15px; /* Espace entre l'image et le nom */
-}
-
-/* L'image de l'icône de profil */
+/* Placement de l'icône */
 #player-icon {
-    width: 56px;       /* Taille fixe */
-    height: 56px;
-    border-radius: 10px; /* Coins un peu plus arrondis */
+    grid-column: 1;     /* Colonne 1 */
+    grid-row: 1;        /* Ligne 1 */
+    
+    width: 60px;        /* Taille Mobile */
+    height: 60px;
+    border-radius: 12px;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    object-fit: cover;
-    background-color: #222; /* Couleur de fond pendant le chargement */
-    transition: transform 0.2s ease;
 }
 
-#player-icon:hover {
-    transform: scale(1.05); /* Petit effet de zoom au survol */
-    border-color: #ffce00;  /* Bordure jaune au survol */
-}
-
-/* Le Nom du joueur */
-#player-name {
-    margin: 0;
-    font-size: 1.6rem;
-    font-weight: 800;
-    line-height: 1.2;
-    letter-spacing: 0.5px;
-}
-
-/* Le Tag (#XXXXX) */
-#player-tag {
-    color: #aaa;
-    font-size: 0.95rem;
-    font-family: 'Courier New', monospace; /* Police style "code" */
-    font-weight: bold;
-    margin-top: 2px;
-    opacity: 0.8;
-}
-
-/* Le groupe de droite (Boutons Claim/Reserved) */
+/* Placement des Boutons (Claim) */
 #header-actions {
+    grid-column: 2 / -1; /* Va jusqu'à la fin à droite */
+    grid-row: 1;         /* Ligne 1 (En face de l'icone) */
+    justify-self: end;   /* Collé à droite */
+    
     display: flex;
     gap: 10px;
-    align-items: center;
 }
 
-/* --- RESPONSIVE (Mobile) --- */
-@media (max-width: 600px) {
-    .header-bar {
-        flex-direction: column; /* Empile les éléments verticalement */
-        text-align: center;
-        gap: 15px;
-        padding: 15px;
-    }
+/* Placement du Groupe Nom + Tag */
+#player-info {
+    grid-column: 1 / -1; /* Prend toute la largeur (Ligne du dessous) */
+    grid-row: 2;         /* Ligne 2 */
+    
+    display: flex;
+    flex-direction: column; /* Tag sous le Nom */
+    gap: 2px;
+}
 
-    #header-left-group {
-        flex-direction: column; /* Image au-dessus du texte */
-        gap: 10px;
+/* Styles Textes */
+#player-name {
+    margin: 0;
+    font-size: 1.8rem;
+    line-height: 1.1;
+}
+
+#player-tag {
+    color: #888;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+
+/* 2. DISPOSITION PC / TABLETTE (Écrans > 768px) : FLEXBOX */
+@media (min-width: 768px) {
+    #dashboard-header {
+        display: flex;       /* On passe en Flex pour aligner tout sur une ligne */
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+        padding: 10px;
     }
 
     #player-icon {
-        width: 64px; /* Un peu plus gros sur mobile */
-        height: 64px;
+        width: 84px;        /* Plus grand sur PC */
+        height: 84px;
+        margin: 0;          /* Reset des marges grid */
+    }
+
+    #player-info {
+        flex-grow: 1;       /* Prend l'espace disponible au milieu */
+        margin: 0;
+        /* Le Tag reste en dessous du nom grâce au flex-direction: column défini plus haut */
+    }
+
+    #header-actions {
+        /* Les boutons se mettent naturellement à la fin du Flex */
+        margin: 0;
+        justify-self: auto;
     }
     
-    #header-actions {
-        width: 100%;
-        justify-content: center; /* Centre le bouton */
+    #player-name {
+        font-size: 2.2rem; /* Nom plus gros sur PC */
     }
 }
