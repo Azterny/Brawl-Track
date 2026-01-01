@@ -1054,95 +1054,62 @@ span.flatpickr-weekday {
    === HEADER DASHBOARD (Profil & Actions) ===
    ========================================= */
 
-/* --- HEADER DU DASHBOARD --- */
-.dashboard-header {
+/* Le conteneur principal */
+.header-bar {
+    display: flex;
+    justify-content: space-between; /* Infos à gauche, Actions à droite */
+    align-items: center;            /* Alignement vertical centré */
+    padding: 15px 20px;
+    background-color: rgba(0, 0, 0, 0.4); /* Fond sombre semi-transparent */
+    border-radius: 12px;            /* Coins arrondis */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Bordure subtile */
+    margin-bottom: 25px;
+    backdrop-filter: blur(5px);     /* Effet de flou arrière-plan (glassmorphism) */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Le groupe de gauche (Icône + Textes) */
+#header-left-group {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 15px 20px;
-    background-color: #1a1a1a; /* Ajuste selon ton thème */
-    border-bottom: 1px solid #333;
-    flex-wrap: wrap; /* Important pour le mode mobile */
+    gap: 15px; /* Espace entre l'image et le nom */
 }
 
-/* Icone Joueur */
-.profile-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 10px;
-    border: 2px solid #000;
+/* L'image de l'icône de profil */
+#player-icon {
+    width: 56px;       /* Taille fixe */
+    height: 56px;
+    border-radius: 10px; /* Coins un peu plus arrondis */
+    border: 2px solid rgba(255, 255, 255, 0.2);
     object-fit: cover;
+    background-color: #222; /* Couleur de fond pendant le chargement */
+    transition: transform 0.2s ease;
 }
 
-/* Bloc Identité (Nom + Tag) */
-.player-identity {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin-right: auto; /* Pousse le bouton vers la droite sur PC */
+#player-icon:hover {
+    transform: scale(1.05); /* Petit effet de zoom au survol */
+    border-color: #ffce00;  /* Bordure jaune au survol */
 }
 
+/* Le Nom du joueur */
 #player-name {
     margin: 0;
-    font-size: 1.5rem;
-    color: #fff;
+    font-size: 1.6rem;
+    font-weight: 800;
     line-height: 1.2;
-    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.player-tag {
-    color: #888;
-    font-family: monospace;
-    font-size: 1rem;
+/* Le Tag (#XXXXX) */
+#player-tag {
+    color: #aaa;
+    font-size: 0.95rem;
+    font-family: 'Courier New', monospace; /* Police style "code" */
     font-weight: bold;
-    letter-spacing: 1px;
+    margin-top: 2px;
+    opacity: 0.8;
 }
 
-/* Zone Bouton */
-#action-area {
-    display: flex;
-    align-items: center;
-}
-
-/* --- VERSION MOBILE (Cible ton layout spécifique) --- */
-@media (max-width: 600px) {
-    .dashboard-header {
-        padding: 15px;
-        gap: 10px;
-    }
-
-    /* ORDRE D'AFFICHAGE :
-       1. Icone (Gauche)
-       2. Bouton (Droite)
-       3. Identité (Dessous, pleine largeur)
-    */
-
-    .profile-icon {
-        order: 1;
-        width: 50px; height: 50px;
-    }
-
-    #action-area {
-        order: 2;
-        margin-left: auto; /* Force le bouton à droite de l'icone */
-    }
-
-    .player-identity {
-        order: 3;
-        width: 100%; /* Force le retour à la ligne */
-        margin-top: 5px;
-        margin-right: 0;
-    }
-
-    /* Ajustements visuels mobile */
-    #player-name {
-        font-size: 1.6rem;
-    }
-    .player-tag {
-        font-size: 1.1rem;
-        color: #aaa;
-    }
-}
 /* Le groupe de droite (Boutons Claim/Reserved) */
 #header-actions {
     display: flex;
