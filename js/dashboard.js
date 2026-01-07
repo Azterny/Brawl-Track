@@ -32,6 +32,7 @@ async function initDashboard() {
 
     // On appelle la fonction de chargement principale
     await loadTagData(currentTagString);
+    await initFollowSystem(currentTagString)
 }
 
 async function fetchUserTier() {
@@ -210,6 +211,82 @@ async function unclaimTagAction() {
             alert("⚠️ " + data.message);
         }
     } catch(e) { alert("Erreur connexion"); }
+}
+
+// --- GESTION DU BOUTON FOLLOW (Add-on) ---
+
+async function initFollowSystem(tag) {
+    const actionsDiv = document.getElementById('header-actions');
+    if (!actionsDiv) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) return; // Pas de follow si pas connecté
+
+    // 1. Vérifier si le bouton existe déjà pour ne pas le dupliquer
+    let btnFollow = document.getElementById('btn-follow-addon');
+    
+    if (!btnFollow) {
+        // Création du bouton s'il n'existe pas
+        btnFollow = document.createElement('button');
+        btnFollow.id = 'btn-follow-addon';
+        btnFollow.className = 'btn-action blue'; // Utilise le style bleu défini plus bas
+        btnFollow.style.marginRight = "10px"; // Petit espace avec le bouton Claim
+        
+        // Insertion en premier dans la liste (avant le bouton Claim) ou après, selon préférence
+        // Ici : on l'ajoute au début du conteneur pour qu'il soit à gauche du Claim
+        actionsDiv.insertBefore(btnFollow, actionsDiv.firstChild); 
+    }
+
+    // 2. Récupérer l'état actuel et mettre à jour le texte/action
+    try {
+        const res = await fetch(`${API_BASE}/api/follow-status/${tag}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            updateFollowButtonState(btnFollow, data.following, tag);
+        }
+    } catch (e) {
+        console.error("Erreur Follow System:", e);
+    }
+}
+
+function updateFollowButtonState(btn, isFollowing, tag) {
+    if (isFollowing) {
+        btn.innerText = "UNFOLLOW";
+        btn.classList.add('active'); // Style visuel optionnel
+        btn.onclick = () => toggleFollowAction(tag, btn, 'unfollow-tag');
+    } else {
+        btn.innerText = "FOLLOW";
+        btn.classList.remove('active');
+        btn.onclick = () => toggleFollowAction(tag, btn, 'follow-tag');
+    }
+}
+
+async function toggleFollowAction(tag, btn, endpoint) {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`${API_BASE}/api/${endpoint}`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ tag: tag })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            // Inversion de l'état après succès
+            const isNowFollowing = (endpoint === 'follow-tag');
+            updateFollowButtonState(btn, isNowFollowing, tag);
+        } else {
+            alert(data.message || "Erreur action");
+        }
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 // --- BRAWLERS GRID ---
