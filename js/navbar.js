@@ -60,7 +60,7 @@ function getRightActions(token, username) {
     if (token) {
         return `
             <div class="dropdown">
-                <button class="nav-btn-user">👤 ${username} ▾</button>
+                <button class="btn-3d btn-yellow btn-sm">👤 ${username} ▾</button>
                 <div class="dropdown-menu right-aligned">
                     <a href="userhome.html">🏠 Mes Comptes</a>
                     <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')">⭐ Abonnement</a>
