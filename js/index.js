@@ -18,8 +18,8 @@ window.onload = function() {
             loginForm.innerHTML = `
                 <h2 style="color: #28a745;">Bon retour !</h2>
                 <p>Tu es déjà connecté.</p>
-                <button onclick="window.location.href='userhome.html'">ACCÉDER À MES COMPTES</button>
-                <button onclick="logout()" style="background: #444; margin-top: 10px;">Se Déconnecter</button>
+                <button onclick="window.location.href='userhome.html'" class="btn-3d btn-yellow">ACCÉDER À MES COMPTES</button>
+                <button onclick="logout()" class="btn-3d btn-red">Se Déconnecter</button>
             `;
         }
     }
