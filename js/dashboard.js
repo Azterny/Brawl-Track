@@ -229,7 +229,7 @@ async function initFollowSystem(tag) {
         // Création du bouton s'il n'existe pas
         btnFollow = document.createElement('button');
         btnFollow.id = 'btn-follow-addon';
-        btnFollow.className = 'btn-action blue'; // Utilise le style bleu défini plus bas
+        btnFollow.className = 'btn-action-blue'; // Utilise le style bleu défini plus bas
         btnFollow.style.marginRight = "10px"; // Petit espace avec le bouton Claim
         
         // Insertion en premier dans la liste (avant le bouton Claim) ou après, selon préférence
