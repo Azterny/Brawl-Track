@@ -327,29 +327,6 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
     box-shadow: none !important;
 }
 
-/* --- BOUTONS FOLLOW --- */
-.btn-action.blue {
-    background-color: #007bff; /* Bleu */
-    color: white;
-    border: 1px solid #0056b3;
-}
-
-.btn-action.blue:hover {
-    background-color: #0056b3;
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
-}
-
-/* Style pour Unfollow (quand on suit déjà) */
-.btn-action.blue.active {
-    background-color: transparent;
-    border: 1px solid #007bff;
-    color: #007bff;
-}
-
-.btn-action.blue.active:hover {
-    background-color: rgba(0, 123, 255, 0.1);
-    content: "UNFOLLOW"; /* Astuce CSS possible ou géré par JS */
-}
 /* =========================================
    6. PAGE D'ACCUEIL (SPLIT LAYOUT)
    ========================================= */
