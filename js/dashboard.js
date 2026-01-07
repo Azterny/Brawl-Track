@@ -32,7 +32,6 @@ async function initDashboard() {
 
     // On appelle la fonction de chargement principale
     await loadTagData(currentTagString);
-    updateHeaderButtons(currentTagString)
 }
 
 async function fetchUserTier() {
@@ -211,83 +210,6 @@ async function unclaimTagAction() {
             alert("⚠️ " + data.message);
         }
     } catch(e) { alert("Erreur connexion"); }
-}
-// --- Logic Follow ---
-
-async function updateHeaderButtons(tag) {
-    const actionsDiv = document.getElementById('header-actions');
-    actionsDiv.innerHTML = ''; // Reset
-    
-    const token = localStorage.getItem('token');
-    if (!token) return; // Pas de boutons si pas connecté
-
-    // 1. Check Status API
-    try {
-        const res = await fetch(`${API_BASE}/api/follow-status/${tag}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) return;
-        const status = await res.json();
-
-        // 2. Bouton FOLLOW
-        const btnFollow = document.createElement('button');
-        btnFollow.className = `btn-action blue ${status.following ? 'active' : ''}`;
-        btnFollow.innerText = status.following ? 'UNFOLLOW' : 'FOLLOW';
-        btnFollow.onclick = () => toggleFollow(tag, btnFollow);
-        actionsDiv.appendChild(btnFollow);
-
-        // 3. Bouton CLAIM (Existant)
-        const btnClaim = document.createElement('button');
-        if (status.claimed) {
-            btnClaim.className = 'btn-action red'; // Ou classe existante pour unclaim
-            btnClaim.innerText = 'UNCLAIM';
-            btnClaim.onclick = () => unclaimTag(tag); // Utilise ta fonction existante
-        } else {
-            btnClaim.className = 'btn-action'; // Vert/Jaune par défaut
-            btnClaim.innerText = 'CLAIM';
-            btnClaim.onclick = () => claimTag(tag); // Utilise ta fonction existante
-        }
-        actionsDiv.appendChild(btnClaim);
-
-    } catch (e) {
-        console.error("Erreur boutons headers:", e);
-    }
-}
-
-// AJOUTER LA LOGIQUE DU CLICK FOLLOW
-async function toggleFollow(tag, btn) {
-    const isFollowing = btn.classList.contains('active');
-    const endpoint = isFollowing ? 'unfollow-tag' : 'follow-tag';
-    const token = localStorage.getItem('token');
-
-    try {
-        const res = await fetch(`${API_BASE}/api/${endpoint}`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ tag: tag })
-        });
-        
-        const data = await res.json();
-        
-        if (res.ok) {
-            // Bascule visuelle
-            if (isFollowing) {
-                btn.classList.remove('active');
-                btn.innerText = 'FOLLOW';
-            } else {
-                btn.classList.add('active');
-                btn.innerText = 'UNFOLLOW';
-            }
-        } else {
-            alert(data.message || "Erreur action follow");
-        }
-    } catch (e) {
-        console.error(e);
-        alert("Erreur réseau");
-    }
 }
 
 // --- BRAWLERS GRID ---
