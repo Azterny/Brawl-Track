@@ -172,34 +172,110 @@ input:focus, select:focus {
     background: #333;
 }
 
-/* Boutons Style 3D */
-button { 
-    width: 100%; 
-    padding: 12px; 
-    background: linear-gradient(to bottom, #ffce00, #e6b800); 
-    color: black; 
-    border: none; 
-    border-radius: 8px; 
-    font-weight: bold; 
-    cursor: pointer; 
-    margin-top: 10px; 
-    position: relative;
+/* =========================================
+   3. BOUTONS 3D (Refactorisation)
+   ========================================= */
+
+/* --- CLASSE MÈRE (Structure & Mécanique) --- */
+.btn-3d {
+    /* Layout */
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%; /* Par défaut, prend toute la largeur (comme avant) */
+    padding: 12px 20px;
+    margin-top: 10px;
+    
+    /* Style Visuel */
+    border: none;
+    border-radius: 8px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
     font-size: 1rem;
-    box-shadow: 0 4px 0 #b38f00; 
-    transition: all 0.1s ease;
+    text-transform: uppercase;
+    color: white; /* Couleur par défaut */
+    cursor: pointer;
+    
+    /* Mécanique 3D & Transition */
+    position: relative;
+    transition: all 0.1s ease-in-out;
+    user-select: none;
 }
-button:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 6px 0 #b38f00; }
-button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
 
-/* Variantes Boutons */
-.btn-save { background: linear-gradient(to bottom, #28a745, #218838); color: white; box-shadow: 0 4px 0 #1e7e34; }
-.btn-save:hover { box-shadow: 0 6px 0 #1e7e34; }
-.btn-save:active { box-shadow: 0 0 0 #1e7e34; }
+/* Effet Hover (Surlèvement) */
+.btn-3d:not(:disabled):hover {
+    filter: brightness(1.1);     /* Éclaircit légèrement */
+    transform: translateY(-2px); /* Monte de 2px */
+}
 
-.btn-danger { background: linear-gradient(to bottom, #dc3545, #c82333); color: white; box-shadow: 0 4px 0 #bd2130; }
-.btn-danger:hover { box-shadow: 0 6px 0 #bd2130; }
-.btn-danger:active { box-shadow: 0 0 0 #bd2130; }
+/* Effet Active (Enfoncement) */
+.btn-3d:not(:disabled):active {
+    transform: translateY(2px);  /* Descend de 2px */
+    box-shadow: 0 0 0 transparent !important; /* L'ombre disparaît pour l'effet "pressé" */
+}
 
+/* État Désactivé Générique */
+.btn-3d:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    filter: grayscale(0.5);
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* --- CLASSES FILLES (Couleurs) --- */
+
+/* 1. JAUNE (Primary / Brawl Stars) */
+.btn-yellow {
+    background: linear-gradient(to bottom, #ffce00, #e6b800);
+    color: black;
+    box-shadow: 0 4px 0 #b38f00;
+}
+.btn-yellow:not(:disabled):hover { box-shadow: 0 6px 0 #b38f00; }
+
+/* 2. BLEU (Info / Follow / Edit) */
+.btn-blue {
+    background: linear-gradient(to bottom, #007bff, #0056b3);
+    color: white;
+    box-shadow: 0 4px 0 #004085;
+}
+.btn-blue:not(:disabled):hover { box-shadow: 0 6px 0 #004085; }
+
+/* 3. ROUGE (Danger / Delete / Unclaim) */
+.btn-red {
+    background: linear-gradient(to bottom, #dc3545, #c82333);
+    color: white;
+    box-shadow: 0 4px 0 #bd2130;
+}
+.btn-red:not(:disabled):hover { box-shadow: 0 6px 0 #bd2130; }
+
+/* 4. VERT (Success / Save) */
+.btn-green {
+    background: linear-gradient(to bottom, #28a745, #218838);
+    color: white;
+    box-shadow: 0 4px 0 #1e7e34;
+}
+.btn-green:not(:disabled):hover { box-shadow: 0 6px 0 #1e7e34; }
+
+/* 5. VIOLET (Réservé / Admin) */
+.btn-purple {
+    background: linear-gradient(to bottom, #6f42c1, #59359a);
+    color: white;
+    box-shadow: 0 4px 0 #4c2d82;
+}
+
+/* 6. GRIS (Désactivé / Claimed par un tiers) */
+.btn-grey {
+    background: #444;
+    color: #888;
+    border: 1px solid #555;
+    box-shadow: none !important; /* Pas d'effet 3D */
+    transform: none !important;
+}
+
+/* --- UTILITAIRES --- */
+.w-auto { width: auto !important; display: inline-block; }
+.btn-sm { padding: 6px 12px; font-size: 0.85rem; }
 
 /* =========================================
    4. FILTRES GRAPHIQUE (SCROLL MOBILE)
@@ -276,80 +352,6 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
 .brawler-card:hover { transform: scale(1.1) translateY(-5px); z-index: 10; background: #333; border-color: #ffce00; }
 .brawler-card[style*="grayscale"] { opacity: 0.5; filter: grayscale(100%); }
 .brawler-card[style*="grayscale"]:hover { filter: grayscale(0%); opacity: 1; }
-
-/* --- BOUTONS D'ACTION DASHBOARD --- */
-
-/* État 4 : CLAIM (Standard) */
-.btn-action-yellow {
-    background: linear-gradient(to bottom, #ffce00, #e6b800);
-    color: black;
-    box-shadow: 0 4px 0 #b38f00;
-}
-.btn-action-yellow:hover {
-    filter: brightness(1.1);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #b38f00;
-}
-.btn-action-yellow:active {
-    transform: translateY(2px);
-    box-shadow: 0 0 0 #b38f00;
-}
-
-/* État 5 : UNCLAIM (Rouge) */
-.btn-action-red {
-    background: linear-gradient(to bottom, #dc3545, #c82333);
-    color: white;
-    box-shadow: 0 4px 0 #bd2130;
-}
-.btn-action-red:hover {
-    filter: brightness(1.1);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #bd2130;
-}
-.btn-action-red:active {
-    transform: translateY(2px);
-    box-shadow: 0 0 0 #bd2130;
-}
-
-/* État 2 : CLAIMED (Gris désactivé) */
-.btn-disabled-grey {
-    background: #444;
-    color: #888;
-    border: 1px solid #555 !important;
-    box-shadow: none !important;
-}
-
-/* État 3 : RESERVED (Violet désactivé) */
-.btn-disabled-purple {
-    background: #4a148c; /* Violet sombre */
-    color: #e1bee7; /* Violet clair */
-    border: 1px solid #7b1fa2 !important;
-    box-shadow: none !important;
-}
-
-/* --- BOUTONS FOLLOW --- */
-.btn-action-blue {
-    background-color: #007bff;
-    color: white;
-    box-shadow: 0 4px 0 rgba(0, 123, 255, 0.5);
-}
-.btn-action-blue:hover {
-    filter: brightness(1.1);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #bd2130;
-}
-.btn-action-blue:active {
-    background-color: #607d8b;
-    border-color: #455a64;
-    transform: translateY(2px);
-    box-shadow: 0 0 0 #bd2130;
-}
-
-.btn-action-blue.active:hover {
-    background-color: #455a64;     /* Bleu Gris plus sombre */
-    border-color: #37474f;
-    box-shadow: none;              /* Pas de glow pour l'état passif/annulation */
-}
 
 /* =========================================
    6. PAGE D'ACCUEIL (SPLIT LAYOUT)
