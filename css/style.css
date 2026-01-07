@@ -328,36 +328,23 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
 }
 
 /* --- BOUTONS FOLLOW --- */
-.btn-action.blue {
-    background-color: #007bff;     /* Bleu vif */
+.btn-action-red {
+    background-color: #007bff;
     color: white;
-    border: 1px solid #0056b3;     /* Bordure légèrement plus foncée */
-    
-    /* On force les mêmes propriétés de structure que le bouton CLAIM */
-    cursor: pointer;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-weight: bold;
-    font-family: 'Lilita One', cursive;
-    text-transform: uppercase;
-    transition: all 0.2s ease;     /* Animation douce */
+    box-shadow: 0 4px 0 rgba(0, 123, 255, 0.5);
 }
-
-/* Survol de "FOLLOW" */
-.btn-action.blue:hover {
-    background-color: #0056b3;     /* Bleu plus foncé */
-    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5); /* Glow Bleu */
-    transform: scale(1.02);        /* Léger effet de zoom comme les autres boutons */
+.btn-action-red:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #bd2130;
 }
-
-/* --- ETAT UNFOLLOW (Bleu Grisé / Active) --- */
-.btn-action.blue.active {
-    background-color: #607d8b;     /* Bleu Gris (Style "Slate") */
+.btn-action-red:active {
+    background-color: #607d8b;
     border-color: #455a64;
-    color: #ececec;                /* Blanc cassé */
+    transform: translateY(2px);
+    box-shadow: 0 0 0 #bd2130;
 }
 
-/* Survol de "UNFOLLOW" */
 .btn-action.blue.active:hover {
     background-color: #455a64;     /* Bleu Gris plus sombre */
     border-color: #37474f;
