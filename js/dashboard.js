@@ -32,7 +32,7 @@ async function initDashboard() {
 
     // On appelle la fonction de chargement principale
     await loadTagData(currentTagString);
-    await initFollowSystem(currentTagString)
+    initFollowSystem(currentTagString)
 }
 
 async function fetchUserTier() {
@@ -255,11 +255,11 @@ async function initFollowSystem(tag) {
 function updateFollowButtonState(btn, isFollowing, tag) {
     if (isFollowing) {
         btn.innerText = "UNFOLLOW";
-        btn.classList.add('active'); // Style visuel optionnel
+        btn.className = 'btn-action-blue active';
         btn.onclick = () => toggleFollowAction(tag, btn, 'unfollow-tag');
     } else {
         btn.innerText = "FOLLOW";
-        btn.classList.remove('active');
+        btn.className = 'btn-action-blue';
         btn.onclick = () => toggleFollowAction(tag, btn, 'follow-tag');
     }
 }
