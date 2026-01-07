@@ -328,24 +328,24 @@ button:active { transform: translateY(2px); box-shadow: 0 0 0 #b38f00; }
 }
 
 /* --- BOUTONS FOLLOW --- */
-.btn-action-red {
+.btn-action-blue {
     background-color: #007bff;
     color: white;
     box-shadow: 0 4px 0 rgba(0, 123, 255, 0.5);
 }
-.btn-action-red:hover {
+.btn-action-blue:hover {
     filter: brightness(1.1);
     transform: translateY(-2px);
     box-shadow: 0 6px 0 #bd2130;
 }
-.btn-action-red:active {
+.btn-action-blue:active {
     background-color: #607d8b;
     border-color: #455a64;
     transform: translateY(2px);
     box-shadow: 0 0 0 #bd2130;
 }
 
-.btn-action.blue.active:hover {
+.btn-action-blue.active:hover {
     background-color: #455a64;     /* Bleu Gris plus sombre */
     border-color: #37474f;
     box-shadow: none;              /* Pas de glow pour l'état passif/annulation */
