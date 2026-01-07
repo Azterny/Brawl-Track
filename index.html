@@ -23,7 +23,7 @@
                 <h3 style="margin-top: 0; color: #fff;">🔎 Recherche Rapide</h3>
                 <div style="display: flex; gap: 10px;">
                     <input type="text" id="public-tag" placeholder="#TAG du joueur">
-                    <button onclick="publicSearch()" style="width: auto; margin:0; background: #444; color: white;">Go</button>
+                    <button onclick="publicSearch()" class="btn-3d btn-yellow">Go</button>
                 </div>
             </div>
 
@@ -31,7 +31,7 @@
                 <h2 style="color: #ffce00;">Connexion</h2>
                 <input type="text" id="login-username" placeholder="Nom d'utilisateur">
                 <input type="password" id="login-password" placeholder="Mot de passe" onkeyup="if(event.key === 'Enter') login()">
-                <button onclick="login()">SE CONNECTER</button>
+                <button onclick="login()" class="btn-3d btn-yellow">SE CONNECTER</button>
                 <p style="margin-top: 15px; color: #888;">
                     Pas de compte ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Créer un compte</a>
                 </p>
@@ -41,7 +41,7 @@
                 <h2 style="color: #ffce00;">Créer un compte</h2>
                 <input type="text" id="reg-username" placeholder="Pseudo">
                 <input type="password" id="reg-password" placeholder="Mot de passe">
-                <button onclick="register()" style="background: #28a745;">S'INSCRIRE</button>
+                <button onclick="register()" class="btn-3d btn-green">S'INSCRIRE</button>
                 <p style="margin-top: 15px; color: #888;">
                     Déjà inscrit ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Se connecter</a>
                 </p>
