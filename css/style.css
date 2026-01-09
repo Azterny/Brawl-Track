@@ -321,6 +321,10 @@ input:focus, select:focus {
     box-shadow: 0 0 10px rgba(255, 206, 0, 0.4) !important;
 }
 
+button.btn-3d.btn-yellow.btn-adp {
+   margin-top: 8px;
+   margin-bottom: 10px;
+}
 
 /* =========================================
    5. SECTIONS & GRILLES DASHBOARD
