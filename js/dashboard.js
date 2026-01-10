@@ -1213,7 +1213,7 @@ function renderGenericChart(config) {
     
     // Règle: Cacher points sur grandes périodes (sauf spéciaux)
     // Mode 0 inclus
-    const shouldHidePoints = (mode >= 7 || mode === 0); 
+    const shouldHidePoints = (mode >= 0 || mode === 0); 
 
     const ctx = document.getElementById(canvasId).getContext('2d');
     let timeUnit = 'day';
