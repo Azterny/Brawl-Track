@@ -112,4 +112,3 @@ function logout() {
 
 // Démarrage
 document.addEventListener('DOMContentLoaded', initUserHome);
-"""}
