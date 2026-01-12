@@ -1,8 +1,3 @@
-{
-type: file_content_update,
-fileName: "azterny/brawl-track/Brawl-Track-769984efbd4d0092f766e3bf2e32580b4ca03e3c/js/userhome.js",
-fullContent: """// --- userhome.js ---
-
 async function initUserHome() {
     const token = localStorage.getItem('token');
     if (!token) {
