@@ -138,7 +138,7 @@ function checkClaimStatus(tagData) {
     // État 3 : RESERVED (Violet)
     if (tagData.is_reserved) {
         btn.innerText = "🔒 RESERVED";
-        btn.className = "btn-disabled-purple";
+        btn.className = "btn-3d btn-purple";
         btn.disabled = true;
         btn.style.cursor = "not-allowed";
         actionsDiv.prepend(btn);
@@ -148,7 +148,7 @@ function checkClaimStatus(tagData) {
     // État 5 : UNCLAIM (Rouge - C'est mon tag)
     if (tagData.claimer_id === currentUserId) {
         btn.innerText = "❌ UNCLAIM";
-        btn.className = "btn-action-red"; 
+        btn.className = "btn-3d btn-red"; 
         btn.onclick = () => unclaimTagAction();
         actionsDiv.prepend(btn);
         return;
@@ -157,7 +157,7 @@ function checkClaimStatus(tagData) {
     // État 2 : CLAIMED (Gris - À quelqu'un d'autre)
     if (tagData.claimer_id && tagData.claimer_id !== currentUserId) {
         btn.innerText = "👤 CLAIMED";
-        btn.className = "btn-disabled-grey";
+        btn.className = "btn-3d btn-grey";
         btn.disabled = true;
         btn.style.cursor = "not-allowed";
         actionsDiv.prepend(btn);
@@ -167,7 +167,7 @@ function checkClaimStatus(tagData) {
     // État 4 : CLAIM (Jaune - Libre)
     // C'est le cas par défaut si claimer_id est null
     btn.innerText = "⚡ CLAIM";
-    btn.className = "btn-action-yellow"; // Classe CSS définie plus bas
+    btn.className = "btn-3d btn-yellow"; // Classe CSS définie plus bas
     btn.onclick = () => claimTagAction();
     actionsDiv.prepend(btn);
 }
@@ -255,11 +255,11 @@ async function initFollowSystem(tag) {
 function updateFollowButtonState(btn, isFollowing, tag) {
     if (isFollowing) {
         btn.innerText = "UNFOLLOW";
-        btn.className = 'btn-action-blue active';
+        btn.className = 'btn-3d btn-blue active';
         btn.onclick = () => toggleFollowAction(tag, btn, 'unfollow-tag');
     } else {
         btn.innerText = "FOLLOW";
-        btn.className = 'btn-action-blue';
+        btn.className = 'btn-3d btn-yellow';
         btn.onclick = () => toggleFollowAction(tag, btn, 'follow-tag');
     }
 }
