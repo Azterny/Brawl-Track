@@ -771,6 +771,30 @@ button.filter-btn.blue-active.active:hover {
     margin: 0 10px;
 }
 
+.nav-logo {
+    display: flex;       /* Pour aligner Image + Texte */
+    align-items: center; /* Centrage vertical */
+    gap: 10px;           /* Espace entre le logo et le texte */
+}
+
+.logo-img {
+    height: 40px;        /* Hauteur adaptée à la navbar de 60px */
+    width: auto;         /* Garde le ratio */
+    object-fit: contain;
+    transition: transform 0.2s;
+}
+
+.nav-logo:hover .logo-img {
+    transform: rotate(-5deg) scale(1.1); /* Petit effet dynamique au survol */
+}
+
+/* Ajustement Mobile */
+@media (max-width: 480px) {
+    .logo-img {
+        height: 32px; /* Un peu plus petit sur mobile */
+    }
+}
+
 /* MEDIA QUERY : Écrans larges (Tablette paysage / PC > 768px) */
 @media (min-width: 769px) {
     .mobile-nav-container {
