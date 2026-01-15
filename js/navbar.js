@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <nav class="navbar">
         <div class="nav-content">
             <a href="${token ? 'userhome.html' : 'index.html'}" class="nav-logo">
+                <img src="assets/logo.png" alt="Logo" class="logo-img">
                 BRAWL TRACK
             </a>
 
