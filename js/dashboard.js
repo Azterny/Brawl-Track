@@ -22,19 +22,11 @@ let mainFlatpickr = null;
 let brawlerFlatpickr = null;
 let currentUserId = null;
 
-// FIX: currentUserTier n'était jamais déclaré globalement, causant un ReferenceError
-// dans manageGenericFilters() qui testait (typeof currentUserTier !== 'undefined')
-// — ce test masquait l'erreur en développement mais pas en mode strict.
-let currentUserTier = null;
-
-// FIX: globalBrawlersList n'était pas déclarée, causant un ReferenceError dans
-// loadBrawlersGrid() lors du premier appel (avant la réponse de /api/brawlers).
-let globalBrawlersList = [];
-
-// FIX: fullHistoryData et currentLiveTrophies référencées dans loadHistoryChart()
-// et renderMainChart() sans déclaration préalable.
-let fullHistoryData = [];
-let currentLiveTrophies = null;
+// NOTE: currentUserTier, globalBrawlersList, fullHistoryData, currentLiveTrophies
+// et myChart sont déjà déclarés avec `let` dans config.js (chargé avant dashboard.js).
+// Les redéclarer ici causerait un SyntaxError "already declared" qui bloquerait
+// le chargement de tout ce fichier — c'est exactement ce qui rendait le dashboard vide.
+// Ces variables sont donc utilisées directement sans re-déclaration.
 
 // Variables spécifiques Brawlers
 let currentBrawlerHistory = [];
