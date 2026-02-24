@@ -1056,7 +1056,12 @@ function preprocessData(rawData, isBrawler) {
             }
         }
 
-        if (index === 0) {
+        // BUG-4 FIX: Ne pas écraser specialType si le brawler est déjà marqué 'locked'
+        // ou 'unlocked' sur le premier point. L'ancienne version écrasait inconditionnellement
+        // specialType = 'start', rendant le point bleu même pour un brawler verrouillé
+        // dont le premier enregistrement est -1 (trophies = 0 après normalisation).
+        // On applique 'start' seulement si aucun type spécial brawler n'est déjà défini.
+        if (index === 0 && specialType !== 'locked' && specialType !== 'unlocked') {
             specialType = 'start';
             specialLabel = `Début : ${displayVal}`;
         }
