@@ -41,6 +41,32 @@ async function initUserHome() {
 
 // --- RENDU DES GRILLES ---
 
+/**
+ * BUG-5 FIX: Throttle pour fetchProfileMetadata.
+ * L'ancienne version lançait N appels simultanés à /api/public/player via forEach,
+ * chacun déclenchant un appel Supercell. Un utilisateur avec 15 follows = 15 appels
+ * simultanés -> risque de 429 côté Supercell et surcharge du Pi Zero 2W.
+ * Solution : semaphore Promise limitant les appels concurrents à MAX_CONCURRENT.
+ */
+const MAX_CONCURRENT_FETCHES = 3;
+let _activeFetches = 0;
+const _fetchQueue = [];
+
+function _runNextFetch() {
+    if (_fetchQueue.length === 0 || _activeFetches >= MAX_CONCURRENT_FETCHES) return;
+    const next = _fetchQueue.shift();
+    _activeFetches++;
+    next().finally(() => {
+        _activeFetches--;
+        _runNextFetch();
+    });
+}
+
+function throttledFetch(fn) {
+    _fetchQueue.push(fn);
+    _runNextFetch();
+}
+
 function renderGrid(containerId, tagsList, emptyMsg) {
     const container = document.getElementById(containerId);
     container.innerHTML = ''; // Clear loading
@@ -65,8 +91,8 @@ function renderGrid(containerId, tagsList, emptyMsg) {
 
         container.appendChild(card);
 
-        // Appel asynchrone pour récupérer Icone + Nom (Lazy loading)
-        fetchProfileMetadata(tagObj.tag, card);
+        // BUG-5 FIX: Passage par throttledFetch pour limiter la concurrence
+        throttledFetch(() => fetchProfileMetadata(tagObj.tag, card));
     });
 }
 
