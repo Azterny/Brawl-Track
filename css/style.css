@@ -1210,3 +1210,12 @@ span.flatpickr-weekday {
         font-size: 2.2rem; /* Nom plus gros sur PC */
     }
 }
+
+/* === BRAWLER NEON RANKS === */
+@keyframes neonPulse {
+    0%, 100% { box-shadow: 0 0 6px var(--neon-color), 0 0 14px var(--neon-color); }
+    50%       { box-shadow: 0 0 14px var(--neon-color), 0 0 30px var(--neon-color), 0 0 45px var(--neon-color); }
+}
+.brawler-neon-p1 { --neon-color: #a855f7; animation: neonPulse 2s ease-in-out infinite; }
+.brawler-neon-p2 { --neon-color: #ff2d78; animation: neonPulse 2s ease-in-out infinite; }
+.brawler-neon-p3 { --neon-color: #ffee00; animation: neonPulse 2s ease-in-out infinite; }
