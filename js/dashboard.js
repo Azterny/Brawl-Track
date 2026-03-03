@@ -197,6 +197,9 @@ function renderProfile(data) {
         nameElem.style.textShadow = 'none';
     }
 
+    /* * /!\ L'ANCIEN BLOC "Gestion de l'affichage du Club" A ÉTÉ SUPPRIMÉ ICI /!\
+     */
+
     document.getElementById('player-tag').innerText = '#' + currentTagString;
 
     const iconImg = document.getElementById('player-icon');
@@ -222,7 +225,7 @@ function renderProfile(data) {
         <div class="stat-card"><div>Prestiges</div><div class="stat-value" style="color:#8A4FE8; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/total prestige.png" style="height:0.9em;"> ${prestiges}</div></div>
     `;
 
-    // AFFICHAGE DE LA NOUVELLE CARTE DU CLUB
+    // NOUVEL AFFICHAGE DE LA CARTE DU CLUB
     const clubCard = document.getElementById('club-card');
     if (data.club && data.club.tag) {
         clubCard.classList.remove('hidden');
