@@ -14,23 +14,8 @@ async function initUserHome() {
         const data = await res.json();
         const username = data.username || "Joueur";
 
-        // --- SÉCURITÉ ET RESTAURATION URL ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const userParam = urlParams.get('user'); // Si on vient du 404.html
-        const pathParts = window.location.pathname.split('/').filter(p => p);
-        const pathUser = (pathParts.length > 0 && !pathParts[0].includes('.html')) ? decodeURIComponent(pathParts[0]) : null;
-
-        const targetUser = userParam || pathUser;
-
-        // Si quelqu'un tape /UnAutrePseudo -> Erreur 404
-        if (targetUser && targetUser.toLowerCase() !== username.toLowerCase()) {
-            window.location.href = `/404.html?target=${encodeURIComponent(targetUser)}`;
-            return;
-        }
-
-        // MAGIE : Restauration de l'URL propre
         if (window.location.pathname.includes('userhome.html')) {
-            window.history.replaceState({}, '', `/${username}`);
+            window.history.replaceState({}, '', `/home`);
         }
         // ------------------------------------
 
