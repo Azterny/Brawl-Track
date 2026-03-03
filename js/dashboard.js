@@ -17,6 +17,16 @@ let brawlerChartInstance = null;
 
 const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : '';
 
+const RANK_CONFIG = {
+    wood:      { label: 'Wood',        neon: false, icon: 'assets/ranks/wood.webp',      trophyIcon: 'assets/trophy_normal.png' },
+    bronze:    { label: 'Bronze',      neon: false, icon: 'assets/ranks/bronze.webp',    trophyIcon: 'assets/trophy_normal.png' },
+    silver:    { label: 'Silver',      neon: false, icon: 'assets/ranks/silver.webp',    trophyIcon: 'assets/trophy_normal.png' },
+    gold:      { label: 'Gold',        neon: false, icon: 'assets/ranks/gold.webp',      trophyIcon: 'assets/trophy_normal.png' },
+    prestige1: { label: 'Prestige 1',  neon: true,  icon: 'assets/ranks/prestige1.webp', trophyIcon: 'assets/trophy_prestige.png' },
+    prestige2: { label: 'Prestige 2',  neon: true,  icon: 'assets/ranks/prestige2.webp', trophyIcon: 'assets/trophy_prestige.png' },
+    prestige3: { label: 'Prestige 3+', neon: true,  icon: 'assets/ranks/prestige3.webp', trophyIcon: 'assets/trophy_prestige.png' },
+};
+
 // =========================================================
 // === HELPER: isHourMode ===
 // =========================================================
