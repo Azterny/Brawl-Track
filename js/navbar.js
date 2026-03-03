@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let html = `
     <nav class="navbar">
         <div class="nav-content">
-            <a href="${token ? '/' + safeUsername : '/'}" class="nav-logo">
+            <a href="${token ? '/home' : '/'}" class="nav-logo">
                 <img src="/assets/logo.png" alt="Logo" class="logo-img">
                 BRAWL TRACK
             </a>
@@ -66,7 +66,7 @@ function getRightActions(token, safeUsername, username) {
             <div class="dropdown">
                 <button class="btn-3d btn-yellow btn-sm">👤 ${username} ▾</button>
                 <div class="dropdown-menu right-aligned">
-                    <a href="/${safeUsername}">🏠 Mes Comptes</a>
+                    <a href="/home">🏠 Mes Comptes</a>
                     <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')">⭐ Abonnement</a>
                     <a href="#" onclick="alert('Paramètres : Bientôt Disponible !')">⚙️ Paramètres</a>
                     <div class="dropdown-divider"></div>
@@ -87,7 +87,7 @@ function getMobileLinks(token, safeUsername, username) {
     if (token) {
         html += `
             <div class="mobile-user-info">Connecté en tant que <strong>${username}</strong></div>
-            <a href="/" class="mobile-link">🏠 Accueil</a>
+            <a href="/home" class="mobile-link">🏠 Mes Comptes</a>
             <a href="/${safeUsername}" class="mobile-link">🏠 Mes Comptes</a>
             <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link">⭐ Abonnement</a>
             <a href="#" class="mobile-link">🏆 Leaderboard</a>
