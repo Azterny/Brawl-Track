@@ -128,11 +128,13 @@ function calculateDateRange(mode, offset, firstDataPointDate) {
 // === INITIALISATION ===
 // =========================================================
 async function initDashboard() {
-    // Analyse des nouveaux chemins d'URL (/player/TAG/BRAWLER)
-    const pathParts = window.location.pathname.split('/').filter(p => p);
-    let tag = new URLSearchParams(window.location.search).get('tag');
-    let brawler = null;
+    // 1. Récupération via les paramètres (après un F5 rattrapé par 404.html)
+    const urlParams = new URLSearchParams(window.location.search);
+    let tag = urlParams.get('tag');
+    let brawler = urlParams.get('brawler');
 
+    // 2. Ou récupération via le chemin direct (navigation interne JavaScript)
+    const pathParts = window.location.pathname.split('/').filter(p => p);
     if (pathParts[0] === 'player' && pathParts[1]) {
         tag = pathParts[1];
         if (pathParts[2]) brawler = decodeURIComponent(pathParts[2]);
@@ -146,16 +148,17 @@ async function initDashboard() {
     currentTagString = tag.toUpperCase().replace('#', '');
     document.title = `Brawl Track - #${currentTagString}`;
 
-    // Si on est arrivé via l'ancienne URL "?tag=...", on la "nettoie" visuellement
-    if (!pathParts.includes('player')) {
-        window.history.replaceState({}, '', `/player/${currentTagString}`);
+    // MAGIE : Si on est sur "dashboard.html", on le cache et on restaure l'URL propre
+    if (window.location.pathname.includes('dashboard.html')) {
+        let cleanUrl = `/player/${currentTagString}`;
+        if (brawler) cleanUrl += `/${encodeURIComponent(brawler)}`;
+        window.history.replaceState({}, '', cleanUrl);
     }
 
     await fetchUserTier();
     await loadTagData(currentTagString);
     initFollowSystem(currentTagString);
 
-    // Ouverture automatique du Brawler si présent dans l'URL propre
     if (brawler && window.currentBrawlersDisplay) {
         const b = window.currentBrawlersDisplay.find(x => x.name.toLowerCase() === brawler.toLowerCase());
         if (b) goToBrawlerStats(b.id, b.name);
