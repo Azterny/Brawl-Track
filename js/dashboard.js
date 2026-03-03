@@ -473,6 +473,7 @@ function renderBrawlersGrid() {
         // Nom
         const nameDiv = document.createElement('div');
         nameDiv.style.fontSize = '0.8em';
+        nameDiv.className = 'brawler-name-label';
         nameDiv.style.overflow = 'hidden';
         nameDiv.style.textOverflow = 'ellipsis';
         nameDiv.style.whiteSpace = 'nowrap';
@@ -500,6 +501,7 @@ function renderBrawlersGrid() {
 
             const trophyText = document.createElement('span');
             trophyText.textContent = b.trophies;
+            trophyText.className = 'brawler-trophy-count';
             trophyDiv.appendChild(trophyText);
 
             if (b.change24h !== 0) {
