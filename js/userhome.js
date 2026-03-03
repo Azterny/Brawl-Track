@@ -54,6 +54,18 @@ async function initUserHome() {
         // 4. Rendu final des grilles
         renderGrid('claims-grid', claimedList, metadataMap, 'Aucun compte lié.');
         renderGrid('follows-grid', followedList, metadataMap, 'Aucun compte suivi.');
+        
+        const pathParts = window.location.pathname.split('/').filter(p => p);
+        const urlUsername = pathParts.length > 0 ? decodeURIComponent(pathParts[0]) : null;
+
+        if (urlUsername && urlUsername !== 'userhome.html' && urlUsername.toLowerCase() !== username.toLowerCase()) {
+            window.location.href = `/error404?target=${encodeURIComponent(urlUsername)}`;
+            return;
+        }
+
+        if (window.location.pathname.includes('userhome.html')) {
+            window.history.replaceState({}, '', `/${username}`);
+        }
 
     } catch (e) {
         console.error(e);
@@ -95,7 +107,7 @@ function renderGrid(containerId, tagsList, metadataMap, emptyMsg) {
 
         const card = document.createElement('div');
         card.className = 'profile-card';
-        card.onclick = () => window.location.href = `dashboard.html?tag=${tag.replace('#','')}`;
+        card.onclick = () => window.location.href = `/player/${tag.replace('#','')}`;
 
         if (meta) {
             let nameColor = meta.nameColor || '#ffffff';
@@ -129,7 +141,7 @@ function searchFromUserhome() {
     let tag = document.getElementById('userhome-search-input').value;
     if (!tag) return;
     tag = tag.toUpperCase().replace('#', '').replace('O', '0');
-    window.location.href = `dashboard.html?tag=${tag}`;
+    window.location.href = `/player/${tag}`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
