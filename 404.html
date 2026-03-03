@@ -9,9 +9,13 @@
         const path = window.location.pathname;
         const parts = path.split('/').filter(p => p);
 
-        // EXCEPTION : Si on cherche explicitement l'erreur 404, on stoppe le routage et on affiche le design 404 !
-        if (parts.length > 0 && (parts[0].includes('404') || parts[0].includes('error'))) {
-            // On ne fait rien, on laisse la page 404 s'afficher
+        // EXCEPTION 1 : Ignorer les fichiers systèmes et dossiers d'assets (évite le bug ASSETS)
+        if (parts.length > 0 && (parts[0] === 'assets' || parts[0] === 'css' || parts[0] === 'js')) {
+            // Laisse la vraie erreur 404 native s'afficher dans la console
+        }
+        // EXCEPTION 2 : Si on cherche explicitement l'erreur 404
+        else if (parts.length > 0 && (parts[0].includes('404') || parts[0].includes('error'))) {
+            // Laisse la page 404 s'afficher
         }
         // 1. Route Dashboard : /player/TAG/BRAWLER
         else if (parts[0] === 'player' && parts[1]) {
