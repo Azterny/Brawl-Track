@@ -11,6 +11,9 @@ function publicSearch() {
 
 // 2. Vérif si déjà connecté (au chargement)
 window.onload = function() {
+    if (window.location.pathname.includes('index.html')) {
+        window.history.replaceState({}, '', '/');
+    }
     const token = localStorage.getItem('token');
     if (token) {
         const loginForm = document.getElementById('login-form');
