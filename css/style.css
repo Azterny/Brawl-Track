@@ -1381,126 +1381,137 @@ span.flatpickr-weekday {
 }
 
 /* =========================================
-   12. CARTE CLUB (DASHBOARD) - REFONTE v2
+   12. CARTE CLUB (DASHBOARD) - COMPACT & JAUNE
    ========================================= */
 .club-card {
-    background: #111; /* Fond très sombre pour faire ressortir le néon */
-    border: 2px solid #333;
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 30px;
+    background: #181818; 
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 12px 20px; /* Padding réduit pour prendre moins de place */
+    margin-bottom: 25px;
     position: relative;
     overflow: hidden;
+    
+    /* Layout Horizontal par défaut */
     display: flex;
-    flex-direction: column; /* Organisation en colonne */
+    flex-direction: row; 
+    align-items: center;
+    flex-wrap: wrap; 
     gap: 15px;
+    
     transition: all 0.3s ease;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* Liseré néon bleu sur le dessus */
+/* Liseré néon JAUNE BRAWL TRACK sur le dessus */
 .club-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; width: 100%; height: 3px;
-    background: linear-gradient(90deg, #007bff, #00d2ff, #007bff);
-    box-shadow: 0 0 10px #00d2ff;
+    background: linear-gradient(90deg, #e6b800, #ffce00, #e6b800);
+    box-shadow: 0 0 10px rgba(255, 206, 0, 0.5);
 }
 
 .club-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     border-color: #444;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.6), 0 0 15px rgba(0, 210, 255, 0.2);
-}
-
-/* Partie Haute : Icône + Nom + Tag */
-.club-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    z-index: 1; /* Passe au dessus de la déco */
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5), 0 0 15px rgba(255, 206, 0, 0.15);
 }
 
 .club-icon {
-    width: 65px;
-    height: 65px;
+    width: 50px; /* Icône légèrement plus petite */
+    height: 50px;
     object-fit: contain;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    z-index: 1;
 }
 
+/* C'est cette classe qui pousse les stats vers la droite ! */
 .club-title-area {
-    flex-grow: 1;
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
 }
 
 .club-name {
     font-family: 'Lilita One', cursive;
-    font-size: 1.7rem;
+    font-size: 1.4rem;
     color: #fff;
     margin: 0;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    line-height: 1.1;
     letter-spacing: 0.5px;
 }
 
 .club-tag {
     font-family: monospace;
-    color: #888;
-    font-size: 0.9rem;
-    background: rgba(0,0,0,0.3);
-    padding: 2px 6px;
-    border-radius: 4px;
-    display: inline-block;
+    color: #ffce00; /* Tag en jaune */
+    font-size: 0.85rem;
     margin-top: 2px;
 }
 
-/* Partie Basse : Grille de stats */
+/* Bloc des statistiques à droite */
 .club-stats-row {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     z-index: 1;
 }
 
 .club-stat-item {
-    flex: 1; /* Occupation égale de l'espace */
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    background: rgba(255,255,255,0.03);
-    padding: 10px;
-    border-radius: 10px;
+    gap: 6px;
+    background: rgba(255,255,255,0.05);
+    padding: 6px 12px;
+    border-radius: 8px;
     border: 1px solid rgba(255,255,255,0.05);
     font-family: 'Lilita One', cursive;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
 }
 
-/* Couleurs spécifiques aux stats */
 .club-stat-item.trophies {
     color: #ffce00;
-    border-color: rgba(255, 206, 0, 0.2);
 }
 .club-stat-item.members {
-    color: #00d2ff;
-    border-color: rgba(0, 210, 255, 0.2);
+    color: #fff; /* Blanc pour un rendu plus propre à côté du jaune */
 }
 
-.stat-icon { height: 1.1em; }
-.stat-icon-emoji { font-size: 1.2em; }
+.stat-icon { height: 1em; }
+.stat-icon-emoji { font-size: 1.1em; }
 
 .max-members {
-    color: #555;
-    font-family: sans-serif; /* Police normale pour le "/ 30" */
-    font-size: 0.9rem;
-    margin-left: -2px;
+    color: #888;
+    font-family: sans-serif;
+    font-size: 0.85rem;
+    margin-left: 2px;
 }
 
-/* Décoration : Halo lumineux en arrière plan */
+/* Décoration : Halo lumineux JAUNE en arrière plan */
 .club-deco-glow {
     position: absolute;
     bottom: -50px;
     right: -50px;
     width: 150px;
     height: 150px;
-    background: radial-gradient(circle, rgba(0, 210, 255, 0.1) 0%, rgba(0,0,0,0) 70%);
+    background: radial-gradient(circle, rgba(255, 206, 0, 0.1) 0%, rgba(0,0,0,0) 70%);
     border-radius: 50%;
     z-index: 0;
+    pointer-events: none;
+}
+
+/* Responsive Mobile : si l'écran est petit, les stats se placent en dessous */
+@media (max-width: 600px) {
+    .club-card {
+        padding: 15px;
+    }
+    .club-title-area {
+        width: calc(100% - 70px); /* Laisse la place pour l'icône */
+    }
+    .club-stats-row {
+        width: 100%;
+        margin-top: 5px;
+        justify-content: flex-start;
+    }
 }
