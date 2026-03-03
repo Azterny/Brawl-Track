@@ -17,6 +17,18 @@ let brawlerChartInstance = null;
 
 const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : '';
 
+// =========================================================
+// === HELPER: isHourMode ===
+// =========================================================
+
+function isHourMode(mode) {
+    return Math.abs(mode - CHART_MODE_HOUR) < 0.001;
+}
+
+// =========================================================
+// === SYSTÈME DE RANGS BRAWLERS ===
+// =========================================================
+
 const RANK_CONFIG = {
     wood:      { label: 'Wood',        neon: false, icon: 'assets/ranks/wood.webp',      trophyIcon: 'assets/trophy_normal.png' },
     bronze:    { label: 'Bronze',      neon: false, icon: 'assets/ranks/bronze.webp',    trophyIcon: 'assets/trophy_normal.png' },
@@ -27,44 +39,28 @@ const RANK_CONFIG = {
     prestige3: { label: 'Prestige 3+', neon: true,  icon: 'assets/ranks/prestige3.webp', trophyIcon: 'assets/trophy_prestige.png' },
 };
 
-// =========================================================
-// === HELPER: isHourMode ===
-// =========================================================
-function isHourMode(mode) {
-    return Math.abs(mode - CHART_MODE_HOUR) < 0.001;
-}
-
-// =========================================================
-// === HELPER: getBrawlerRank ===
-// Retourne les infos de rang selon les trophées du brawler
-// =========================================================
+/**
+ * Retourne la clé de rang correspondant aux trophées d'un brawler.
+ * @param {number} trophies
+ * @returns {string} Clé de RANK_CONFIG
+ */
 function getBrawlerRank(trophies) {
-    if (trophies >= 3000) return { name: 'Prestige 3+', color: '#ffee00', neonClass: 'brawler-neon-p3' };
-    if (trophies >= 2000) return { name: 'Prestige 2',  color: '#ff2d78', neonClass: 'brawler-neon-p2' };
-    if (trophies >= 1000) return { name: 'Prestige 1',  color: '#a855f7', neonClass: 'brawler-neon-p1' };
-    if (trophies >= 750)  return { name: 'Gold',         color: '#FFD700', neonClass: null };
-    if (trophies >= 500)  return { name: 'Silver',       color: '#C0C0C0', neonClass: null };
-    if (trophies >= 250)  return { name: 'Bronze',       color: '#CD7F32', neonClass: null };
-    return                       { name: 'Wood',          color: '#8B6014', neonClass: null };
-}
-
-// =========================================================
-// === HELPER: calculateTotalPrestige ===
-// 1 prestige par tranche de 1000 trophées par brawler
-// =========================================================
-function calculateTotalPrestige(brawlers) {
-    if (!brawlers || brawlers.length === 0) return 0;
-    return brawlers.reduce((sum, b) => {
-        const trophies = (b.trophies && b.trophies > 0) ? b.trophies : 0;
-        return sum + Math.floor(trophies / 1000);
-    }, 0);
+    if (trophies >= 3000) return 'prestige3';
+    if (trophies >= 2000) return 'prestige2';
+    if (trophies >= 1000) return 'prestige1';
+    if (trophies >= 750)  return 'gold';
+    if (trophies >= 500)  return 'silver';
+    if (trophies >= 250)  return 'bronze';
+    return 'wood';
 }
 
 // =========================================================
 // === HELPER: calculateDateRange ===
 // =========================================================
+
 function calculateDateRange(mode, offset, firstDataPointDate) {
     const now = new Date();
+
     if (mode === 0) return null;
 
     if (isHourMode(mode)) {
@@ -74,6 +70,7 @@ function calculateDateRange(mode, offset, firstDataPointDate) {
         startDate.setMinutes(0, 0, 0);
         const endDate = new Date(target);
         endDate.setMinutes(59, 59, 999);
+
         if (firstDataPointDate) {
             const firstArchiveHour = new Date(firstDataPointDate);
             firstArchiveHour.setMinutes(0, 0, 0);
@@ -209,29 +206,19 @@ function renderProfile(data) {
         iconImg.style.display = 'block';
     }
 
-    // --- NOUVEAU : Calcul Prestige total ---
-    const totalPrestige = calculateTotalPrestige(data.brawlers);
+    // Fusion Solo + Duo → Victoires Survivant
+    const survivorVictories = (data.soloVictories || 0) + (data.duoVictories || 0);
 
-    // --- NOUVEAU : Fusion Solo + Duo ---
-    const soloAndDuo = (data.soloVictories || 0) + (data.duoVictories || 0);
+    // Calcul Prestiges côté client (1 prestige = 1000 trophées sur un brawler)
+    const prestiges = data.brawlers
+        ? data.brawlers.reduce((sum, b) => sum + Math.floor((b.trophies || 0) / 1000), 0)
+        : 0;
 
     document.getElementById('stats-area').innerHTML = `
-        <div class="stat-card">
-            <div>Trophées</div>
-            <div class="stat-value" style="color:#ffce00">🏆 ${data.trophies}</div>
-        </div>
-        <div class="stat-card">
-            <div>3vs3</div>
-            <div class="stat-value" style="color:#007bff">⚔️ ${data['3vs3Victories']}</div>
-        </div>
-        <div class="stat-card">
-            <div>Solo &amp; Duo</div>
-            <div class="stat-value" style="color:#28a745">🥇 ${soloAndDuo}</div>
-        </div>
-        <div class="stat-card">
-            <div>Prestige</div>
-            <div class="stat-value" style="color:#a855f7">⭐ ${totalPrestige}</div>
-        </div>
+        <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00">🏆 ${data.trophies}</div></div>
+        <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff">⚔️ ${data['3vs3Victories']}</div></div>
+        <div class="stat-card"><div>Survivant</div><div class="stat-value" style="color:#28a745">🛡️ ${survivorVictories}</div></div>
+        <div class="stat-card"><div>Prestiges</div><div class="stat-value" style="color:#8A4FE8">✨ ${prestiges}</div></div>
     `;
 }
 
@@ -258,6 +245,7 @@ function checkClaimStatus(tagData) {
     btn.style.border = "none";
     btn.style.transition = "all 0.2s";
 
+    // État 3 : RESERVED (Violet)
     if (tagData.is_reserved) {
         btn.innerText = "🔒 RESERVED";
         btn.className = "btn-3d btn-purple";
@@ -267,6 +255,7 @@ function checkClaimStatus(tagData) {
         return;
     }
 
+    // État 5 : UNCLAIM (Rouge - C'est mon tag)
     if (tagData.claimer_id === currentUserId) {
         btn.innerText = "❌ UNCLAIM";
         btn.className = "btn-3d btn-red";
@@ -275,6 +264,7 @@ function checkClaimStatus(tagData) {
         return;
     }
 
+    // État 2 : CLAIMED (Gris - À quelqu'un d'autre)
     if (tagData.claimer_id && tagData.claimer_id !== currentUserId) {
         btn.innerText = "👤 CLAIMED";
         btn.className = "btn-3d btn-grey";
@@ -284,6 +274,7 @@ function checkClaimStatus(tagData) {
         return;
     }
 
+    // État 4 : CLAIM (Jaune - Libre)
     btn.innerText = "⚡ CLAIM";
     btn.className = "btn-3d btn-yellow";
     btn.onclick = () => claimTagAction();
@@ -311,6 +302,7 @@ async function claimTagAction() {
 
 async function unclaimTagAction() {
     if (!confirm("Ne plus suivre ce compte ?\nL'historique automatique sera arrêté.")) return;
+
     const token = localStorage.getItem('token');
     try {
         const res = await fetch(`${API_BASE}/api/unclaim-tag`, {
@@ -319,6 +311,7 @@ async function unclaimTagAction() {
             body: JSON.stringify({ tag: currentTagString })
         });
         const data = await res.json();
+
         if (res.ok) {
             checkClaimStatus({ claimer_id: null, is_reserved: false });
         } else {
@@ -328,7 +321,7 @@ async function unclaimTagAction() {
 }
 
 // =========================================================
-// === GESTION DU BOUTON FOLLOW ===
+// === GESTION DU BOUTON FOLLOW (Add-on) ===
 // =========================================================
 
 async function initFollowSystem(tag) {
@@ -352,6 +345,7 @@ async function initFollowSystem(tag) {
         const res = await fetch(`${API_BASE}/api/follow-status/${tag}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+
         if (res.ok) {
             const data = await res.json();
             updateFollowButtonState(btnFollow, data.following, tag);
@@ -378,9 +372,13 @@ async function toggleFollowAction(tag, btn, endpoint) {
     try {
         const res = await fetch(`${API_BASE}/api/${endpoint}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ tag: tag })
         });
+
         const data = await res.json();
         if (res.ok) {
             const isNowFollowing = (endpoint === 'follow-tag');
@@ -388,7 +386,9 @@ async function toggleFollowAction(tag, btn, endpoint) {
         } else {
             alert(data.message || "Erreur action");
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 // =========================================================
@@ -441,7 +441,45 @@ function renderBrawlersGrid() {
         const card = document.createElement('div');
         card.className = 'brawler-card';
 
-                // Trophées + variation (uniquement si possédé)
+        if (!b.owned) {
+            // Brawler non possédé : grisé, pas de rang
+            card.style.filter = "grayscale(100%) opacity(0.3)";
+            card.style.cursor = "default";
+        } else {
+            // Brawler possédé : rang + neon éventuel
+            const rank = getBrawlerRank(b.trophies);
+            card.classList.add(`rank-${rank}`);
+            card.style.cursor = "pointer";
+            card.onclick = () => goToBrawlerStats(b.id, b.name);
+
+            // Badge rang (icone coin bas-gauche)
+            const badge = document.createElement('img');
+            badge.src = RANK_CONFIG[rank].icon;
+            badge.alt = RANK_CONFIG[rank].label;
+            badge.className = 'brawler-rank-badge';
+            badge.title = RANK_CONFIG[rank].label;
+            card.appendChild(badge);
+        }
+
+        // Image du brawler
+        const img = document.createElement('img');
+        img.src = b.imageUrl;
+        img.style.width = '100%';
+        img.style.aspectRatio = '1/1';
+        img.style.objectFit = 'contain';
+        img.loading = 'lazy';
+        card.appendChild(img);
+
+        // Nom
+        const nameDiv = document.createElement('div');
+        nameDiv.style.fontSize = '0.8em';
+        nameDiv.style.overflow = 'hidden';
+        nameDiv.style.textOverflow = 'ellipsis';
+        nameDiv.style.whiteSpace = 'nowrap';
+        nameDiv.textContent = b.name;
+        card.appendChild(nameDiv);
+
+        // Trophées + variation (uniquement si possédé)
         if (b.owned) {
             const rank = getBrawlerRank(b.trophies);
             const trophyDiv = document.createElement('div');
@@ -471,50 +509,8 @@ function renderBrawlersGrid() {
                 trophyDiv.appendChild(arrow);
             }
             card.appendChild(trophyDiv);
-        } else {
-            // --- NOUVEAU : Bordure colorée selon le rang ---
-            const rank = getBrawlerRank(b.trophies);
-            card.style.border = `2px solid ${rank.color}`;
-            card.style.cursor = "pointer";
-
-            // Effet néon pulsé pour les prestiges (>= 1000 trophées)
-            if (rank.neonClass) {
-                card.classList.add(rank.neonClass);
-            }
-
-            card.onclick = () => goToBrawlerStats(b.id, b.name);
         }
 
-        const img = document.createElement('img');
-        img.src = b.imageUrl;
-        img.style.width = '100%';
-        img.style.aspectRatio = '1/1';
-        img.style.objectFit = 'contain';
-        img.loading = 'lazy';
-        card.appendChild(img);
-
-        const nameDiv = document.createElement('div');
-        nameDiv.style.fontSize = '0.8em';
-        nameDiv.style.overflow = 'hidden';
-        nameDiv.style.textOverflow = 'ellipsis';
-        nameDiv.style.whiteSpace = 'nowrap';
-        nameDiv.textContent = b.name;
-        card.appendChild(nameDiv);
-
-        if (b.owned) {
-            const trophyDiv = document.createElement('div');
-            trophyDiv.style.color = '#ffce00';
-            trophyDiv.style.fontSize = '0.7em';
-            trophyDiv.style.marginTop = '2px';
-            trophyDiv.textContent = `🏆 ${b.trophies}`;
-            if (b.change24h !== 0) {
-                const arrow = document.createElement('span');
-                arrow.textContent = b.change24h > 0 ? ' ↗' : ' ↘';
-                arrow.style.color = b.change24h > 0 ? '#28a745' : '#ff5555';
-                trophyDiv.appendChild(arrow);
-            }
-            card.appendChild(trophyDiv);
-        }
         grid.appendChild(card);
     });
 }
@@ -575,12 +571,15 @@ function navigateBrawlerHour(direction) {
 
 function jumpToBrawlerDate(dateString) {
     if (!dateString) return;
+
     const parts = dateString.split('-');
     const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
     const now = new Date();
     const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     const diffTime = todayMidnight - targetDate;
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
     if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
 
     if (isHourMode(currentBrawlerMode)) {
@@ -601,6 +600,7 @@ function jumpToBrawlerDate(dateString) {
     } else if (currentBrawlerMode === 365) {
         currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
     }
+
     renderBrawlerChart();
 }
 
@@ -622,6 +622,7 @@ function updateBrawlerNavigationUI(data) {
     }
 
     const range = calculateDateRange(currentBrawlerMode, currentChartOffset, firstDataPointDate);
+
     if (!range) return;
 
     const { startDate, endDate } = range;
@@ -644,7 +645,7 @@ function updateBrawlerNavigationUI(data) {
         if (btnNextHour) btnNextHour.disabled = (currentChartOffset === 0);
     } else {
         if (currentChartOffset === 0) {
-            if (currentBrawlerMode === 1)        label.innerText = "Aujourd'hui";
+            if (currentBrawlerMode === 1)   label.innerText = "Aujourd'hui";
             else if (currentBrawlerMode === 7)   label.innerText = "Cette semaine";
             else if (currentBrawlerMode === 31)  label.innerText = "Ce mois";
             else if (currentBrawlerMode === 365) label.innerText = "Cette année";
@@ -667,17 +668,22 @@ function updateBrawlerNavigationUI(data) {
 
 function getInterpolatedValue(targetDate, allData) {
     if (!allData || allData.length === 0) return null;
+
     const targetTs = targetDate.getTime();
     let prev = null, next = null;
+
     for (let pt of allData) {
         let d = pt.date || pt.recorded_at;
         if (d) d = d.replace(' ', 'T');
         let ptTs = new Date(d).getTime();
+
         if (ptTs <= targetTs) prev = { ...pt, ts: ptTs };
         if (ptTs >= targetTs && !next) { next = { ...pt, ts: ptTs }; break; }
     }
+
     if (!prev && next) return null;
     if (prev && !next) return null;
+
     if (prev && next) {
         if (prev.ts === next.ts) return prev.trophies;
         const factor = (targetTs - prev.ts) / (next.ts - prev.ts);
@@ -693,6 +699,7 @@ function getInterpolatedValue(targetDate, allData) {
 function loadHistoryChart(historyData, currentTrophies) {
     fullHistoryData = historyData || [];
     currentLiveTrophies = currentTrophies;
+
     manageGenericFilters(fullHistoryData, 'btn');
     setChartMode(0);
 }
@@ -700,8 +707,10 @@ function loadHistoryChart(historyData, currentTrophies) {
 function setChartMode(mode) {
     currentChartMode = mode;
     currentChartOffset = 0;
+
     const navMain = document.getElementById('chart-navigation');
     const navHour = document.getElementById('chart-navigation-hour');
+
     if (navMain) {
         if (mode === 0) {
             navMain.classList.add('hidden');
@@ -735,6 +744,7 @@ function setBrawlerChartMode(mode, liveValOverride) {
 
     const nav     = document.getElementById('brawler-chart-navigation');
     const navHour = document.getElementById('brawler-chart-navigation-hour');
+
     if (nav) {
         if (mode === 0) {
             nav.classList.add('hidden');
@@ -756,6 +766,7 @@ function setBrawlerChartMode(mode, liveValOverride) {
             if (b) liveVal = b.trophies;
         }
     }
+
     window.currentBrawlerLiveVal = liveVal;
 
     syncPickerWithMode(true, mode, currentBrawlerHistory);
@@ -764,6 +775,7 @@ function setBrawlerChartMode(mode, liveValOverride) {
 
 function renderBrawlerChart() {
     if (brawlerChartInstance) brawlerChartInstance.destroy();
+
     brawlerChartInstance = renderGenericChart({
         canvasId: 'brawlerChartCanvas',
         rawData: currentBrawlerHistory,
@@ -774,6 +786,7 @@ function renderBrawlerChart() {
         variationId: 'brawler-trophy-variation',
         isBrawler: true
     });
+
     updateBrawlerNavigationUI(currentBrawlerHistory);
 }
 
@@ -790,6 +803,7 @@ function renderMainChart() {
     if (activeBtn) activeBtn.classList.add('active');
 
     if (window.myChart) window.myChart.destroy();
+
     window.myChart = renderGenericChart({
         canvasId: 'trophyChart',
         rawData: fullHistoryData,
@@ -814,6 +828,7 @@ function manageGenericFilters(data, idPrefix) {
         const now = new Date();
         diffDays = (now - oldest) / (1000 * 60 * 60 * 24);
     }
+
     const toggle = (suffix, condition) => {
         const el = document.getElementById(`${idPrefix}-${suffix}`);
         if (el) {
@@ -821,8 +836,10 @@ function manageGenericFilters(data, idPrefix) {
             else el.classList.add('hidden');
         }
     };
+
     const isPremium = (currentUserTier === 'premium');
     toggle('1h', diffDays > 0 && isPremium);
+
     toggle('7d', diffDays >= 1);
     toggle('31d', diffDays > 7);
     toggle('365d', diffDays > 31);
@@ -853,12 +870,15 @@ function navigateMonth(direction) {
 
 function jumpToDate(dateString) {
     if (!dateString) return;
+
     const parts = dateString.split('-');
     const targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
     const now = new Date();
     const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
     const diffTime = todayMidnight - targetDate;
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
     if (diffDays < 0) { alert("Impossible de prédire le futur ! 🔮"); return; }
 
     if (isHourMode(currentChartMode)) {
@@ -879,6 +899,7 @@ function jumpToDate(dateString) {
     } else if (currentChartMode === 365) {
         currentChartOffset = todayMidnight.getFullYear() - targetDate.getFullYear();
     }
+
     renderMainChart();
 }
 
@@ -895,11 +916,13 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
 
     const isAtStart = (startDate <= firstDataPointDate);
     btnPrev.disabled = isAtStart;
+
     const options = { day: 'numeric', month: 'short' };
 
     if (isHourMode(currentChartMode)) {
         label.innerText = startDate.toLocaleDateString('fr-FR', options);
         btnNext.disabled = (currentChartOffset === 0);
+
         if (labelHour) {
             const hStart = startDate.getHours().toString().padStart(2, '0') + ":00";
             const nextHourDate = new Date(startDate);
@@ -907,10 +930,13 @@ function updateNavigationUI(startDate, endDate, firstDataPointDate) {
             const hEnd = nextHourDate.getHours().toString().padStart(2, '0') + ":00";
             labelHour.innerText = `${hStart} - ${hEnd} 🕓`;
         }
+
         if (btnPrevHour) btnPrevHour.disabled = isAtStart;
         if (btnNextHour) btnNextHour.disabled = (currentChartOffset === 0);
+
     } else {
         btnNext.disabled = (currentChartOffset === 0);
+
         if (currentChartOffset === 0) {
             if (currentChartMode === 1)        label.innerText = "Aujourd'hui";
             else if (currentChartMode === 7)   label.innerText = "Cette semaine";
@@ -1009,12 +1035,15 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
 
     try {
         const fp = flatpickr(inputElement, config);
+
         trigger.onclick = () => {
             fp._positionElement = trigger;
             fp.open();
         };
+
         if (isBrawler) brawlerFlatpickr = fp;
         else mainFlatpickr = fp;
+
     } catch(e) {
         console.error("Erreur init Flatpickr:", e);
     }
@@ -1026,6 +1055,7 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
 
 function preprocessData(rawData, isBrawler) {
     let processed = [];
+
     rawData.forEach((d, index) => {
         const rawVal = d.trophies;
         let displayVal = rawVal;
@@ -1107,6 +1137,7 @@ function renderGenericChart(config) {
         }));
     }
 
+    // Points Fantômes (Ghost Points)
     if (mode > 0) {
         if (startDate > firstDataPointDate) {
             const valLeft = getInterpolatedValue(startDate, processedData);
@@ -1114,6 +1145,7 @@ function renderGenericChart(config) {
                 finalDataPoints.unshift({ x: startDate, y: Math.round(valLeft), type: 'ghost' });
             }
         }
+
         if (offset === 0) {
             if (liveValue !== null && liveValue !== undefined) {
                 finalDataPoints.push({ x: new Date(), y: liveValue, type: 'live', cLabel: 'Actuel' });
@@ -1134,6 +1166,7 @@ function renderGenericChart(config) {
 
     finalDataPoints.sort((a, b) => a.x - b.x);
 
+    // Calcul Variation
     if (variationId && document.getElementById(variationId)) {
         const el = document.getElementById(variationId);
         if (finalDataPoints.length >= 2) {
