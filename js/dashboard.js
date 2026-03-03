@@ -1090,27 +1090,31 @@ function renderClubCard(club) {
     const badgeId = club.badgeId || 8000000; // Badge par défaut si manquant
     const membersCount = club.members ? club.members.length : 0;
     
-    // Le nombre max de membres dans Brawl Stars est 30
+    // NOUVELLE URL : Utilisation du format webp haute résolution
+    const iconUrl = `https://brawlify.com/images/club-badges/96/${badgeId}.webp`;
+
+    // Nouvelle structure HTML pour un design plus cohérent
     clubCard.innerHTML = `
-        <img src="https://cdn.brawlify.com/club/${badgeId}.png" class="club-icon" onerror="this.src='assets/default_icon.png'" alt="Club Icon">
-        
-        <div class="club-info">
-            <h3 class="club-name">${club.name}</h3>
-            <div class="club-stats-row">
-                <div class="club-stat-item">
-                    <img src="assets/trophy_normal.png" style="width: 14px;">
-                    <span style="color: #ffce00; font-weight: bold;">${club.trophies.toLocaleString('fr-FR')}</span>
-                </div>
-                <div class="club-stat-item" title="Membres du club">
-                    <span>👥</span>
-                    <span style="color: #00d2ff; font-weight: bold;">${membersCount} <span style="color:#666;">/ 30</span></span>
-                </div>
+        <div class="club-header">
+            <img src="${iconUrl}" class="club-icon" onerror="this.src='assets/default_icon.png'" alt="Club Icon">
+            <div class="club-title-area">
+                <h3 class="club-name">${club.name}</h3>
+                <div class="club-tag">${club.tag}</div>
             </div>
         </div>
         
-        <div style="font-family: monospace; color: #666; font-size: 0.9em; text-align: right;">
-            ${club.tag}
+        <div class="club-stats-row">
+            <div class="club-stat-item trophies" title="Total Trophées du Club">
+                <img src="assets/trophy_normal.png" class="stat-icon">
+                <span class="stat-text">${club.trophies.toLocaleString('fr-FR')}</span>
+            </div>
+            <div class="club-stat-item members" title="Membres du club">
+                <span class="stat-icon-emoji">👥</span>
+                <span class="stat-text">${membersCount} <span class="max-members">/ 30</span></span>
+            </div>
         </div>
+        
+        <div class="club-deco-glow"></div>
     `;
 }
 
