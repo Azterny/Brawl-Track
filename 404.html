@@ -28,6 +28,9 @@
             else if (parts.length === 1 && parts[0] === 'home') {
             window.location.replace(`/userhome.html`);
         }
+        // 3. NOUVEAU : Route Club : /club/TAG
+        else if (parts[0] === 'club' && parts[1]) {
+            window.location.replace(`/club.html?tag=${parts[1]}`);
     </script>
 
     <link rel="icon" type="image/png" href="/assets/logo.png">
