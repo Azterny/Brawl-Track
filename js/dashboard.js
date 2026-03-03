@@ -1087,20 +1087,19 @@ async function fetchClubDetails(clubTag) {
 
 function renderClubCard(club) {
     const clubCard = document.getElementById('club-card');
-    const badgeId = club.badgeId || 8000000; // Badge par défaut si manquant
+    // L'API Supercell renvoie le "badgeId" du club. On l'utilise pour avoir le VRAI logo.
+    const badgeId = club.badgeId || 8000000; 
     const membersCount = club.members ? club.members.length : 0;
     
-    // NOUVELLE URL : Utilisation du format webp haute résolution
+    // URL dynamique Brawlify (en webp haute qualité)
     const iconUrl = `https://brawlify.com/images/club-badges/96/${badgeId}.webp`;
 
-    // Nouvelle structure HTML pour un design plus cohérent
     clubCard.innerHTML = `
-        <div class="club-header">
-            <img src="${iconUrl}" class="club-icon" onerror="this.src='assets/default_icon.png'" alt="Club Icon">
-            <div class="club-title-area">
-                <h3 class="club-name">${club.name}</h3>
-                <div class="club-tag">${club.tag}</div>
-            </div>
+        <img src="${iconUrl}" class="club-icon" onerror="this.src='assets/default_icon.png'" alt="Club Icon">
+        
+        <div class="club-title-area">
+            <h3 class="club-name">${club.name}</h3>
+            <div class="club-tag">${club.tag}</div>
         </div>
         
         <div class="club-stats-row">
