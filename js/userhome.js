@@ -120,12 +120,12 @@ function renderGrid(containerId, tagsList, metadataMap, emptyMsg) {
                     <div class="profile-tag">${tag}</div>
                 </div>
                 <div class="profile-trophies">
-                    ${meta.trophies} <img src="assets/trophy_normal.png" alt="Trophée">
+                    ${meta.trophies} <img src="/assets/trophy_normal.png" alt="Trophée">
                 </div>
             `;
         } else {
             card.innerHTML = `
-                <img src="assets/default_icon.png" class="profile-icon" style="opacity:0.5;">
+                <img src="/assets/default_icon.png" class="profile-icon" style="opacity:0.5;">
                 <div class="profile-info">
                     <div class="profile-name">Inconnu / Erreur</div>
                     <div class="profile-tag">${tag}</div>
