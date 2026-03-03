@@ -116,6 +116,14 @@
             <p style="color: #888; font-style: italic;">Gérez vos comptes et vos suivis</p>
         </div>
 
+        <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 40px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px; max-width: 400px; width: 100%;">
+                <input type="text" id="userhome-search-input" placeholder="Chercher un tag (#...)" style="margin: 0;">
+                <button onclick="searchFromUserhome()" class="btn-3d btn-yellow w-auto" style="margin: 0; padding: 0 20px;">🔎</button>
+            </div>
+            <button onclick="logout()" class="btn-3d btn-red w-auto" style="margin: 0;">🚪 Déconnexion</button>
+        </div>
+        
         <div class="section-header">
             <h2 class="section-title">🔐 Vos Comptes</h2>
             <span id="counter-claims" class="section-counter">...</span>
@@ -133,11 +141,6 @@
 
         <div id="follows-grid" class="grid-section">
             <div style="grid-column: 1/-1; text-align: center; color: #666; padding: 20px;">Chargement...</div>
-        </div>
-
-        <div style="border-top: 1px solid #333; padding-top: 30px; margin-top: 40px; text-align: center;">
-            <button onclick="window.location.href='index.html'" class="btn-3d btn-grey w-auto" style="margin-right: 15px;">🔎 Chercher un autre Tag</button>
-            <button onclick="logout()" class="btn-3d btn-red w-auto">🚪 Déconnexion</button>
         </div>
 
     </div>
