@@ -230,6 +230,14 @@ function renderProfile(data) {
         <div class="stat-card"><div>Survivant</div><div class="stat-value" style="color:#28a745; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/icons/solo.png" style="height:0.9em;"> ${survivorVictories}</div></div>
         <div class="stat-card"><div>Prestiges</div><div class="stat-value" style="color:#8A4FE8; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/total prestige.png" style="height:0.9em;"> ${prestiges}</div></div>
     `;
+    const clubCard = document.getElementById('club-card');
+    if (data.club && data.club.tag) {
+        clubCard.classList.remove('hidden');
+        clubCard.innerHTML = `<div style="color:#aaa; font-style:italic;">Chargement des données du club...</div>`;
+        fetchClubDetails(data.club.tag);
+    } else {
+        clubCard.classList.add('hidden'); // Pas de club
+    }
 }
 
 // =========================================================
@@ -1059,6 +1067,55 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
     } catch(e) {
         console.error("Erreur init Flatpickr:", e);
     }
+}
+
+// =========================================================
+// === GESTION DU CLUB ===
+// =========================================================
+
+async function fetchClubDetails(clubTag) {
+    try {
+        const cleanTag = clubTag.replace('#', '');
+        const res = await fetch(`${API_BASE}/api/public/club/${cleanTag}`);
+        if (res.ok) {
+            const clubData = await res.json();
+            renderClubCard(clubData);
+        } else {
+            document.getElementById('club-card').classList.add('hidden');
+        }
+    } catch (e) {
+        console.error("Erreur chargement club :", e);
+        document.getElementById('club-card').classList.add('hidden');
+    }
+}
+
+function renderClubCard(club) {
+    const clubCard = document.getElementById('club-card');
+    const badgeId = club.badgeId || 8000000; // Badge par défaut si manquant
+    const membersCount = club.members ? club.members.length : 0;
+    
+    // Le nombre max de membres dans Brawl Stars est 30
+    clubCard.innerHTML = `
+        <img src="https://cdn.brawlify.com/club/${badgeId}.png" class="club-icon" onerror="this.src='assets/default_icon.png'" alt="Club Icon">
+        
+        <div class="club-info">
+            <h3 class="club-name">${club.name}</h3>
+            <div class="club-stats-row">
+                <div class="club-stat-item">
+                    <img src="assets/trophy_normal.png" style="width: 14px;">
+                    <span style="color: #ffce00; font-weight: bold;">${club.trophies.toLocaleString('fr-FR')}</span>
+                </div>
+                <div class="club-stat-item" title="Membres du club">
+                    <span>👥</span>
+                    <span style="color: #00d2ff; font-weight: bold;">${membersCount} <span style="color:#666;">/ 30</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="font-family: monospace; color: #666; font-size: 0.9em; text-align: right;">
+            ${club.tag}
+        </div>
+    `;
 }
 
 // =========================================================
