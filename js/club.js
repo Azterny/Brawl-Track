@@ -52,7 +52,7 @@ function renderClub(club) {
     // 2. Description
     const descElem = document.getElementById('club-description');
     if (club.description) {
-        descElem.innerText = `"${club.description}"`;
+        descElem.innerHTML = formatBrawlText(club.description);
     } else {
         descElem.innerText = "Aucune description.";
     }
@@ -106,6 +106,45 @@ function sortClubMembers() {
     });
 
     renderMembers(members);
+}
+
+// Fonction pour traduire les balises de couleurs Brawl Stars (<c3>...</c>)
+function formatBrawlText(text) {
+    if (!text) return "";
+    
+    // 1. Sécurité anti-XSS : on convertit le HTML dangereux en texte simple
+    let safeText = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    // 2. Palette de couleurs Brawl Stars (adaptée pour ressortir sur un fond sombre)
+    const brawlColors = {
+        '0': '#222222', // Noir (légèrement éclairci pour qu'il soit un minimum lisible sur fond noir)
+        '1': '#ffffff', // Blanc
+        '2': '#ff5555', // Rouge clair
+        '3': '#54ff54', // Vert fluo
+        '4': '#3388ff', // Bleu
+        '5': '#00d2ff', // Azur
+        '6': '#ff99cc', // Rose clair
+        '7': '#ffce00', // Jaune (Couleur Brawl Track)
+        '8': '#ff00ff', // Rose foncé
+        '9': '#cc0000', // Rouge foncé
+        '10': '#ffffff' // Blanc
+    };
+
+    // 3. Remplacement des balises &lt;c...&gt; par des <span> colorés
+    safeText = safeText.replace(/&lt;c(\d+)&gt;/g, (match, colorCode) => {
+        const color = brawlColors[colorCode] || '#ffffff'; // Blanc par défaut si code inconnu
+        return `<span style="color: ${color};">`;
+    });
+
+    // 4. Remplacement des balises de fermeture &lt;/c&gt;
+    safeText = safeText.replace(/&lt;\/c&gt;/g, '</span>');
+
+    return `"${safeText}"`;
 }
 
 function renderMembers(members) {
