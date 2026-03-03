@@ -21,8 +21,8 @@
             window.location.replace(redirect);
         }
         // 2. Route Userhome : /Username (un seul segment, sans extension .html)
-        else if (parts.length === 1 && !parts[0].includes('.')) {
-            window.location.replace(`/userhome.html?user=${parts[0]}`);
+            else if (parts.length === 1 && parts[0] === 'home') {
+            window.location.replace(`/userhome.html`);
         }
     </script>
 
