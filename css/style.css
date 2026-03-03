@@ -1665,12 +1665,6 @@ span.flatpickr-weekday {
    15. EVENTS PAGE D'ACCUEIL (ICÔNES)
    ========================================= */
 
-/* Assurez-vous que la classe de votre carte d'événement possède "position: relative" */
-.event-card {
-    position: relative;
-    overflow: hidden; /* Coupe l'image si elle essaie de déborder */
-}
-
 /* Force le texte de l'événement à rester au-dessus de l'image (si l'écran est petit) */
 .event-card > div, .event-card h3, .event-card p {
     position: relative;
