@@ -6,7 +6,8 @@ async function initUserHome() {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/api/my-stats`, { 
+        // CORRECTION ICI : Utilisation de API_URL au lieu de API_BASE
+        const res = await fetch(`${API_URL}/api/my-stats`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
         
@@ -14,10 +15,10 @@ async function initUserHome() {
         const data = await res.json();
         const username = data.username || "Joueur";
 
+        // Nettoyage de l'URL vers /home
         if (window.location.pathname.includes('userhome.html')) {
             window.history.replaceState({}, '', `/home`);
         }
-        // ------------------------------------
 
         document.getElementById('welcome-msg').innerText = `Bienvenue, ${username} !`;
         localStorage.setItem('username', username);
@@ -29,16 +30,13 @@ async function initUserHome() {
         document.getElementById('counter-claims').innerText = `${claimedList.length} / ${limits.claim_max}`;
         document.getElementById('counter-follows').innerText = `${followedList.length} / ${limits.follow_max}`;
 
-        // Afficher des loaders (Skeletons) le temps du chargement groupé
         renderSkeletons('claims-grid', claimedList.length || 1);
         renderSkeletons('follows-grid', followedList.length || 1);
 
-        // 3. Récupération en masse (BULK) des métadonnées
         const allTags = [...claimedList, ...followedList].map(t => t.tag);
         let metadataMap = {};
 
         if (allTags.length > 0) {
-            // Déduplication des tags
             const uniqueTags = [...new Set(allTags)];
             const bulkRes = await fetch(`${API_URL}/api/bulk-players`, {
                 method: 'POST',
@@ -54,30 +52,16 @@ async function initUserHome() {
             }
         }
 
-        // 4. Rendu final des grilles
         renderGrid('claims-grid', claimedList, metadataMap, 'Aucun compte lié.');
         renderGrid('follows-grid', followedList, metadataMap, 'Aucun compte suivi.');
-        
-        const pathParts = window.location.pathname.split('/').filter(p => p);
-        const urlUsername = pathParts.length > 0 ? decodeURIComponent(pathParts[0]) : null;
-
-        if (urlUsername && urlUsername !== 'userhome.html' && urlUsername.toLowerCase() !== username.toLowerCase()) {
-            window.location.href = `/error404?target=${encodeURIComponent(urlUsername)}`;
-            return;
-        }
-
-        if (window.location.pathname.includes('userhome.html')) {
-            window.history.replaceState({}, '', `/${username}`);
-        }
 
     } catch (e) {
         console.error(e);
         localStorage.removeItem('token');
-        window.location.href = "index.html";
+        window.location.href = "/"; // CORRIGÉ
     }
 }
 
-// Fonction utilitaire : affiche un joli squelette clignotant pendant le chargement
 function renderSkeletons(containerId, count) {
     const container = document.getElementById(containerId);
     container.innerHTML = '';
@@ -94,7 +78,6 @@ function renderSkeletons(containerId, count) {
     }
 }
 
-// Fonction utilitaire : rendu final des cartes (Horizontal)
 function renderGrid(containerId, tagsList, metadataMap, emptyMsg) {
     const container = document.getElementById(containerId);
     container.innerHTML = '';
@@ -135,7 +118,6 @@ function renderGrid(containerId, tagsList, metadataMap, emptyMsg) {
                 </div>
             `;
         }
-
         container.appendChild(card);
     });
 }
@@ -159,5 +141,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function logout() {
     localStorage.removeItem('token');
-    window.location.href = "index.html";
+    window.location.href = "/";
 }
