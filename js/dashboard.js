@@ -208,7 +208,7 @@ function renderProfile(data) {
         let color = data.nameColor;
         if (color.startsWith('0x')) color = '#' + (color.length >= 10 ? color.slice(4) : color.slice(2));
         nameElem.style.color = color;
-        nameElem.style.textShadow = `0 0 15px ${color}66`;
+        nameElem.style.textShadow = '1px 2px 3px rgba(0,0,0,0.8)';
     } else {
         nameElem.style.color = '#ffffff';
         nameElem.style.textShadow = 'none';
