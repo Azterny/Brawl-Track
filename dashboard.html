@@ -29,7 +29,8 @@
                 <img id="player-icon" src="assets/default_icon.png" alt="Profile Icon">
                 <div id="player-info">
                     <h1 id="player-name">Loading...</h1>
-                    <div id="player-tag">#TAG</div>
+                    <div id="player-club" style="color: #00d2ff; font-weight: bold; font-size: 1.1rem; margin-top: 2px; display: none;"></div>
+                    <div id="player-tag" style="margin-top: 2px;">#TAG</div>
                 </div>
                 <div id="header-actions">
                     </div>
@@ -83,7 +84,9 @@
             </div>
 
             <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 20px;">
-                <h3 style="margin: 0;">🤖 Brawlers</h3>
+                <h3 style="margin: 0; display: flex; align-items: center;">
+                    <img src="assets/icons/wipeout.png" style="height: 1.2em; margin-right: 8px;"> Brawlers
+                </h3>
                 <select id="sort-brawlers" onchange="sortBrawlers()" style="width: auto; padding: 5px; background: #333; color: white; border: 1px solid #555;">
                     <option value="trophies">▼ Trophées</option>
                     <option value="name">A-Z Nom</option>
