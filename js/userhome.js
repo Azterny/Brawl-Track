@@ -1,24 +1,42 @@
 async function initUserHome() {
     const token = localStorage.getItem('token');
     if (!token) {
-        window.location.href = "index.html";
+        window.location.href = "/";
         return;
     }
 
     try {
-        // 1. Récupération des tags suivis et claims
-        const res = await fetch(`${API_URL}/api/my-stats`, { 
+        const res = await fetch(`${API_BASE}/api/my-stats`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
         
         if (!res.ok) throw new Error("Session expirée");
         const data = await res.json();
-
-        // 2. Mise à jour Header
         const username = data.username || "Joueur";
+
+        // --- SÉCURITÉ ET RESTAURATION URL ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const userParam = urlParams.get('user'); // Si on vient du 404.html
+        const pathParts = window.location.pathname.split('/').filter(p => p);
+        const pathUser = (pathParts.length > 0 && !pathParts[0].includes('.html')) ? decodeURIComponent(pathParts[0]) : null;
+
+        const targetUser = userParam || pathUser;
+
+        // Si quelqu'un tape /UnAutrePseudo -> Erreur 404
+        if (targetUser && targetUser.toLowerCase() !== username.toLowerCase()) {
+            window.location.href = `/404.html?target=${encodeURIComponent(targetUser)}`;
+            return;
+        }
+
+        // MAGIE : Restauration de l'URL propre
+        if (window.location.pathname.includes('userhome.html')) {
+            window.history.replaceState({}, '', `/${username}`);
+        }
+        // ------------------------------------
+
         document.getElementById('welcome-msg').innerText = `Bienvenue, ${username} !`;
         localStorage.setItem('username', username);
-
+        
         const claimedList = data.claimed_tags || [];
         const followedList = data.followed_tags || [];
         const limits = data.limits || { claim_max: 5, follow_max: 15 };
