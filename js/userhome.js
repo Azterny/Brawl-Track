@@ -6,31 +6,54 @@ async function initUserHome() {
     }
 
     try {
-        // 1. Récupération des statistiques globales (Tags + Limites)
+        // 1. Récupération des tags suivis et claims
         const res = await fetch(`${API_URL}/api/my-stats`, { 
             headers: { 'Authorization': `Bearer ${token}` } 
         });
         
-        if (!res.ok) throw new Error("Session expirée ou invalide");
-        
+        if (!res.ok) throw new Error("Session expirée");
         const data = await res.json();
 
-        // 2. Mise à jour Interface Header
+        // 2. Mise à jour Header
         const username = data.username || "Joueur";
         document.getElementById('welcome-msg').innerText = `Bienvenue, ${username} !`;
-        localStorage.setItem('username', username); // Sync pour Navbar
+        localStorage.setItem('username', username);
 
-        // 3. Mise à jour Compteurs
         const claimedList = data.claimed_tags || [];
         const followedList = data.followed_tags || [];
         const limits = data.limits || { claim_max: 5, follow_max: 15 };
 
         document.getElementById('counter-claims').innerText = `${claimedList.length} / ${limits.claim_max}`;
-        document.getElementById('counter-follows').innerText = `${followedList.length} / ${limits.follow_max}`; // Affichage limite réelle
+        document.getElementById('counter-follows').innerText = `${followedList.length} / ${limits.follow_max}`;
 
-        // 4. Rendu des Grilles
-        renderGrid('claims-grid', claimedList, 'Aucun compte lié.');
-        renderGrid('follows-grid', followedList, 'Aucun compte suivi.');
+        // Afficher des loaders (Skeletons) le temps du chargement groupé
+        renderSkeletons('claims-grid', claimedList.length || 1);
+        renderSkeletons('follows-grid', followedList.length || 1);
+
+        // 3. Récupération en masse (BULK) des métadonnées
+        const allTags = [...claimedList, ...followedList].map(t => t.tag);
+        let metadataMap = {};
+
+        if (allTags.length > 0) {
+            // Déduplication des tags
+            const uniqueTags = [...new Set(allTags)];
+            const bulkRes = await fetch(`${API_URL}/api/bulk-players`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ tags: uniqueTags })
+            });
+            
+            if (bulkRes.ok) {
+                metadataMap = await bulkRes.json();
+            }
+        }
+
+        // 4. Rendu final des grilles
+        renderGrid('claims-grid', claimedList, metadataMap, 'Aucun compte lié.');
+        renderGrid('follows-grid', followedList, metadataMap, 'Aucun compte suivi.');
 
     } catch (e) {
         console.error(e);
@@ -39,37 +62,27 @@ async function initUserHome() {
     }
 }
 
-// --- RENDU DES GRILLES ---
-
-/**
- * BUG-5 FIX: Throttle pour fetchProfileMetadata.
- * L'ancienne version lançait N appels simultanés à /api/public/player via forEach,
- * chacun déclenchant un appel Supercell. Un utilisateur avec 15 follows = 15 appels
- * simultanés -> risque de 429 côté Supercell et surcharge du Pi Zero 2W.
- * Solution : semaphore Promise limitant les appels concurrents à MAX_CONCURRENT.
- */
-const MAX_CONCURRENT_FETCHES = 3;
-let _activeFetches = 0;
-const _fetchQueue = [];
-
-function _runNextFetch() {
-    if (_fetchQueue.length === 0 || _activeFetches >= MAX_CONCURRENT_FETCHES) return;
-    const next = _fetchQueue.shift();
-    _activeFetches++;
-    next().finally(() => {
-        _activeFetches--;
-        _runNextFetch();
-    });
-}
-
-function throttledFetch(fn) {
-    _fetchQueue.push(fn);
-    _runNextFetch();
-}
-
-function renderGrid(containerId, tagsList, emptyMsg) {
+// Fonction utilitaire : affiche un joli squelette clignotant pendant le chargement
+function renderSkeletons(containerId, count) {
     const container = document.getElementById(containerId);
-    container.innerHTML = ''; // Clear loading
+    container.innerHTML = '';
+    for(let i=0; i<count; i++) {
+        container.innerHTML += `
+            <div class="profile-card skeleton-mode">
+                <div class="skeleton-box" style="width: 55px; height: 55px; border-radius: 12px; margin-right: 15px;"></div>
+                <div class="profile-info">
+                    <div class="skeleton-box" style="width: 60%; height: 18px; margin-bottom: 8px;"></div>
+                    <div class="skeleton-box" style="width: 30%; height: 14px;"></div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Fonction utilitaire : rendu final des cartes (Horizontal)
+function renderGrid(containerId, tagsList, metadataMap, emptyMsg) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
 
     if (tagsList.length === 0) {
         container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #555; font-style: italic; padding: 20px;">${emptyMsg}</div>`;
@@ -77,76 +90,48 @@ function renderGrid(containerId, tagsList, emptyMsg) {
     }
 
     tagsList.forEach(tagObj => {
-        // Création du squelette de la carte (Loader)
+        const tag = tagObj.tag;
+        const meta = metadataMap[tag] || null;
+
         const card = document.createElement('div');
         card.className = 'profile-card';
-        card.onclick = () => window.location.href = `dashboard.html?tag=${tagObj.tag.replace('#','')}`;
+        card.onclick = () => window.location.href = `dashboard.html?tag=${tag.replace('#','')}`;
 
-        // Contenu initial (Loader)
-        card.innerHTML = `
-            <div class="card-loader"></div>
-            <div class="profile-name" style="margin-top:10px;">Chargement...</div>
-            <div class="profile-tag">${tagObj.tag}</div>
-        `;
+        if (meta) {
+            let nameColor = meta.nameColor || '#ffffff';
+            if (nameColor.startsWith('0x')) nameColor = '#' + (nameColor.length >= 10 ? nameColor.slice(4) : nameColor.slice(2));
+
+            card.innerHTML = `
+                <img src="https://cdn.brawlify.com/profile-icons/regular/${meta.iconId}.png" class="profile-icon" alt="Icon">
+                <div class="profile-info">
+                    <div class="profile-name" style="color: ${nameColor}; text-shadow: 0 0 10px ${nameColor}44;">${meta.name}</div>
+                    <div class="profile-tag">${tag}</div>
+                </div>
+                <div class="profile-trophies">
+                    ${meta.trophies} <img src="assets/trophy_normal.png" alt="Trophée">
+                </div>
+            `;
+        } else {
+            card.innerHTML = `
+                <img src="assets/default_icon.png" class="profile-icon" style="opacity:0.5;">
+                <div class="profile-info">
+                    <div class="profile-name">Inconnu / Erreur</div>
+                    <div class="profile-tag">${tag}</div>
+                </div>
+            `;
+        }
 
         container.appendChild(card);
-
-        // BUG-5 FIX: Passage par throttledFetch pour limiter la concurrence
-        throttledFetch(() => fetchProfileMetadata(tagObj.tag, card));
     });
 }
 
-// Récupère les infos visuelles (Nom, Icone) depuis l'API publique
-// car la BDD locale ne stocke pas forcément l'icone ou le nom à jour dans la table Tags
-async function fetchProfileMetadata(tag, cardElement) {
-    try {
-        const cleanTag = tag.replace('#', '');
-        const trophies = data.trophies || 0;
-        const res = await fetch(`${API_URL}/api/public/player/${cleanTag}`);
-        
-        if (res.ok) {
-            const data = await res.json();
-            const iconId = (data.icon && data.icon.id) ? data.icon.id : 28000000;
-            const name = data.name || "Inconnu";
-            const nameColor = data.nameColor ? '#' + data.nameColor.replace('0x', '').slice(-6) : '#ffffff';
-
-            // Mise à jour de la carte existante
-            cardElement.innerHTML = `
-                <img src="https://cdn.brawlify.com/profile-icons/regular/${iconId}.png" class="profile-icon" alt="Icon">
-                <div class="profile-name" style="color: ${nameColor}; text-shadow: 0 0 10px ${nameColor}44;">${name}</div>
-                <div style="color: #ffce00; font-weight: bold; margin-top: 5px; font-size: 0.9em; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                    <img src="assets/trophy_normal.png" style="width: 14px;"> ${trophies}
-                </div>
-                <div class="profile-tag" style="margin-top: 5px;">${tag}</div>
-            `;
-        } else {
-            throw new Error("Erreur fetch");
-        }
-    } catch (e) {
-        // Fallback si erreur (API Down ou autre)
-        const currentContent = cardElement.innerHTML;
-        // On remplace juste le loader par une icone par défaut si besoin, ou on laisse le tag
-        cardElement.innerHTML = `
-            <img src="assets/default_icon.png" class="profile-icon" style="opacity:0.5;">
-            <div class="profile-name">Inconnu</div>
-            <div class="profile-tag">${tag}</div>
-        `;
-    }
-}
-
-function logout() {
-    localStorage.removeItem('token');
-    window.location.href = "index.html";
-}
 function searchFromUserhome() {
     let tag = document.getElementById('userhome-search-input').value;
     if (!tag) return;
-    // Normalisation obligatoire selon les règles du projet
     tag = tag.toUpperCase().replace('#', '').replace('O', '0');
     window.location.href = `dashboard.html?tag=${tag}`;
 }
 
-// Optionnel : permettre la recherche en appuyant sur "Entrée"
 document.addEventListener('DOMContentLoaded', () => {
     initUserHome();
     const searchInput = document.getElementById('userhome-search-input');
@@ -157,5 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Démarrage
-document.addEventListener('DOMContentLoaded', initUserHome);
+function logout() {
+    localStorage.removeItem('token');
+    window.location.href = "index.html";
+}
