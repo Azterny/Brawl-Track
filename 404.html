@@ -3,9 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erreur 404 - Brawl Track</title>
-    <link rel="icon" type="image/png" href="/assets/logo.png">
+    <title>Redirection...</title>
     
+    <script>
+        const path = window.location.pathname;
+        const parts = path.split('/').filter(p => p);
+
+        // 1. Route Dashboard : /player/TAG/BRAWLER
+        if (parts[0] === 'player' && parts[1]) {
+            const tag = parts[1];
+            let redirect = `/dashboard.html?tag=${tag}`;
+            if (parts[2]) redirect += `&brawler=${parts[2]}`;
+            window.location.replace(redirect);
+        }
+        // 2. Route Userhome : /Username (un seul segment, sans extension .html)
+        else if (parts.length === 1 && !parts[0].includes('.')) {
+            window.location.replace(`/userhome.html?user=${parts[0]}`);
+        }
+    </script>
+
+    <link rel="icon" type="image/png" href="/assets/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -24,13 +41,11 @@
     <script src="/js/config.js"></script>
     <script src="/js/navbar.js"></script>
     <script>
-        // Récupère l'argument cible dans l'URL (ex: error404?target=3FJS8FZ)
-        const urlParams = new URLSearchParams(window.location.search);
-        let target = urlParams.get('target');
-
+        // Si la redirection a été faite manuellement avec ?target=...
+        const target = new URLSearchParams(window.location.search).get('target');
         if (target) {
             document.getElementById('error-title').innerText = "Joueur ou compte introuvable";
-            document.getElementById('error-desc').innerHTML = `La cible ou le joueur <strong>#${decodeURIComponent(target)}</strong> n'existe pas ou vous n'y avez pas accès.`;
+            document.getElementById('error-desc').innerHTML = `La cible <strong>#${decodeURIComponent(target)}</strong> n'existe pas ou vous n'y avez pas accès.`;
         }
     </script>
 </body>
