@@ -1211,11 +1211,153 @@ span.flatpickr-weekday {
     }
 }
 
-/* === BRAWLER NEON RANKS === */
-@keyframes neonPulse {
-    0%, 100% { box-shadow: 0 0 6px var(--neon-color), 0 0 14px var(--neon-color); }
-    50%       { box-shadow: 0 0 14px var(--neon-color), 0 0 30px var(--neon-color), 0 0 45px var(--neon-color); }
+/* =========================================
+   11. SYSTÈME DE RANGS BRAWLERS
+   ========================================= */
+
+/* --- Backgrounds par rang --- */
+.brawler-card.rank-wood     { background: linear-gradient(160deg, #2a1f14 0%, #1a1208 100%); }
+.brawler-card.rank-bronze   { background: linear-gradient(160deg, #2e1c0e 0%, #1a0f08 100%); }
+.brawler-card.rank-silver   { background: linear-gradient(160deg, #1e2028 0%, #12141a 100%); }
+.brawler-card.rank-gold     { background: linear-gradient(160deg, #2a2200 0%, #1a1500 100%); }
+.brawler-card.rank-prestige1 { background: linear-gradient(160deg, #1e1030 0%, #120820 100%); }
+.brawler-card.rank-prestige2 { background: linear-gradient(160deg, #2a0e22 0%, #1a0815 100%); }
+.brawler-card.rank-prestige3 { background: linear-gradient(160deg, #1a1a2e 0%, #0e0e1a 100%); }
+
+/* --- Bordures standard (non-prestige) --- */
+.brawler-card.rank-wood {
+    border: 2px solid #6B4F2A !important;
+    box-shadow: 0 2px 8px rgba(107, 79, 42, 0.2);
 }
-.brawler-neon-p1 { --neon-color: #a855f7; animation: neonPulse 2s ease-in-out infinite; }
-.brawler-neon-p2 { --neon-color: #ff2d78; animation: neonPulse 2s ease-in-out infinite; }
-.brawler-neon-p3 { --neon-color: #ffee00; animation: neonPulse 2s ease-in-out infinite; }
+.brawler-card.rank-bronze {
+    border: 2px solid #CD7F32 !important;
+    box-shadow: 0 2px 8px rgba(205, 127, 50, 0.25);
+}
+.brawler-card.rank-silver {
+    border: 2px solid #A0A8B8 !important;
+    box-shadow: 0 2px 8px rgba(160, 168, 184, 0.2);
+}
+.brawler-card.rank-gold {
+    border: 2px solid #E6B800 !important;
+    box-shadow: 0 2px 10px rgba(230, 184, 0, 0.3);
+}
+
+/* --- Bordures Prestige (neon subtil, épaisseur 2.5px) --- */
+.brawler-card.rank-prestige1 {
+    border: 2.5px solid #7B3FD8 !important;
+    box-shadow: 0 0 8px rgba(123, 63, 216, 0.45), inset 0 0 6px rgba(123, 63, 216, 0.06);
+    animation: neon-prestige1 3s ease-in-out infinite;
+}
+.brawler-card.rank-prestige2 {
+    border: 2.5px solid #C83FA0 !important;
+    box-shadow: 0 0 8px rgba(200, 63, 160, 0.45), inset 0 0 6px rgba(200, 63, 160, 0.06);
+    animation: neon-prestige2 3s ease-in-out infinite;
+}
+.brawler-card.rank-prestige3 {
+    border: 2.5px solid #ff6666 !important;
+    animation: neon-rainbow 4s linear infinite;
+}
+
+/* --- Animations Neon (douces) --- */
+@keyframes neon-prestige1 {
+    0%, 100% {
+        box-shadow: 0 0 6px rgba(123, 63, 216, 0.4), inset 0 0 5px rgba(123, 63, 216, 0.05);
+        border-color: #7B3FD8;
+    }
+    50% {
+        box-shadow: 0 0 14px rgba(155, 95, 240, 0.65), inset 0 0 8px rgba(123, 63, 216, 0.08);
+        border-color: #9B5FF0;
+    }
+}
+
+@keyframes neon-prestige2 {
+    0%, 100% {
+        box-shadow: 0 0 6px rgba(200, 63, 160, 0.4), inset 0 0 5px rgba(200, 63, 160, 0.05);
+        border-color: #C83FA0;
+    }
+    50% {
+        box-shadow: 0 0 14px rgba(230, 95, 190, 0.65), inset 0 0 8px rgba(200, 63, 160, 0.08);
+        border-color: #E65FBE;
+    }
+}
+
+@keyframes neon-rainbow {
+    0%   { border-color: #ff5555; box-shadow: 0 0 10px rgba(255,85,85,0.5); }
+    16%  { border-color: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.5); }
+    33%  { border-color: #ffee44; box-shadow: 0 0 10px rgba(255,238,68,0.5); }
+    50%  { border-color: #44ff88; box-shadow: 0 0 10px rgba(68,255,136,0.5); }
+    66%  { border-color: #44aaff; box-shadow: 0 0 10px rgba(68,170,255,0.5); }
+    83%  { border-color: #cc44ff; box-shadow: 0 0 10px rgba(204,68,255,0.5); }
+    100% { border-color: #ff5555; box-shadow: 0 0 10px rgba(255,85,85,0.5); }
+}
+
+/* --- Hover effects par rang --- */
+.brawler-card.rank-wood:hover {
+    transform: scale(1.08) translateY(-4px);
+    border-color: #9B7240 !important;
+    box-shadow: 0 6px 16px rgba(107, 79, 42, 0.45) !important;
+}
+.brawler-card.rank-bronze:hover {
+    transform: scale(1.08) translateY(-4px);
+    border-color: #E8962A !important;
+    box-shadow: 0 6px 16px rgba(205, 127, 50, 0.55) !important;
+}
+.brawler-card.rank-silver:hover {
+    transform: scale(1.08) translateY(-4px);
+    border-color: #D0D8E8 !important;
+    box-shadow: 0 6px 16px rgba(200, 210, 230, 0.45) !important;
+}
+.brawler-card.rank-gold:hover {
+    transform: scale(1.08) translateY(-4px);
+    border-color: #FFD700 !important;
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.55) !important;
+}
+.brawler-card.rank-prestige1:hover {
+    transform: scale(1.08) translateY(-4px);
+    animation-play-state: paused;
+    border-color: #AA66FF !important;
+    box-shadow: 0 6px 22px rgba(170, 102, 255, 0.7), inset 0 0 10px rgba(123, 63, 216, 0.12) !important;
+}
+.brawler-card.rank-prestige2:hover {
+    transform: scale(1.08) translateY(-4px);
+    animation-play-state: paused;
+    border-color: #FF66CC !important;
+    box-shadow: 0 6px 22px rgba(255, 102, 204, 0.7), inset 0 0 10px rgba(200, 63, 160, 0.12) !important;
+}
+.brawler-card.rank-prestige3:hover {
+    transform: scale(1.08) translateY(-4px);
+    animation-play-state: paused;
+    border-color: #ffffff !important;
+    box-shadow: 0 6px 24px rgba(255, 255, 255, 0.5), 0 0 30px rgba(180, 100, 255, 0.35) !important;
+}
+
+/* --- Badge Rang (coin bas-gauche) --- */
+.brawler-rank-badge {
+    position: absolute;
+    bottom: 24px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
+    z-index: 2;
+    transition: transform 0.2s ease;
+}
+.brawler-card:hover .brawler-rank-badge {
+    transform: scale(1.2);
+}
+
+/* --- Icone trophée brawler (coin bas-droit) --- */
+.brawler-trophy-icon {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 2px;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7));
+}
+
+/* Assure le positionnement relatif sur la carte */
+.brawler-card {
+    position: relative;
+}
