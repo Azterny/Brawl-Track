@@ -100,7 +100,7 @@ function renderGrid(containerId, tagsList, metadataMap, emptyMsg) {
             if (nameColor.startsWith('0x')) nameColor = '#' + (nameColor.length >= 10 ? nameColor.slice(4) : nameColor.slice(2));
 
             card.innerHTML = `
-                <img src="https://cdn.brawlify.com/profile-icons/regular/${meta.iconId}.png" class="profile-icon" alt="Icon">
+                <img src="https://cdn.brawlify.com/profile-icons/regular/${meta.iconId}.png" class="profile-icon" onerror="this.src='/assets/default_icon.png'" alt="Icon">
                 <div class="profile-info">
                     <div class="profile-name" style="color: ${nameColor}; text-shadow: 0 0 10px ${nameColor}44;">${meta.name}</div>
                     <div class="profile-tag">${tag}</div>
