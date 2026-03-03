@@ -197,15 +197,6 @@ function renderProfile(data) {
         nameElem.style.textShadow = 'none';
     }
 
-    // Gestion de l'affichage du Club
-    const clubElem = document.getElementById('player-club');
-    if (data.club && data.club.name) {
-        clubElem.innerText = data.club.name;
-        clubElem.style.display = 'block';
-    } else {
-        clubElem.style.display = 'none';
-    }
-
     document.getElementById('player-tag').innerText = '#' + currentTagString;
 
     const iconImg = document.getElementById('player-icon');
@@ -223,18 +214,20 @@ function renderProfile(data) {
         ? data.brawlers.reduce((sum, b) => sum + Math.floor((b.trophies || 0) / 1000), 0)
         : 0;
 
-    // Remplacement des Emojis par des Images (avec taille relative "em" pour s'adapter à la police)
+    // Remplacement des Emojis par des Images
     document.getElementById('stats-area').innerHTML = `
         <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/trophy_normal.png" style="height:0.9em;"> ${data.trophies}</div></div>
         <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/icons/duels.png" style="height:0.9em;"> ${data['3vs3Victories']}</div></div>
         <div class="stat-card"><div>Survivant</div><div class="stat-value" style="color:#28a745; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/icons/solo.png" style="height:0.9em;"> ${survivorVictories}</div></div>
         <div class="stat-card"><div>Prestiges</div><div class="stat-value" style="color:#8A4FE8; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/total prestige.png" style="height:0.9em;"> ${prestiges}</div></div>
     `;
+
+    // AFFICHAGE DE LA NOUVELLE CARTE DU CLUB
     const clubCard = document.getElementById('club-card');
     if (data.club && data.club.tag) {
         clubCard.classList.remove('hidden');
-        clubCard.innerHTML = `<div style="color:#aaa; font-style:italic;">Chargement des données du club...</div>`;
-        fetchClubDetails(data.club.tag);
+        clubCard.innerHTML = `<div style="color:#aaa; font-style:italic; padding: 10px;">Chargement des données du club...</div>`;
+        fetchClubDetails(data.club.tag); // Fait l'appel asynchrone sans bloquer la page
     } else {
         clubCard.classList.add('hidden'); // Pas de club
     }
