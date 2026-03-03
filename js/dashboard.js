@@ -14,6 +14,7 @@ let currentUserId = null;
 let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
 let ChartInstance = null;
+let brawlerChartInstance = null;
 
 const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : '';
 
