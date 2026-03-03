@@ -195,8 +195,7 @@ async function loadTagData(tag) {
         checkClaimStatus(data);
     } catch (e) {
         console.error(e);
-        // REDIRECTION VERS 404
-        window.location.href = `/error404?target=${currentTagString}`;
+        window.location.href = `/404.html?target=${currentTagString}`;
     }
 }
 
