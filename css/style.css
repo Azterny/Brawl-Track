@@ -345,7 +345,11 @@ button.btn-3d.btn-yellow.btn-adp {
 .stat-value { font-size: 1.6em; font-weight: bold; margin-top: 5px; }
 
 /* Brawlers Grid */
-#brawlers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
+#brawlers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    gap: 10px;
+}
 .brawler-card { 
     background: #222; 
     border-radius: 8px; 
@@ -1254,8 +1258,8 @@ span.flatpickr-weekday {
     animation: neon-prestige2 3s ease-in-out infinite;
 }
 .brawler-card.rank-prestige3 {
-    border: 2.5px solid #ff6666 !important;
-    animation: neon-rainbow 4s linear infinite;
+    border: 2.5px solid #FFD700 !important;
+    animation: neon-prestige3 3s ease-in-out infinite;
 }
 
 /* --- Animations Neon (douces) --- */
@@ -1281,14 +1285,15 @@ span.flatpickr-weekday {
     }
 }
 
-@keyframes neon-rainbow {
-    0%   { border-color: #ff5555; box-shadow: 0 0 10px rgba(255,85,85,0.5); }
-    16%  { border-color: #ffaa00; box-shadow: 0 0 10px rgba(255,170,0,0.5); }
-    33%  { border-color: #ffee44; box-shadow: 0 0 10px rgba(255,238,68,0.5); }
-    50%  { border-color: #44ff88; box-shadow: 0 0 10px rgba(68,255,136,0.5); }
-    66%  { border-color: #44aaff; box-shadow: 0 0 10px rgba(68,170,255,0.5); }
-    83%  { border-color: #cc44ff; box-shadow: 0 0 10px rgba(204,68,255,0.5); }
-    100% { border-color: #ff5555; box-shadow: 0 0 10px rgba(255,85,85,0.5); }
+@keyframes neon-prestige3 {
+    0%, 100% {
+        border-color: #FFD700;
+        box-shadow: 0 0 6px rgba(255, 215, 0, 0.45), inset 0 0 5px rgba(255, 215, 0, 0.05);
+    }
+    50% {
+        border-color: #FFE566;
+        box-shadow: 0 0 14px rgba(255, 229, 102, 0.7), inset 0 0 8px rgba(255, 215, 0, 0.1);
+    }
 }
 
 /* --- Hover effects par rang --- */
@@ -1327,17 +1332,17 @@ span.flatpickr-weekday {
 .brawler-card.rank-prestige3:hover {
     transform: scale(1.08) translateY(-4px);
     animation-play-state: paused;
-    border-color: #ffffff !important;
-    box-shadow: 0 6px 24px rgba(255, 255, 255, 0.5), 0 0 30px rgba(180, 100, 255, 0.35) !important;
+    border-color: #FFE566 !important;
+    box-shadow: 0 6px 24px rgba(255, 215, 0, 0.75), inset 0 0 10px rgba(255, 215, 0, 0.12) !important;
 }
 
 /* --- Badge Rang (coin bas-gauche) --- */
 .brawler-rank-badge {
     position: absolute;
-    bottom: 24px;
+    bottom: 44px;
     left: 4px;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     object-fit: contain;
     filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
     z-index: 2;
@@ -1349,15 +1354,28 @@ span.flatpickr-weekday {
 
 /* --- Icone trophée brawler (coin bas-droit) --- */
 .brawler-trophy-icon {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     object-fit: contain;
     vertical-align: middle;
-    margin-right: 2px;
+    margin-right: 3px;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.7));
 }
 
 /* Assure le positionnement relatif sur la carte */
 .brawler-card {
     position: relative;
+    min-height: 130px;          /* Hauteur min pour tout loger */
+    padding-bottom: 6px !important;
+}
+
+/* Nombre de trophées plus lisible */
+.brawler-card .brawler-trophy-count {
+    font-size: 0.82em !important;
+    font-weight: bold;
+}
+
+/* Nom du brawler légèrement agrandi */
+.brawler-card .brawler-name-label {
+    font-size: 0.85em !important;
 }
