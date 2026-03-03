@@ -9,8 +9,12 @@
         const path = window.location.pathname;
         const parts = path.split('/').filter(p => p);
 
+        // EXCEPTION : Si on cherche explicitement l'erreur 404, on stoppe le routage et on affiche le design 404 !
+        if (parts.length > 0 && (parts[0].includes('404') || parts[0].includes('error'))) {
+            // On ne fait rien, on laisse la page 404 s'afficher
+        }
         // 1. Route Dashboard : /player/TAG/BRAWLER
-        if (parts[0] === 'player' && parts[1]) {
+        else if (parts[0] === 'player' && parts[1]) {
             const tag = parts[1];
             let redirect = `/dashboard.html?tag=${tag}`;
             if (parts[2]) redirect += `&brawler=${parts[2]}`;
