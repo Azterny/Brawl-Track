@@ -13,7 +13,7 @@ let currentUserId = null;
 
 let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
-let brawlerChartInstance = null;
+let ChartInstance = null;
 
 const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : '';
 
@@ -485,7 +485,7 @@ function renderBrawlersGrid() {
             const rank = getBrawlerRank(b.trophies);
             const trophyDiv = document.createElement('div');
             trophyDiv.style.color = '#ffce00';
-            trophyDiv.style.fontSize = '0.7em';
+            trophyDiv.style.fontSize = '1em';
             trophyDiv.style.marginTop = '2px';
             trophyDiv.style.display = 'flex';
             trophyDiv.style.alignItems = 'center';
