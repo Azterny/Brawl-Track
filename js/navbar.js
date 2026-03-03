@@ -46,12 +46,13 @@ document.addEventListener("DOMContentLoaded", function() {
 // --- GÉNÉRATEURS DE HTML ---
 
 function getCenterLinks(token) {
-    // Lien Leaderboard (Commun à tous)
     let links = `<a href="#" onclick="alert('🏆 Leaderboard : Bientôt Disponible !')" class="nav-link">🏆 Leaderboard</a>`;
     
-    // Si pas connecté, on garde la recherche accessible
     if (!token) {
         links += `<a href="#" onclick="focusSearch()" class="nav-link">🔎 Recherche</a>`;
+    } else {
+        // AJOUT DE L'ACCUEIL POUR LES CONNECTÉS
+        links = `<a href="index.html" class="nav-link">🏠 Accueil</a>` + links;
     }
     
     return links;
@@ -78,12 +79,12 @@ function getRightActions(token, username) {
         `;
     }
 }
-
 function getMobileLinks(token, username) {
     let html = "";
     if (token) {
         html += `
             <div class="mobile-user-info">Connecté en tant que <strong>${username}</strong></div>
+            <a href="index.html" class="mobile-link">🏠 Accueil</a>
             <a href="userhome.html" class="mobile-link">🏠 Mes Comptes</a>
             <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link">⭐ Abonnement</a>
             <a href="#" class="mobile-link">🏆 Leaderboard</a>
