@@ -103,7 +103,7 @@
             
             <div class="brawler-header-nav">
                 <h2 style="margin:0;">📊 Statistiques</h2>
-                <button class="btn-3d btn-yellow btn-adp" onclick="switchView('dashboard')">⬅ Retour</button>
+                <button class="btn-3d btn-yellow btn-adp" onclick="switchView('dashboard'); window.history.pushState({}, '', '/player/' + currentTagString);">⬅ Retour</button>
             </div>
 
             <div class="brawler-identity-card">
