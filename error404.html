@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur 404 - Brawl Track</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="global-navbar"></div>
+
+    <div class="container" style="margin-top: 15vh; text-align: center; max-width: 500px;">
+        <h1 style="font-size: 6rem; color: #ff5555; margin: 0; text-shadow: 0 0 20px rgba(255,85,85,0.4);">404</h1>
+        <h2 id="error-title" style="color: #ffce00; margin-top: 10px;">Page introuvable</h2>
+        <p id="error-desc" style="color: #aaa; margin: 20px 0 30px 0; font-size: 1.1rem;">
+            La page que vous recherchez n'existe pas.
+        </p>
+        <button onclick="window.location.href='/'" class="btn-3d btn-yellow w-auto" style="padding: 10px 30px; font-size: 1.2rem;">🏠 Retour à l'accueil</button>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script>
+        // Récupère l'argument cible dans l'URL (ex: error404?target=3FJS8FZ)
+        const urlParams = new URLSearchParams(window.location.search);
+        let target = urlParams.get('target');
+
+        if (target) {
+            document.getElementById('error-title').innerText = "Joueur ou compte introuvable";
+            document.getElementById('error-desc').innerHTML = `La cible ou le joueur <strong>#${decodeURIComponent(target)}</strong> n'existe pas ou vous n'y avez pas accès.`;
+        }
+    </script>
+</body>
+</html>
