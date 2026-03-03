@@ -45,6 +45,8 @@ async function loadEvents() {
         events.forEach(evt => {
             const mode = evt.event.mode;
             const map = evt.event.map;
+            // NOUVEAU : On récupère l'ID du mode (0 par défaut si introuvable)
+            const modeId = evt.event.modeId || 0; 
             
             // CORRECTION DATE : Conversion format Brawl Stars -> ISO
             const rawTime = evt.endTime;
@@ -66,6 +68,17 @@ async function loadEvents() {
 
             const card = document.createElement('div');
             card.className = 'event-card';
+
+            // --- NOUVEAU : Création de l'icône Brawlify ---
+            const iconId = 48000000 + parseInt(modeId);
+            const iconUrl = `https://cdn.brawlify.com/game-modes/regular/${iconId}.png`;
+            
+            const modeIcon = document.createElement('img');
+            modeIcon.src = iconUrl;
+            modeIcon.className = 'event-mode-icon';
+            // Si Brawlify n'a pas encore l'image, on la cache proprement
+            modeIcon.onerror = function() { this.style.display = 'none'; };
+            // ----------------------------------------------
 
             const header = document.createElement('div');
             header.className = 'event-header';
@@ -101,6 +114,8 @@ async function loadEvents() {
 
             card.appendChild(header);
             card.appendChild(body);
+            // Ajout de l'image de fond en dernier pour qu'elle s'intègre à la carte
+            card.appendChild(modeIcon);
 
             container.appendChild(card);
         });
