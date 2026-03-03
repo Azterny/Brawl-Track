@@ -127,22 +127,39 @@ function calculateDateRange(mode, offset, firstDataPointDate) {
 // =========================================================
 // === INITIALISATION ===
 // =========================================================
-
 async function initDashboard() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const tag = urlParams.get('tag');
+    // Analyse des nouveaux chemins d'URL (/player/TAG/BRAWLER)
+    const pathParts = window.location.pathname.split('/').filter(p => p);
+    let tag = new URLSearchParams(window.location.search).get('tag');
+    let brawler = null;
+
+    if (pathParts[0] === 'player' && pathParts[1]) {
+        tag = pathParts[1];
+        if (pathParts[2]) brawler = decodeURIComponent(pathParts[2]);
+    }
 
     if (!tag) {
-        window.location.href = "index.html";
+        window.location.href = "/";
         return;
     }
 
     currentTagString = tag.toUpperCase().replace('#', '');
-    document.title = `Brawl Track - #${currentTagString} - Statistiques`;
+    document.title = `Brawl Track - #${currentTagString}`;
+
+    // Si on est arrivé via l'ancienne URL "?tag=...", on la "nettoie" visuellement
+    if (!pathParts.includes('player')) {
+        window.history.replaceState({}, '', `/player/${currentTagString}`);
+    }
 
     await fetchUserTier();
     await loadTagData(currentTagString);
     initFollowSystem(currentTagString);
+
+    // Ouverture automatique du Brawler si présent dans l'URL propre
+    if (brawler && window.currentBrawlersDisplay) {
+        const b = window.currentBrawlersDisplay.find(x => x.name.toLowerCase() === brawler.toLowerCase());
+        if (b) goToBrawlerStats(b.id, b.name);
+    }
 }
 
 async function fetchUserTier() {
@@ -169,17 +186,14 @@ async function loadTagData(tag) {
         const res = await fetch(`${API_BASE}/api/public/player/${tag}`);
         if (!res.ok) throw new Error("Joueur introuvable");
         const data = await res.json();
-
         renderProfile(data);
         await loadBrawlersGrid(data.brawlers);
         loadHistoryChart(data.history || [], data.trophies);
         checkClaimStatus(data);
-
     } catch (e) {
         console.error(e);
-        document.getElementById('player-name').innerText = "Erreur / Introuvable";
-        alert("Impossible de charger ce tag.");
-        window.location.href = "index.html";
+        // REDIRECTION VERS 404
+        window.location.href = `/error404?target=${currentTagString}`;
     }
 }
 
@@ -545,6 +559,8 @@ function getMonday(d) {
 async function goToBrawlerStats(id, name) {
     if (typeof switchView === 'function') switchView('brawlers');
 
+    window.history.pushState({}, '', `/player/${currentTagString}/${encodeURIComponent(name)}`);
+    
     document.getElementById('selected-brawler-id').value = id;
     document.getElementById('selected-brawler-name').textContent = name;
 
