@@ -101,7 +101,7 @@ function renderGrid(containerId, tagsList, emptyMsg) {
 async function fetchProfileMetadata(tag, cardElement) {
     try {
         const cleanTag = tag.replace('#', '');
-        // On utilise l'API publique (Attention : peut charger Supercell API)
+        const trophies = data.trophies || 0;
         const res = await fetch(`${API_URL}/api/public/player/${cleanTag}`);
         
         if (res.ok) {
@@ -114,7 +114,10 @@ async function fetchProfileMetadata(tag, cardElement) {
             cardElement.innerHTML = `
                 <img src="https://cdn.brawlify.com/profile-icons/regular/${iconId}.png" class="profile-icon" alt="Icon">
                 <div class="profile-name" style="color: ${nameColor}; text-shadow: 0 0 10px ${nameColor}44;">${name}</div>
-                <div class="profile-tag">${tag}</div>
+                <div style="color: #ffce00; font-weight: bold; margin-top: 5px; font-size: 0.9em; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                    <img src="assets/trophy_normal.png" style="width: 14px;"> ${trophies}
+                </div>
+                <div class="profile-tag" style="margin-top: 5px;">${tag}</div>
             `;
         } else {
             throw new Error("Erreur fetch");
@@ -135,6 +138,24 @@ function logout() {
     localStorage.removeItem('token');
     window.location.href = "index.html";
 }
+function searchFromUserhome() {
+    let tag = document.getElementById('userhome-search-input').value;
+    if (!tag) return;
+    // Normalisation obligatoire selon les règles du projet
+    tag = tag.toUpperCase().replace('#', '').replace('O', '0');
+    window.location.href = `dashboard.html?tag=${tag}`;
+}
+
+// Optionnel : permettre la recherche en appuyant sur "Entrée"
+document.addEventListener('DOMContentLoaded', () => {
+    initUserHome();
+    const searchInput = document.getElementById('userhome-search-input');
+    if(searchInput) {
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') searchFromUserhome();
+        });
+    }
+});
 
 // Démarrage
 document.addEventListener('DOMContentLoaded', initUserHome);
