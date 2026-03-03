@@ -30,13 +30,13 @@ function isHourMode(mode) {
 // =========================================================
 
 const RANK_CONFIG = {
-    wood:      { label: 'Wood',        neon: false, icon: 'assets/ranks/wood.webp',      trophyIcon: 'assets/trophy_normal.png' },
-    bronze:    { label: 'Bronze',      neon: false, icon: 'assets/ranks/bronze.webp',    trophyIcon: 'assets/trophy_normal.png' },
-    silver:    { label: 'Silver',      neon: false, icon: 'assets/ranks/silver.webp',    trophyIcon: 'assets/trophy_normal.png' },
-    gold:      { label: 'Gold',        neon: false, icon: 'assets/ranks/gold.webp',      trophyIcon: 'assets/trophy_normal.png' },
-    prestige1: { label: 'Prestige 1',  neon: true,  icon: 'assets/ranks/prestige1.webp', trophyIcon: 'assets/trophy_prestige.png' },
-    prestige2: { label: 'Prestige 2',  neon: true,  icon: 'assets/ranks/prestige2.webp', trophyIcon: 'assets/trophy_prestige.png' },
-    prestige3: { label: 'Prestige 3+', neon: true,  icon: 'assets/ranks/prestige3.webp', trophyIcon: 'assets/trophy_prestige.png' },
+    wood:      { label: 'Wood',        neon: false, icon: '/assets/ranks/wood.webp',      trophyIcon: '/assets/trophy_normal.png' },
+    bronze:    { label: 'Bronze',      neon: false, icon: '/assets/ranks/bronze.webp',    trophyIcon: '/assets/trophy_normal.png' },
+    silver:    { label: 'Silver',      neon: false, icon: '/assets/ranks/silver.webp',    trophyIcon: '/assets/trophy_normal.png' },
+    gold:      { label: 'Gold',        neon: false, icon: '/assets/ranks/gold.webp',      trophyIcon: '/assets/trophy_normal.png' },
+    prestige1: { label: 'Prestige 1',  neon: true,  icon: '/assets/ranks/prestige1.webp', trophyIcon: '/assets/trophy_prestige.png' },
+    prestige2: { label: 'Prestige 2',  neon: true,  icon: '/assets/ranks/prestige2.webp', trophyIcon: '/assets/trophy_prestige.png' },
+    prestige3: { label: 'Prestige 3+', neon: true,  icon: '/assets/ranks/prestige3.webp', trophyIcon: '/assets/trophy_prestige.png' },
 };
 
 /**
@@ -233,10 +233,10 @@ function renderProfile(data) {
 
     // Remplacement des Emojis par des Images
     document.getElementById('stats-area').innerHTML = `
-        <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/trophy_normal.png" style="height:0.9em;"> ${data.trophies}</div></div>
-        <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/icons/duels.png" style="height:0.9em;"> ${data['3vs3Victories']}</div></div>
-        <div class="stat-card"><div>Survivant</div><div class="stat-value" style="color:#28a745; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/icons/solo.png" style="height:0.9em;"> ${survivorVictories}</div></div>
-        <div class="stat-card"><div>Prestiges</div><div class="stat-value" style="color:#8A4FE8; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="assets/total prestige.png" style="height:0.9em;"> ${prestiges}</div></div>
+        <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/trophy_normal.png" style="height:0.9em;"> ${data.trophies}</div></div>
+        <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/icons/duels.png" style="height:0.9em;"> ${data['3vs3Victories']}</div></div>
+        <div class="stat-card"><div>Survivant</div><div class="stat-value" style="color:#28a745; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/icons/solo.png" style="height:0.9em;"> ${survivorVictories}</div></div>
+        <div class="stat-card"><div>Prestiges</div><div class="stat-value" style="color:#8A4FE8; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/total prestige.png" style="height:0.9em;"> ${prestiges}</div></div>
     `;
 
     // NOUVEL AFFICHAGE DE LA CARTE DU CLUB
@@ -1111,7 +1111,7 @@ function renderClubCard(club) {
     const iconUrl = `https://brawlify.com/images/club-badges/96/${badgeId}.webp`;
 
     clubCard.innerHTML = `
-        <img src="${iconUrl}" class="club-icon" onerror="this.src='assets/default_icon.png'" alt="Club Icon">
+        <img src="${iconUrl}" class="club-icon" onerror="this.src='/assets/default_icon.png'" alt="Club Icon">
         
         <div class="club-title-area">
             <h3 class="club-name">${club.name}</h3>
@@ -1120,7 +1120,7 @@ function renderClubCard(club) {
         
         <div class="club-stats-row">
             <div class="club-stat-item trophies" title="Total Trophées du Club">
-                <img src="assets/trophy_normal.png" class="stat-icon">
+                <img src="/assets/trophy_normal.png" class="stat-icon">
                 <span class="stat-text">${club.trophies.toLocaleString('fr-FR')}</span>
             </div>
             <div class="club-stat-item members" title="Membres du club">
