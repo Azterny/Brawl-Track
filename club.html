@@ -17,7 +17,7 @@
     <div class="container" style="max-width: 900px; margin-top: 20px;">
         <div class="header-bar">
             <div id="dashboard-header">
-                <img id="club-icon" src="/assets/default_icon.png" alt="Club Icon" style="border-radius: 15px; width: 80px; height: 80px; object-fit: contain;">
+                <img id="club-icon" src="/assets/loading_icon.png" onerror="this.src='/assets/default_icon.png'" alt="Club Icon" style="border-radius: 15px; width: 80px; height: 80px; object-fit: contain;">
                 <div id="player-info">
                     <h1 id="club-name">Chargement...</h1>
                     <div id="club-tag" style="margin-top: 2px; color: #ffce00; font-family: monospace;">#TAG</div>
@@ -29,11 +29,20 @@
         </div>
 
         <div class="view-section active">
-            <div id="stats-area" class="stats-grid" style="grid-template-columns: 1fr 1fr; max-width: 600px; margin: 0 auto;">
+            
+            <div id="club-description" style="text-align: center; color: #ccc; font-style: italic; margin-bottom: 25px; font-size: 1.1rem; padding: 0 15px;"></div>
+
+            <div id="stats-area" class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); max-width: 800px; margin: 0 auto;">
                 </div>
 
-            <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px;">
+            <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; flex-wrap: wrap; gap: 10px;">
                 <h2 style="margin: 0; color: #fff; font-family: 'Lilita One';">👥 Membres (<span id="members-count">0</span>/30)</h2>
+                
+                <select id="sort-members" onchange="sortClubMembers()" style="background: #222; color: #fff; border: 1px solid #444; padding: 8px 15px; border-radius: 8px; font-family: 'Lilita One', cursive; cursor: pointer; outline: none;">
+                    <option value="trophies">Trophées</option>
+                    <option value="role">Grade</option>
+                    <option value="name">Nom</option>
+                </select>
             </div>
             
             <div id="members-list" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
