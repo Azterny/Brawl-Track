@@ -441,10 +441,36 @@ function renderBrawlersGrid() {
         const card = document.createElement('div');
         card.className = 'brawler-card';
 
-        if (!b.owned) {
-            // Brawler non possédé — style grisé (inchangé)
-            card.style.filter = "grayscale(100%) opacity(0.3)";
-            card.style.cursor = "default";
+                // Trophées + variation (uniquement si possédé)
+        if (b.owned) {
+            const rank = getBrawlerRank(b.trophies);
+            const trophyDiv = document.createElement('div');
+            trophyDiv.style.color = '#ffce00';
+            trophyDiv.style.fontSize = '0.7em';
+            trophyDiv.style.marginTop = '2px';
+            trophyDiv.style.display = 'flex';
+            trophyDiv.style.alignItems = 'center';
+            trophyDiv.style.justifyContent = 'center';
+            trophyDiv.style.gap = '2px';
+
+            // Icone trophée (normal ou prestige)
+            const trophyImg = document.createElement('img');
+            trophyImg.src = RANK_CONFIG[rank].trophyIcon;
+            trophyImg.className = 'brawler-trophy-icon';
+            trophyImg.alt = 'trophée';
+            trophyDiv.appendChild(trophyImg);
+
+            const trophyText = document.createElement('span');
+            trophyText.textContent = b.trophies;
+            trophyDiv.appendChild(trophyText);
+
+            if (b.change24h !== 0) {
+                const arrow = document.createElement('span');
+                arrow.textContent = b.change24h > 0 ? ' ↗' : ' ↘';
+                arrow.style.color = b.change24h > 0 ? '#28a745' : '#ff5555';
+                trophyDiv.appendChild(arrow);
+            }
+            card.appendChild(trophyDiv);
         } else {
             // --- NOUVEAU : Bordure colorée selon le rang ---
             const rank = getBrawlerRank(b.trophies);
