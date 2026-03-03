@@ -1515,3 +1515,47 @@ span.flatpickr-weekday {
         justify-content: flex-start;
     }
 }
+
+/* =========================================
+   13. OPTIMISATIONS PERFORMANCES (Anti-Lag Mobile)
+   ========================================= */
+
+/* Réduction globale : Lueur du club légèrement moins gourmande */
+.club-deco-glow {
+    background: radial-gradient(circle, rgba(255, 206, 0, 0.05) 0%, rgba(0,0,0,0) 60%);
+}
+
+/* Mode Mobile : Désactivation totale des effets lourds */
+@media (max-width: 768px) {
+    /* 1. Suppression des ombres externes (Néons des cartes et boutons) */
+    .club-card,
+    .club-card::before,
+    .brawler-card,
+    .profile-card,
+    .btn-3d {
+        box-shadow: none !important;
+    }
+
+    /* 2. Remplacement des néons de rang prestige par de simples bordures colorées */
+    .rank-prestige1, 
+    .rank-prestige2, 
+    .rank-prestige3 {
+        box-shadow: none !important;
+        border: 2px solid;
+    }
+    .rank-prestige1 { border-color: #ff44ff !important; }
+    .rank-prestige2 { border-color: #ff0055 !important; }
+    .rank-prestige3 { border-color: #00ffff !important; }
+
+    /* 3. Suppression des filtres d'ombre sur les images (le pire ennemi du lag mobile) */
+    .club-icon,
+    .profile-icon,
+    .brawler-identity-icon {
+        filter: none !important;
+    }
+
+    /* 4. Désactivation de la grosse lueur de fond du club */
+    .club-deco-glow {
+        display: none !important;
+    }
+}
