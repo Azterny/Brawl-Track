@@ -692,8 +692,9 @@ function getInterpolatedValue(targetDate, allData) {
         if (ptTs >= targetTs && !next) { next = { ...pt, ts: ptTs }; break; }
     }
 
-    if (!prev && next) return null;
-    if (prev && !next) return null;
+    if (!prev && next) return next.trophies; 
+    
+    if (prev && !next) return prev.trophies; 
 
     if (prev && next) {
         if (prev.ts === next.ts) return prev.trophies;
