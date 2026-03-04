@@ -57,23 +57,24 @@ function changeZone() {
 
 function renderMenu() {
     document.getElementById('lb-header').style.display = 'none';
+    document.getElementById('mobile-brawler-select-container').innerHTML = ''; // Nettoyer
     document.getElementById('page-title').innerText = "Sélectionnez un Classement";
     
     const content = document.getElementById('dynamic-content');
     content.innerHTML = `
         <div class="menu-cards">
             <div class="menu-card" onclick="goTo('/leaderboard/global/trophies')">
-                <img src="/assets/trophy_normal.png" height="50">
+                <img src="/assets/trophy_normal.png" height="55" alt="Joueurs">
                 <h2>Joueurs</h2>
                 <p>Top Trophées Joueurs</p>
             </div>
             <div class="menu-card" onclick="goTo('/leaderboard/global/club/trophies')">
-                <span style="font-size: 50px;">🛡️</span>
+                <img src="https://brawlify.com/images/club-badges/96/8000000.webp" height="55" alt="Clubs">
                 <h2>Clubs</h2>
                 <p>Top Trophées Clubs</p>
             </div>
             <div class="menu-card" onclick="goTo('/leaderboard/global/brawler')">
-                <span style="font-size: 50px;">🔫</span>
+                <img src="https://cdn.brawlify.com/brawlers/borderless/16000000.png" height="55" alt="Brawlers">
                 <h2>Brawlers</h2>
                 <p>Top Joueurs par Brawler</p>
             </div>
@@ -90,6 +91,11 @@ async function loadCategory(category) {
     const content = document.getElementById('dynamic-content');
     content.innerHTML = `<div style="text-align:center;"><img src="/assets/loading_icon.png" class="spin" width="50"></div>`;
     document.getElementById('search-input').value = ""; // Reset recherche
+    
+    // Nettoyer le select mobile par défaut
+    if (category !== 'brawler') {
+        document.getElementById('mobile-brawler-select-container').innerHTML = '';
+    }
 
     if (category === 'trophies') {
         document.getElementById('page-title').innerText = `Top Joueurs - ${currentZone.toUpperCase()}`;
@@ -111,8 +117,8 @@ async function loadCategory(category) {
 
 async function renderBrawlerSplitScreen() {
     const content = document.getElementById('dynamic-content');
+    const mobileContainer = document.getElementById('mobile-brawler-select-container');
     
-    // Fetch global brawlers list
     if (globalBrawlersList.length === 0) {
         const bRes = await fetchAPI(`/api/brawlers`);
         globalBrawlersList = bRes.items || [];
@@ -129,11 +135,16 @@ async function renderBrawlerSplitScreen() {
         <option value="${b.id}" ${selectedBrawlerId == b.id ? 'selected' : ''}>${b.name}</option>
     `).join('');
 
+    // Injecter le menu déroulant dans le conteneur du HAUT (au-dessus de la recherche)
+    mobileContainer.innerHTML = `
+        <select class="mobile-brawler-select" onchange="selectBrawler(this.value)">
+            ${selectOptionsHtml}
+        </select>
+    `;
+
+    // Injecter le reste (Sidebar + Contenu de droite) en bas
     content.innerHTML = `
         <div class="brawler-split">
-            <select class="mobile-brawler-select" onchange="selectBrawler(this.value)">
-                ${selectOptionsHtml}
-            </select>
             <div class="brawler-sidebar">${brawlerListHtml}</div>
             <div class="brawler-content" id="brawler-ranking-content">
                 <div style="text-align:center; color:#aaa; margin-top: 50px;">Veuillez sélectionner un brawler</div>
@@ -218,7 +229,7 @@ function renderList(items, type, targetId = 'dynamic-content') {
                         <div class="list-tag">${item.tag}</div>
                     </div>
                     <div class="list-stats">
-                        <span style="color:#aaa;">👥 ${item.memberCount}</span>
+                        <span style="color:#aaa;" class="list-stat-item"><img src="/assets/icons/solo.png" height="15" style="filter: grayscale(100%);"> ${item.memberCount}</span>
                         <span style="color:#ffce00;"><img src="/assets/trophy_normal.png" height="15"> ${item.trophies}</span>
                     </div>
                 </div>`;
