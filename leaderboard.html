@@ -5,59 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brawl Track - Classements</title>
     <link rel="stylesheet" href="/css/style.css">
-    <style>
-        /* Styles spécifiques au Leaderboard */
-        .leaderboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .zone-selector { background: #222; color: #fff; border: 1px solid #444; padding: 10px; border-radius: 8px; font-size: 1rem; }
-        .search-bar { flex-grow: 1; max-width: 400px; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; }
-        
-        .menu-cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
-        .menu-card { background: #2a2a2a; padding: 20px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s; width: 250px; }
-        .menu-card:hover { background: #333; transform: translateY(-5px); }
-
-        .list-container { display: flex; flex-direction: column; gap: 10px; }
-        .list-item { display: flex; align-items: center; background: #2a2a2a; padding: 10px 15px; border-radius: 8px; gap: 15px; }
-        .list-rank { font-size: 1.2rem; font-weight: bold; color: #888; width: 40px; text-align: center; }
-        .list-icon { width: 45px; height: 45px; border-radius: 5px; object-fit: cover; }
-        .list-info { flex-grow: 1; }
-        .list-name { font-size: 1.1rem; font-weight: bold; }
-        .list-tag { font-size: 0.8rem; color: #aaa; }
-        .list-stats { display: flex; align-items: center; gap: 15px; font-weight: bold; }
-
-        /* Split Screen Brawlers */
-        .brawler-split { display: flex; gap: 20px; align-items: flex-start; }
-        .brawler-sidebar { width: 30%; background: #222; padding: 15px; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
-        .brawler-content { width: 70%; }
-        .brawler-item { display: flex; align-items: center; gap: 10px; padding: 8px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
-        .brawler-item:hover, .brawler-item.active { background: #333; }
-        .brawler-item img { width: 35px; height: 35px; }
-        .mobile-brawler-select { display: none; width: 100%; padding: 10px; background: #222; color: white; border-radius: 8px; border: 1px solid #444; margin-bottom: 20px; }
-
-        @media (max-width: 768px) {
-            .brawler-sidebar { display: none; }
-            .brawler-content { width: 100%; }
-            .mobile-brawler-select { display: block; }
-            .list-stats { flex-direction: column; align-items: flex-end; gap: 5px; }
-        }
-    </style>
 </head>
 <body>
     <div id="navbar-container"></div>
 
     <div class="container main-content" style="margin-top: 80px;">
+        
+        <h1 id="page-title" style="text-align: center; margin-bottom: 20px;">Classements</h1>
+        
+        <div id="mobile-brawler-select-container"></div>
+
         <div class="leaderboard-header" id="lb-header" style="display: none;">
             <select id="zone-select" class="zone-selector" onchange="changeZone()">
-                <option value="global">🌍 Global</option>
-                <option value="fr">🇫🇷 France</option>
-                <option value="gb">🇬🇧 Royaume-Uni</option>
-                <option value="us">🇺🇸 États-Unis</option>
+                <option value="global">Global</option>
+                <option value="fr">France</option>
+                <option value="gb">Royaume-Uni</option>
+                <option value="us">États-Unis</option>
             </select>
             <input type="text" id="search-input" class="search-bar" placeholder="Rechercher (Nom ou Tag)..." oninput="filterList()">
         </div>
 
-        <h1 id="page-title" style="text-align: center; margin-bottom: 30px;">Classements</h1>
-        
         <div id="dynamic-content"></div>
+        
     </div>
 
     <script src="/js/config.js"></script>
