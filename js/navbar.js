@@ -3,12 +3,9 @@ document.addEventListener("DOMContentLoaded", function() {
     if (!navContainer) return;
 
     const token = localStorage.getItem('token');
-    // On récupère le nom sauvegardé, sinon 'Joueur' par défaut
     const username = localStorage.getItem('username') || 'Joueur'; 
-    // On sécurise le nom d'utilisateur pour l'URL
     const safeUsername = encodeURIComponent(username);
     
-    // Structure de base
     let html = `
     <nav class="navbar">
         <div class="nav-content">
@@ -48,7 +45,6 @@ document.addEventListener("DOMContentLoaded", function() {
 // --- GÉNÉRATEURS DE HTML ---
 
 function getCenterLinks(token) {
-    // Lien Leaderboard (Commun à tous)
     let links = `<a href="#" onclick="alert('🏆 Leaderboard : Bientôt Disponible !')" class="nav-link">🏆 Leaderboard</a>`;
     
     if (!token) {
@@ -85,10 +81,11 @@ function getRightActions(token, safeUsername, username) {
 function getMobileLinks(token, safeUsername, username) {
     let html = "";
     if (token) {
+        // FIX BUG-JS-1 : Suppression du lien "Mes Comptes" en double qui existait ici
         html += `
             <div class="mobile-user-info">Connecté en tant que <strong>${username}</strong></div>
-            <a href="/home" class="mobile-link">🏠 Mes Comptes</a>
-            <a href="/${safeUsername}" class="mobile-link">🏠 Mes Comptes</a>
+            <a href="/" class="mobile-link">🏠 Accueil</a>
+            <a href="/home" class="mobile-link">👤 Mes Comptes</a>
             <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link">⭐ Abonnement</a>
             <a href="#" class="mobile-link">🏆 Leaderboard</a>
             <a href="#" class="mobile-link">⚙️ Paramètres</a>
@@ -116,12 +113,11 @@ function toggleMobileNav() {
 
 function logoutNav() {
     localStorage.removeItem('token');
-    localStorage.removeItem('username'); // On nettoie le nom aussi
+    localStorage.removeItem('username');
     window.location.href = '/';
 }
 
 function focusSearch() {
-    // Si on est déjà sur l'accueil
     if (window.location.pathname === '/' || window.location.pathname.includes('index.html')) {
         const el = document.getElementById('public-tag');
         if(el) el.focus();
