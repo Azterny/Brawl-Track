@@ -32,6 +32,10 @@
         else if (parts.length === 1 && parts[0] === 'home') {
             window.location.replace(`/userhome.html`);
         }
+        // 4. Route Leaderboard : /leaderboard/...
+        else if (path.startsWith('/leaderboard')) {
+            window.location.replace('/leaderboard.html' + window.location.search);
+        }
     </script>
     <link rel="icon" type="image/png" href="/assets/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
