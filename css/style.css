@@ -1,1 +1,574 @@
+/* =========================================
+   STYLE.CSS — Composants UI réutilisables
+   sur plusieurs pages (badges, boutons,
+   inputs, navbar, header-bar, stats-grid,
+   rang brawlers, carte club)
+   ========================================= */
 
+/* =========================================
+   1. BADGES
+   ========================================= */
+.badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75em;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+.badge-basic    { background: #444; color: #ccc; border: 1px solid #666; }
+.badge-subscriber {
+    background: linear-gradient(45deg, #0056b3, #007bff);
+    color: #fff;
+    border: 1px solid #0056b3;
+}
+.badge-premium {
+    background: linear-gradient(45deg, #ffce00, #ffa500);
+    color: #000;
+    border: 1px solid #ffd700;
+    box-shadow: 0 0 10px rgba(255, 206, 0, 0.3);
+}
+
+/* =========================================
+   2. INPUTS & SELECTS
+   ========================================= */
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: 2px solid #333;
+    background: #2a2a2a;
+    color: white;
+    box-sizing: border-box;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+input:focus, select:focus {
+    outline: none;
+    border-color: #ffce00;
+    background: #333;
+}
+
+/* =========================================
+   3. BOUTONS 3D
+   ========================================= */
+.btn-3d {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 12px 20px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold;
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: white;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.1s ease-in-out;
+    user-select: none;
+}
+.btn-3d:not(:disabled):hover  { filter: brightness(1.1); transform: translateY(-2px); }
+.btn-3d:not(:disabled):active { transform: translateY(2px); box-shadow: 0 0 0 transparent !important; }
+.btn-3d:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    filter: grayscale(0.5);
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Variantes couleur */
+.btn-yellow  { background: linear-gradient(to bottom, #ffce00, #e6b800); color: black;  box-shadow: 0 4px 0 #b38f00; }
+.btn-yellow:not(:disabled):hover  { box-shadow: 0 6px 0 #b38f00; }
+
+.btn-blue    { background: linear-gradient(to bottom, #007bff, #0056b3); color: white;  box-shadow: 0 4px 0 #004085; }
+.btn-blue:not(:disabled):hover    { box-shadow: 0 6px 0 #004085; }
+
+.btn-red     { background: linear-gradient(to bottom, #dc3545, #c82333); color: white;  box-shadow: 0 4px 0 #bd2130; }
+.btn-red:not(:disabled):hover     { box-shadow: 0 6px 0 #bd2130; }
+
+.btn-green   { background: linear-gradient(to bottom, #28a745, #218838); color: white;  box-shadow: 0 4px 0 #1e7e34; }
+.btn-green:not(:disabled):hover   { box-shadow: 0 6px 0 #1e7e34; }
+
+.btn-purple  { background: linear-gradient(to bottom, #6f42c1, #59359a); color: white;  box-shadow: 0 4px 0 #4c2d82; }
+
+.btn-grey    { background: #444; color: #888; border: 1px solid #555; box-shadow: none !important; transform: none !important; }
+
+/* Modificateurs de taille et largeur */
+.w-auto   { width: auto !important; display: inline-block; }
+.btn-sm   { padding: 6px 12px; font-size: 0.85rem; }
+.btn-adp  { width: fit-content !important; margin-top: 8px; margin-bottom: 10px; }
+
+/* =========================================
+   4. SECTIONS / VUES (Dashboard & Club)
+   ========================================= */
+.view-section        { display: none; }
+.view-section.active { display: block; animation: slideUpFade 0.4s ease-out; }
+
+/* =========================================
+   5. STATS GRID (Dashboard, Club, Admin)
+   ========================================= */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+}
+.stat-card {
+    background: #252525;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #333;
+    transition: transform 0.3s;
+}
+.stat-card:hover { transform: translateY(-5px); border-color: #444; }
+.stat-value { font-size: 1.6em; font-weight: bold; margin-top: 5px; }
+
+/* =========================================
+   6. EN-TÊTE (header-bar — Dashboard & Club)
+   ========================================= */
+.header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 25px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+#dashboard-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 10px 15px;
+    align-items: center;
+    width: 100%;
+}
+
+#player-icon {
+    grid-column: 1;
+    grid-row: 1;
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#header-actions {
+    grid-column: 2 / -1;
+    grid-row: 1;
+    justify-self: end;
+    display: flex;
+    gap: 10px;
+}
+
+#player-info {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#player-name {
+    margin: 0;
+    font-size: clamp(1.2rem, 5vw, 2.2rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #fff;
+    line-height: 1.2;
+}
+
+#player-tag {
+    color: #888;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+#tier-badge { flex-shrink: 0; }
+
+/* =========================================
+   7. SYSTÈME DE RANGS BRAWLERS
+   (Partagé entre Dashboard & Leaderboard)
+   ========================================= */
+
+/* Fond par rang */
+.brawler-card.rank-wood      { background: linear-gradient(160deg, #2a1f14 0%, #1a1208 100%); }
+.brawler-card.rank-bronze    { background: linear-gradient(160deg, #2e1c0e 0%, #1a0f08 100%); }
+.brawler-card.rank-silver    { background: linear-gradient(160deg, #1e2028 0%, #12141a 100%); }
+.brawler-card.rank-gold      { background: linear-gradient(160deg, #2a2200 0%, #1a1500 100%); }
+.brawler-card.rank-prestige1 { background: linear-gradient(160deg, #1e1030 0%, #120820 100%); }
+.brawler-card.rank-prestige2 { background: linear-gradient(160deg, #2a0e22 0%, #1a0815 100%); }
+.brawler-card.rank-prestige3 { background: linear-gradient(160deg, #1a1a2e 0%, #0e0e1a 100%); }
+
+/* Bordures par rang */
+.brawler-card.rank-wood   { border: 2px solid #6B4F2A !important; box-shadow: 0 2px 8px rgba(107, 79, 42, 0.2); }
+.brawler-card.rank-bronze { border: 2px solid #CD7F32 !important; box-shadow: 0 2px 8px rgba(205, 127, 50, 0.25); }
+.brawler-card.rank-silver { border: 2px solid #A0A8B8 !important; box-shadow: 0 2px 8px rgba(160, 168, 184, 0.2); }
+.brawler-card.rank-gold   { border: 2px solid #E6B800 !important; box-shadow: 0 2px 10px rgba(230, 184, 0, 0.3); }
+
+.brawler-card.rank-prestige1 {
+    border: 2.5px solid #7B3FD8 !important;
+    box-shadow: 0 0 8px rgba(123, 63, 216, 0.45), inset 0 0 6px rgba(123, 63, 216, 0.06);
+    animation: neon-prestige1 3s ease-in-out infinite;
+}
+.brawler-card.rank-prestige2 {
+    border: 2.5px solid #C83FA0 !important;
+    box-shadow: 0 0 8px rgba(200, 63, 160, 0.45), inset 0 0 6px rgba(200, 63, 160, 0.06);
+    animation: neon-prestige2 3s ease-in-out infinite;
+}
+.brawler-card.rank-prestige3 {
+    border: 2.5px solid #FFD700 !important;
+    animation: neon-prestige3 3s ease-in-out infinite;
+}
+
+/* Hover par rang */
+.brawler-card.rank-wood:hover {
+    transform: scale(1.08) translateY(-4px);
+    border-color: #9B7240 !important;
+    box-shadow: 0 6px 16px rgba(107, 79, 42, 0.45) !important;
+}
+.brawler-card.rank-bronze:hover {
+    transform: scale(1.08) translateY(-4px);
+    border-color: #E8962A !important;
+    box-shadow: 0 6px 16px rgba(205, 127, 50, 0.55) !important;
+}
+.brawler-card.rank-silver:hover {
+    transform: scale(1.08) translateY(-4px);
+    border-color: #D0D8E8 !important;
+    box-shadow: 0 6px 16px rgba(200, 210, 230, 0.45) !important;
+}
+.brawler-card.rank-gold:hover {
+    transform: scale(1.08) translateY(-4px);
+    border-color: #FFD700 !important;
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.55) !important;
+}
+.brawler-card.rank-prestige1:hover {
+    transform: scale(1.08) translateY(-4px);
+    animation-play-state: paused;
+    border-color: #AA66FF !important;
+    box-shadow: 0 6px 22px rgba(170, 102, 255, 0.7), inset 0 0 10px rgba(123, 63, 216, 0.12) !important;
+}
+.brawler-card.rank-prestige2:hover {
+    transform: scale(1.08) translateY(-4px);
+    animation-play-state: paused;
+    border-color: #FF66CC !important;
+    box-shadow: 0 6px 22px rgba(255, 102, 204, 0.7), inset 0 0 10px rgba(200, 63, 160, 0.12) !important;
+}
+.brawler-card.rank-prestige3:hover {
+    transform: scale(1.08) translateY(-4px);
+    animation-play-state: paused;
+    border-color: #FFE566 !important;
+    box-shadow: 0 6px 24px rgba(255, 215, 0, 0.75), inset 0 0 10px rgba(255, 215, 0, 0.12) !important;
+}
+
+/* Animations neon prestige */
+@keyframes neon-prestige1 {
+    0%, 100% { box-shadow: 0 0 6px rgba(123, 63, 216, 0.4), inset 0 0 5px rgba(123, 63, 216, 0.05); border-color: #7B3FD8; }
+    50%       { box-shadow: 0 0 14px rgba(155, 95, 240, 0.65), inset 0 0 8px rgba(123, 63, 216, 0.08); border-color: #9B5FF0; }
+}
+@keyframes neon-prestige2 {
+    0%, 100% { box-shadow: 0 0 6px rgba(200, 63, 160, 0.4), inset 0 0 5px rgba(200, 63, 160, 0.05); border-color: #C83FA0; }
+    50%       { box-shadow: 0 0 14px rgba(230, 95, 190, 0.65), inset 0 0 8px rgba(200, 63, 160, 0.08); border-color: #E65FBE; }
+}
+@keyframes neon-prestige3 {
+    0%, 100% { border-color: #FFD700; box-shadow: 0 0 6px rgba(255, 215, 0, 0.45), inset 0 0 5px rgba(255, 215, 0, 0.05); }
+    50%       { border-color: #FFE566; box-shadow: 0 0 14px rgba(255, 229, 102, 0.7), inset 0 0 8px rgba(255, 215, 0, 0.1); }
+}
+
+/* Badge de rang et icône de trophée sur les cartes */
+.brawler-rank-badge {
+    position: absolute;
+    bottom: 44px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+    z-index: 2;
+    transition: transform 0.2s ease;
+}
+.brawler-card:hover .brawler-rank-badge { transform: scale(1.2); }
+
+.brawler-trophy-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 3px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+}
+
+/* =========================================
+   8. CARTE CLUB (Dashboard & page Club)
+   ========================================= */
+.club-card {
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-bottom: 25px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.club-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 3px;
+    background: linear-gradient(90deg, #e6b800, #ffce00, #e6b800);
+    box-shadow: 0 0 10px rgba(255, 206, 0, 0.5);
+}
+.club-card:hover {
+    transform: translateY(-2px);
+    border-color: #444;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 206, 0, 0.15);
+}
+.club-icon {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    z-index: 1;
+}
+.club-title-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    z-index: 1;
+}
+.club-name {
+    font-family: 'Lilita One', cursive;
+    font-size: 1.4rem;
+    color: #fff;
+    margin: 0;
+    line-height: 1.1;
+    letter-spacing: 0.5px;
+}
+.club-tag {
+    font-family: monospace;
+    color: #ffce00;
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+.club-stats-row {
+    display: flex;
+    gap: 10px;
+    z-index: 1;
+}
+.club-stat-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-family: 'Lilita One', cursive;
+    font-size: 1.1rem;
+}
+.club-stat-item.trophies { color: #ffce00; }
+.club-stat-item.members  { color: #fff; }
+.stat-icon         { height: 1em; }
+.stat-icon-emoji   { font-size: 1.1em; }
+.max-members       { color: #888; font-family: sans-serif; font-size: 0.85rem; margin-left: 2px; }
+.club-deco-glow {
+    position: absolute;
+    bottom: -50px; right: -50px;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(255, 206, 0, 0.05) 0%, rgba(0, 0, 0, 0) 60%);
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* =========================================
+   9. GLOBAL NAVBAR
+   ========================================= */
+.navbar {
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #333;
+    height: 60px;
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+.nav-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+.nav-logo {
+    font-family: 'Audiowide', cursive;
+    font-size: 1.5rem;
+    color: #ffce00;
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.nav-logo:hover {
+    color: #fff;
+    text-decoration: none;
+    text-shadow: 0 0 10px rgba(255, 206, 0, 0.5);
+}
+.logo-img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.2s;
+}
+.nav-logo:hover .logo-img { transform: rotate(-5deg) scale(1.1); }
+
+.nav-links, .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.nav-link {
+    color: #ccc;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    width: auto;
+    margin: 0;
+    padding: 4px 0;
+    box-shadow: none;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.nav-link:hover { color: white; text-decoration: none; }
+
+.nav-btn-cta {
+    background: #ffce00;
+    color: black;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: transform 0.2s;
+}
+.nav-btn-cta:hover { transform: scale(1.05); text-decoration: none; }
+
+.nav-btn-user {
+    background: #333;
+    color: white;
+    border: 1px solid #555;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+    font-size: 0.9rem;
+}
+.nav-btn-user:hover { background: #444; }
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #252525;
+    border: 1px solid #444;
+    border-radius: 8px;
+    min-width: 180px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    padding: 5px 0;
+    margin-top: 10px;
+}
+.dropdown-menu::before {
+    content: "";
+    position: absolute;
+    top: -20px; left: 0;
+    width: 100%; height: 20px;
+    background: transparent;
+}
+.dropdown-menu.right-aligned { left: auto; right: 0; transform: none; }
+.dropdown:hover .dropdown-menu { display: block; animation: slideUpFade 0.2s ease-out; }
+.dropdown-menu a {
+    display: block;
+    padding: 10px 15px;
+    color: #ccc;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+.dropdown-menu a:hover { background: #333; color: #ffce00; }
+.dropdown-divider { height: 1px; background: #444; margin: 5px 0; }
+
+.nav-burger {
+    display: none;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+}
+
+.mobile-nav-overlay {
+    position: fixed; top: 0; right: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    display: flex;
+    justify-content: flex-end;
+}
+.mobile-nav-content {
+    width: 280px;
+    height: 100%;
+    background: #1a1a1a;
+    padding: 20px;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+.mobile-link {
+    padding: 15px 0;
+    border-bottom: 1px solid #333;
+    color: #eee;
+    font-size: 1.1rem;
+    text-decoration: none;
+}
+.mobile-user-info {
+    background: #252525;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    color: #aaa;
+    font-size: 0.9em;
+}
