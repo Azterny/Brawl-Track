@@ -1390,3 +1390,61 @@ span.flatpickr-weekday {
     .leaderboard-header { flex-direction: column; align-items: stretch; }
     .search-bar { max-width: 100%; }
 }
+
+/* --- LEADERBOARD HEADER (CÔTE À CÔTE SUR PC) --- */
+.leaderboard-header { 
+    display: flex; 
+    flex-direction: row; /* Forcer l'affichage côte à côte */
+    justify-content: center; 
+    align-items: center; 
+    margin-bottom: 30px; 
+    gap: 15px; 
+    width: 100%; 
+}
+@media (max-width: 768px) {
+    .leaderboard-header { flex-direction: column; align-items: stretch; }
+    #mobile-brawler-filter { display: block !important; }
+}
+
+/* --- ICÔNES JOUER/CLUB (PAS D'ARRONDIS) --- */
+.list-icon { 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 0 !important; /* Retrait de l'arrondi */
+    object-fit: cover; 
+}
+
+/* --- STATS DU LEADERBOARD (PLUS GROS SUR PC) --- */
+.list-stats { 
+    display: flex; 
+    align-items: center; 
+    gap: 30px; /* Plus d'espace entre trophées et joueurs */
+    font-weight: bold; 
+    font-size: 1.5rem; /* Augmentation de la taille de police */
+    flex-shrink: 0; 
+}
+.stat-img-icon {
+    height: 24px !important; /* Grandes icônes (trophées/wipeout/prestige) */
+    vertical-align: middle;
+}
+@media (max-width: 768px) {
+    .list-stats { flex-direction: column; align-items: flex-end; gap: 5px; font-size: 1.1rem; }
+    .stat-img-icon { height: 16px !important; }
+}
+
+/* --- CADRES AUTOURS DES ICONES BRAWLERS (PARTOUT) --- */
+.brawler-card img, 
+.brawler-item img, 
+.brawler-identity-icon {
+    border: 2px solid #555 !important;
+    border-radius: 6px !important;
+    padding: 2px !important;
+    background: #111 !important;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+}
+
+/* Affiner le cadre pour les brawlers dans la sidebar du leaderboard */
+.brawler-item img {
+    width: 45px;
+    height: 45px;
+}
