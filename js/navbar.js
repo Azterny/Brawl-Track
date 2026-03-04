@@ -81,13 +81,12 @@ function getRightActions(token, safeUsername, username) {
 function getMobileLinks(token, safeUsername, username) {
     let html = "";
     if (token) {
-        // FIX BUG-JS-1 : Suppression du lien "Mes Comptes" en double qui existait ici
         html += `
             <div class="mobile-user-info">Connecté en tant que <strong>${username}</strong></div>
             <a href="/" class="mobile-link">🏠 Accueil</a>
             <a href="/home" class="mobile-link">👤 Mes Comptes</a>
             <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link">⭐ Abonnement</a>
-            <a href="/leaderboard" class="mobile-nav-link">Classements</a>
+            <a href="/leaderboard" class="mobile-link">Classements</a>
             <a href="#" class="mobile-link">⚙️ Paramètres</a>
             <hr style="border-color:#333; width:100%; opacity:0.3;">
             <button onclick="logoutNav()" class="btn-danger" style="margin-top:20px;">Déconnexion</button>
@@ -96,7 +95,7 @@ function getMobileLinks(token, safeUsername, username) {
         html += `
             <a href="/" class="mobile-link">🏠 Accueil</a>
             <a href="#" onclick="focusSearch()" class="mobile-link">🔎 Recherche</a>
-            <a href="#" onclick="alert('🏆 Leaderboard : Bientôt Disponible !')" class="mobile-link">🏆 Leaderboard</a>
+            <a href="/leaderboard" class="mobile-link">🏆 Classements</a>
             <hr style="border-color:#333; width:100%; opacity:0.3;">
             <a href="/" class="nav-btn-cta" style="text-align:center; display:block;">Se Connecter</a>
         `;
