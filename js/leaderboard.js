@@ -152,16 +152,13 @@ async function renderBrawlerSplitScreen() {
         </div>
     `).join('');
 
-    let selectOptionsHtml = `<option value="">-- Choisir un Brawler --</option>` + globalBrawlersList.map(b => `
-        <option value="${b.id}" ${selectedBrawlerId == b.id ? 'selected' : ''}>${b.name}</option>
-    `).join('');
+    let datalistOptionsHtml = globalBrawlersList.map(b => `<option value="${b.name}">`).join('');
 
-    // Interface Mobile (Sera entièrement masquée sur PC par le CSS #mobile-brawler-select-container)
     mobileContainer.innerHTML = `
-        <input type="text" id="mobile-brawler-filter" placeholder="Chercher un brawler..." oninput="filterMobileBrawlerList()" style="width: 100%; max-width: 600px; display: block; margin: 0 auto 10px auto; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 1rem;">
-        <select class="mobile-brawler-select" id="mobile-brawler-select" onchange="selectBrawler(this.value)" style="display: block;">
-            ${selectOptionsHtml}
-        </select>
+        <input list="brawlers-datalist" id="mobile-brawler-select" placeholder="-- Chercher ou choisir un Brawler --" onchange="selectBrawlerFromDatalist(this.value)" style="width: 100%; max-width: 600px; display: block; margin: 0 auto 15px auto; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 1rem;">
+        <datalist id="brawlers-datalist">
+            ${datalistOptionsHtml}
+        </datalist>
     `;
 
     // Interface PC (Sidebar) + Contenu Droite
