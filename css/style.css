@@ -1500,3 +1500,40 @@ span.flatpickr-weekday {
     width: 45px;
     height: 45px;
 }
+
+/* --- LEADERBOARD HEADER (CÔTE À CÔTE SUR PC) --- */
+.leaderboard-header { 
+    display: flex; 
+    flex-direction: row; 
+    justify-content: center; 
+    align-items: center; 
+    margin-bottom: 30px; 
+    gap: 15px; 
+    width: 100%; 
+}
+
+/* Annulation du width: 100% global pour les mettre sur la même ligne */
+.zone-selector { 
+    width: auto !important; 
+    min-width: 180px; 
+    margin: 0 !important; 
+}
+.search-bar { 
+    flex-grow: 1; 
+    max-width: 600px; 
+    margin: 0 !important; 
+}
+
+/* --- GESTION DU RESPONSIVE ET DES DOUBLONS DE RECHERCHE BRAWLERS --- */
+#mobile-brawler-select-container { 
+    display: none; /* Toujours caché sur PC */
+}
+
+@media (max-width: 768px) {
+    .leaderboard-header { flex-direction: column; align-items: stretch; }
+    .zone-selector { width: 100% !important; }
+    .search-bar { max-width: 100%; }
+    
+    #mobile-brawler-select-container { display: block; } /* Affiché sur Mobile */
+    .brawler-sidebar { display: none; } /* Cache la sidebar PC sur Mobile */
+}
