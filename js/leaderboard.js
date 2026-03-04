@@ -255,8 +255,7 @@ function renderList(items, type, targetId = 'dynamic-content') {
                         <span style="color:#ffce00;" class="list-stat-item"><img src="/assets/trophy_normal.png" class="stat-img-icon"> ${item.trophies}</span>
                     </div>
                 </div>`;
-        } 
-        else if (type === 'club') {
+        } else if (type === 'club') {
             let icon = item.badgeId ? `https://brawlify.com/images/club-badges/96/${item.badgeId}.webp` : '/assets/default_icon.png';
             html += `
                 <div class="list-item" style="cursor:pointer;" onclick="window.location.href='/club/${item.tag.replace('#','')}'">
@@ -271,20 +270,22 @@ function renderList(items, type, targetId = 'dynamic-content') {
                         <span style="color:#ffce00;" class="list-stat-item"><img src="/assets/trophy_normal.png" class="stat-img-icon"> ${item.trophies}</span>
                     </div>
                 </div>`;
-        }
-        else if (type === 'brawler_ranking') {
+        } else if (type === 'brawler_ranking') {
             let rankData = getBrawlerRank(item.trophies);
             let prestige = Math.floor(item.trophies / 1000);
+            // Récupération de l'icône de profil du joueur
+            let icon = (item.icon && item.icon.id) ? `https://cdn.brawlify.com/profile-icons/regular/${item.icon.id}.png` : '/assets/default_icon.png';
+            
             html += `
                 <div class="list-item" style="cursor:pointer;" onclick="window.location.href='/player/${item.tag.replace('#','')}'">
                     <div class="list-rank">#${item.rank}</div>
-                    <img src="${RANK_CONFIG[rankData].icon}" style="height:40px; border-radius: 0;" title="${RANK_CONFIG[rankData].label}">
+                    <img src="${icon}" class="list-icon">
                     <div class="list-info">
                         <div class="list-name" style="color: ${nameColor}">${item.name}</div>
                         <div class="list-tag">${item.tag}</div>
                     </div>
                     <div class="list-stats">
-                        ${prestige > 0 ? `<span style="color:#8A4FE8;" class="list-stat-item"><img src="/assets/total prestige.png" class="stat-img-icon"> ${prestige}</span>` : ''}
+                        ${prestige > 0 ? `<span style="color:#8A4FE8;" class="list-stat-item"><img src="${RANK_CONFIG[rankData].icon}" class="stat-img-icon" style="border-radius: 0;" title="${RANK_CONFIG[rankData].label}"> ${prestige}</span>` : ''}
                         <span style="color:#ffce00;" class="list-stat-item"><img src="${RANK_CONFIG[rankData].trophyIcon}" class="stat-img-icon"> ${item.trophies}</span>
                     </div>
                 </div>`;
