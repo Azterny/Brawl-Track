@@ -629,7 +629,7 @@ function updateBrawlerNavigationUI(data) {
     let firstDataPointDate = new Date();
     if (data && data.length > 0) {
         let d = data[0].date || data[0].recorded_at;
-        firstDataPointDate = new Date(d.replace(' ', 'T'));
+        firstDataPointDate = new Date(d.replace(' ', 'T') + 'Z');
     }
 
     const range = calculateDateRange(currentBrawlerMode, currentBrawlerChartOffset, firstDataPointDate);
@@ -685,7 +685,7 @@ function getInterpolatedValue(targetDate, allData) {
 
     for (let pt of allData) {
         let d = pt.date || pt.recorded_at;
-        if (d) d = d.replace(' ', 'T');
+        if (d) d = d.replace(' ', 'T') + 'Z';
         let ptTs = new Date(d).getTime();
 
         if (ptTs <= targetTs) prev = { ...pt, ts: ptTs };
@@ -987,7 +987,7 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
     if (historyData && historyData.length > 0) {
         const d = historyData[0].date || historyData[0].recorded_at;
         if (d) {
-            minDate = new Date(d.replace(' ', 'T'));
+            minDate = new Date(d.replace(' ', 'T') + 'Z');
             const now = new Date();
             daysOfHistory = (now - minDate) / (1000 * 60 * 60 * 24);
         }
@@ -1144,7 +1144,7 @@ function preprocessData(rawData, isBrawler) {
         }
 
         processed.push({
-            date: (d.date || d.recorded_at).replace(' ', 'T'),
+            date: (d.date || d.recorded_at).replace(' ', 'T') + 'Z',
             trophies: displayVal,
             customType: specialType,
             customLabel: specialLabel
