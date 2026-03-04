@@ -3,36 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brawl Track - Classements</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <title>Brawl Track</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
 </head>
 <body>
-    <div id="navbar-container"></div>
+    <div id="global-navbar"></div>
 
-    <div class="container main-content" style="margin-top: 80px;">
-        
-        <h1 id="page-title" style="text-align: center; margin-bottom: 20px;">Classements</h1>
-        
-        <div id="mobile-brawler-select-container"></div>
-
-        <div class="leaderboard-header" id="lb-header" style="display: none;">
-            <select id="zone-select" class="zone-selector" onchange="changeZone()">
-                <option value="global">Global</option>
-                <option value="fr">France</option>
-                <option value="gb">Royaume-Uni</option>
-                <option value="us">États-Unis</option>
-            </select>
-            <input type="text" id="search-input" class="search-bar" placeholder="Rechercher (Nom ou Tag)..." oninput="filterList()">
+    <div class="container wide">
+        <div class="header-bar" style="margin-top: 20px;">
+            <div id="dashboard-header">
+                <img id="player-icon" src="/assets/loading_icon.png" onerror="this.src='/assets/default_icon.png'" alt="Profile Icon">
+                <div id="player-info">
+                    <h1 id="player-name">Loading...</h1>
+                    <div id="player-tag" style="margin-top: 2px;">#TAG</div>
+                </div>
+                <div id="header-actions"></div>
+            </div>
         </div>
 
-        <div id="dynamic-content"></div>
+        <div id="club-card" class="club-card hidden">
+        </div>
         
+        <div id="view-dashboard" class="view-section active">
+            <div id="stats-area" class="stats-grid"></div>
+            <div id="chart-container" style="margin-top: 30px; background: #222; padding: 15px; border-radius: 10px; position: relative;">
+                <div id="chart-content-wrapper">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <h3 style="margin: 0;">📈 Progression</h3>
+                            <span id="trophy-variation" style="font-weight: bold; font-size: 1em;"></span>
+                        </div>
+                    </div>
+                    <div class="chart-filters">
+                        <button id="btn-1h" onclick="setChartMode(0.042)" class="filter-btn hidden">1H</button> 
+                        <button id="btn-24h" onclick="setChartMode(1)" class="filter-btn">Jour</button>
+                        <button id="btn-7d" onclick="setChartMode(7)" class="filter-btn hidden">Semaine</button>
+                        <button id="btn-31d" onclick="setChartMode(31)" class="filter-btn hidden">Mois</button>
+                        <button id="btn-365d" onclick="setChartMode(365)" class="filter-btn hidden">Année</button>
+                        <button id="btn-all" onclick="setChartMode(0)" class="filter-btn active">Tout</button>
+                    </div>
+
+                    <div id="chart-nav-month" class="chart-nav-bar hidden" style="margin-bottom: 5px; background: #222; border:none; padding: 5px;">
+                        <button class="nav-arrow" onclick="navigateMonth(1)">❮❮</button>
+                        <span id="chart-month-label" style="color:#aaa; font-size:0.9em;">Mois</span>
+                        <button class="nav-arrow" onclick="navigateMonth(-1)">❯❯</button>
+                    </div>
+
+                    <div id="chart-navigation" class="chart-nav-bar hidden">
+                        <button id="nav-btn-prev" class="nav-arrow" onclick="navigateChart(1)">❮</button>
+                        <span id="chart-period-label" style="font-weight:bold; min-width: 150px; text-align:center;">Aujourd'hui</span>
+                        <div id="picker-container-main" style="position: relative; display:inline-block;">
+                            <span id="trigger-picker-main" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</span>
+                            <input type="text" id="picker-input-main" style="display:none;"> 
+                        </div>
+                        <button id="nav-btn-next" class="nav-arrow" onclick="navigateChart(-1)">❯</button>
+                    </div>
+                    
+                    <div id="chart-navigation-hour" class="chart-nav-bar hidden" style="margin-top: 5px;">
+                            <button id="nav-btn-prev-hour" class="nav-arrow" onclick="navigateHour(1)">❮</button>
+                            <span id="chart-hour-label" style="font-weight:bold; min-width: 120px; text-align:center;">--:--</span>
+                            <button id="nav-btn-next-hour" class="nav-arrow" onclick="navigateHour(-1)">❯</button>
+                    </div>
+                    
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="trophyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #444; padding-top: 20px;">
+                <h3 style="margin: 0; display: flex; align-items: center;">
+                    <img src="/assets/icons/wipeout.png" style="height: 1.2em; margin-right: 8px;"> Brawlers
+                </h3>
+                <select id="sort-brawlers" onchange="sortBrawlers()" style="width: auto; padding: 5px; background: #333; color: white; border: 1px solid #555;">
+                    <option value="trophies">▼ Trophées</option>
+                    <option value="name">A-Z Nom</option>
+                    <option value="id">Base (ID)</option>
+                </select>
+            </div>
+            
+            <div id="brawlers-grid" style="margin-top: 15px;"></div>
+        </div>
+
+        <div id="view-brawlers" class="view-section">
+            
+            <div class="brawler-header-nav">
+                <h2 style="margin:0;">📊 Statistiques</h2>
+                <button class="btn-3d btn-yellow btn-adp" onclick="switchView('dashboard'); window.history.pushState({}, '', '/player/' + currentTagString);">⬅ Retour</button>
+            </div>
+
+            <div class="brawler-identity-card">
+                <img id="selected-brawler-img" src="" alt="Brawler Icon" class="brawler-identity-icon">
+                
+                <div class="brawler-identity-info">
+                    <h1 id="selected-brawler-name">Brawler</h1>
+                    <div id="brawler-trophy-variation" style="font-size: 0.9em; color: #aaa;">--</div>
+                </div>
+            </div>
+
+            <input type="hidden" id="selected-brawler-id">
+
+            <div style="background: #222; padding: 15px; border-radius: 10px; position: relative; margin-top: 20px;">
+    
+                <div class="chart-filters">
+                    <button id="btn-brawler-1h" onclick="setBrawlerChartMode(0.042)" class="filter-btn filter-brawler-btn blue-active hidden">1H</button>
+                    <button id="btn-brawler-24h" onclick="setBrawlerChartMode(1)" class="filter-btn filter-brawler-btn blue-active">Jour</button>
+                    <button id="btn-brawler-7d" onclick="setBrawlerChartMode(7)" class="filter-btn filter-brawler-btn blue-active hidden">Semaine</button>
+                    <button id="btn-brawler-31d" onclick="setBrawlerChartMode(31)" class="filter-btn filter-brawler-btn blue-active hidden">Mois</button>
+                    <button id="btn-brawler-365d" onclick="setBrawlerChartMode(365)" class="filter-btn filter-brawler-btn blue-active hidden">Année</button>
+                    <button id="btn-brawler-all" onclick="setBrawlerChartMode(0)" class="filter-btn filter-brawler-btn blue-active active">Tout</button>
+                </div>
+            
+                <div id="brawler-chart-navigation" class="chart-nav-bar hidden">
+                    <button id="brawler-nav-btn-prev" class="nav-arrow" onclick="navigateBrawlerChart(1)">❮</button>
+                    
+                    <span id="brawler-chart-period-label" style="font-weight:bold; min-width: 150px; text-align:center;">Aujourd'hui</span>
+                    
+                    <div id="picker-container-brawler" style="position: relative; display:inline-block;">
+                        <span id="trigger-picker-brawler" style="cursor: pointer; font-size: 1.2em;" title="Choisir une date">📅</span>
+                        <input type="text" id="picker-input-brawler" style="display:none;">
+                    </div>
+                
+                    <button id="brawler-nav-btn-next" class="nav-arrow" onclick="navigateBrawlerChart(-1)">❯</button>
+                </div>
+                
+                <div id="brawler-chart-navigation-hour" class="chart-nav-bar hidden" style="margin-top: 5px;">
+                    <button id="brawler-nav-btn-prev-hour" class="nav-arrow" onclick="navigateBrawlerHour(1)">❮</button>
+                    <span id="brawler-chart-hour-label" style="font-weight:bold; min-width: 120px; text-align:center;">--:--</span>
+                    <button id="brawler-nav-btn-next-hour" class="nav-arrow" onclick="navigateBrawlerHour(-1)">❯</button>
+                </div>
+                
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="brawlerChartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="/js/config.js"></script>
     <script src="/js/utils.js"></script>
-    <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
-    <script src="/js/leaderboard.js"></script>
+    <script src="/js/dashboard.js"></script>
+    
+    <script>
+        // Lancement immédiat
+        window.onload = function() {
+            initDashboard();
+        };
+    </script>
 </body>
 </html>
