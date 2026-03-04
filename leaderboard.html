@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div id="navbar-container"></div>
-
     <div id="global-navbar"></div>
+
+    <div class="container wide main-content" style="margin-top: 80px;">
         
         <h1 id="page-title" style="text-align: center; margin-bottom: 20px;">Classements</h1>
         
@@ -17,12 +17,19 @@
 
         <div class="leaderboard-header" id="lb-header" style="display: none;">
             <select id="zone-select" class="zone-selector" onchange="changeZone()">
-                <option value="global">Global</option>
-                <option value="fr">France</option>
-                <option value="gb">Royaume-Uni</option>
-                <option value="us">États-Unis</option>
+                <option value="global">🌍 Global</option>
+                <option value="fr">🇫🇷 France</option>
+                <option value="gb">🇬🇧 Royaume-Uni</option>
+                <option value="us">🇺🇸 États-Unis</option>
+                <option value="de">🇩🇪 Allemagne</option>
+                <option value="es">🇪🇸 Espagne</option>
+                <option value="it">🇮🇹 Italie</option>
+                <option value="br">🇧🇷 Brésil</option>
+                <option value="jp">🇯🇵 Japon</option>
+                <option value="kr">🇰🇷 Corée du Sud</option>
+                <option value="ca">🇨🇦 Canada</option>
             </select>
-            <input type="text" id="search-input" class="search-bar" placeholder="Rechercher (Nom ou Tag)..." oninput="filterList()">
+            <input type="text" id="search-input" class="search-bar" placeholder="Rechercher un Joueur ou un Club..." oninput="filterList()">
         </div>
 
         <div id="dynamic-content"></div>
