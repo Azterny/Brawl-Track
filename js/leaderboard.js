@@ -255,7 +255,7 @@ function renderList(items, type, targetId = 'dynamic-content') {
             html += `
                 <div class="list-item" style="cursor:pointer;" onclick="window.location.href='/player/${item.tag.replace('#','')}'">
                     <div class="list-rank">#${item.rank}</div>
-                    <img src="${icon}" class="list-icon">
+                    <img src="${icon}" class="list-icon" onerror="this.src='/assets/default_icon.png'">
                     <div class="list-info">
                         <div class="list-name" style="color: ${nameColor}">${item.name}</div>
                         <div class="list-tag">${item.tag}</div>
@@ -269,7 +269,7 @@ function renderList(items, type, targetId = 'dynamic-content') {
             html += `
                 <div class="list-item" style="cursor:pointer;" onclick="window.location.href='/club/${item.tag.replace('#','')}'">
                     <div class="list-rank">#${item.rank}</div>
-                    <img src="${icon}" class="list-icon">
+                    <img src="${icon}" class="list-icon" onerror="this.src='/assets/default_icon.png'">
                     <div class="list-info">
                         <div class="list-name">${item.name}</div>
                         <div class="list-tag">${item.tag}</div>
@@ -288,7 +288,7 @@ function renderList(items, type, targetId = 'dynamic-content') {
             html += `
                 <div class="list-item" style="cursor:pointer;" onclick="window.location.href='/player/${item.tag.replace('#','')}'">
                     <div class="list-rank">#${item.rank}</div>
-                    <img src="${icon}" class="list-icon">
+                    <img src="${icon}" class="list-icon" onerror="this.src='/assets/default_icon.png'">
                     <div class="list-info">
                         <div class="list-name" style="color: ${nameColor}">${item.name}</div>
                         <div class="list-tag">${item.tag}</div>
