@@ -52,20 +52,44 @@
     <div id="global-navbar"></div>
 
     <div class="container" style="margin-top: 15vh; text-align: center; max-width: 500px;">
-        <h1 style="font-size: 6rem; color: #ff5555; margin: 0; text-shadow: 0 0 20px rgba(255,85,85,0.4);">404</h1>
-        <h2 id="error-title" style="color: #ffce00; margin-top: 10px;">Page introuvable</h2>
-        <p id="error-desc" style="color: #aaa; margin: 20px 0 30px 0; font-size: 1.1rem;">
-            La page que vous recherchez n'existe pas.
-        </p>
-        <button onclick="window.location.href='/'" class="btn-3d btn-yellow w-auto" style="padding: 10px 30px; font-size: 1.2rem;">🏠 Retour à l'accueil</button>
+        
+        <div id="loading-content">
+            <img src="/assets/loading_icon.png" class="spin" width="50" alt="Chargement...">
+            <p style="color: #aaa; margin-top: 20px; font-size: 1.1rem;">Recherche de la page en cours...</p>
+        </div>
+
+        <div id="error-content" style="display: none;">
+            <h1 style="font-size: 6rem; color: #ff5555; margin: 0; text-shadow: 0 0 20px rgba(255,85,85,0.4);">404</h1>
+            <h2 id="error-title" style="color: #ffce00; margin-top: 10px;">Page introuvable</h2>
+            <p id="error-desc" style="color: #aaa; margin: 20px 0 30px 0; font-size: 1.1rem;">
+                La page que vous recherchez n'existe pas.
+            </p>
+            <button onclick="window.location.href='/'" class="btn-3d btn-yellow w-auto" style="padding: 10px 30px; font-size: 1.2rem;">🏠 Retour à l'accueil</button>
+        </div>
+        
     </div>
 
     <script src="/js/config.js"></script>
     <script src="/js/navbar.js"></script>
     <script>
+        // Passage du mode Chargement au mode Erreur après 3 secondes
+        setTimeout(() => {
+            const loadingContent = document.getElementById('loading-content');
+            const errorContent = document.getElementById('error-content');
+            
+            if(loadingContent && errorContent) {
+                loadingContent.style.display = 'none';
+                errorContent.style.display = 'block';
+            }
+        }, 3000);
+
         // Si la redirection a été faite manuellement avec ?target=...
         const target = new URLSearchParams(window.location.search).get('target');
         if (target) {
+            // Si on sait déjà que c'est une erreur via ?target=..., on affiche l'erreur directement sans attendre
+            document.getElementById('loading-content').style.display = 'none';
+            document.getElementById('error-content').style.display = 'block';
+
             document.getElementById('error-title').innerText = "Joueur ou compte introuvable";
             document.getElementById('error-desc').innerHTML = `La cible <strong>#${decodeURIComponent(target)}</strong> n'existe pas ou vous n'y avez pas accès.`;
         }
