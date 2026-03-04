@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function() {
 // --- GÉNÉRATEURS DE HTML ---
 
 function getCenterLinks(token) {
-    let links = `<a href="#" onclick="alert('🏆 Leaderboard : Bientôt Disponible !')" class="nav-link">🏆 Leaderboard</a>`;
+    let links = `<a href="/leaderboard" class="nav-link">Classements</a>`;
     
     if (!token) {
         links += `<a href="#" onclick="focusSearch()" class="nav-link">🔎 Recherche</a>`;
@@ -87,7 +87,7 @@ function getMobileLinks(token, safeUsername, username) {
             <a href="/" class="mobile-link">🏠 Accueil</a>
             <a href="/home" class="mobile-link">👤 Mes Comptes</a>
             <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link">⭐ Abonnement</a>
-            <a href="#" class="mobile-link">🏆 Leaderboard</a>
+            <a href="/leaderboard" class="mobile-nav-link">Classements</a>
             <a href="#" class="mobile-link">⚙️ Paramètres</a>
             <hr style="border-color:#333; width:100%; opacity:0.3;">
             <button onclick="logoutNav()" class="btn-danger" style="margin-top:20px;">Déconnexion</button>
