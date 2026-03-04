@@ -1203,9 +1203,13 @@ function renderGenericChart(config) {
 
     if (mode > 0) {
         if (startDate > firstDataPointDate) {
-            const valLeft = getInterpolatedValue(startDate, processedData);
-            if (valLeft !== null) {
-                finalDataPoints.unshift({ x: startDate, y: Math.round(valLeft), type: 'ghost' });
+            // FIX : Ne créer un fantôme que s'il n'y a pas déjà un vrai point EXACTEMENT à cette date
+            const hasExactStart = finalDataPoints.some(pt => pt.x.getTime() === startDate.getTime());
+            if (!hasExactStart) {
+                const valLeft = getInterpolatedValue(startDate, processedData);
+                if (valLeft !== null) {
+                    finalDataPoints.unshift({ x: startDate, y: Math.round(valLeft), type: 'ghost' });
+                }
             }
         }
 
@@ -1215,9 +1219,13 @@ function renderGenericChart(config) {
             }
         } else {
             if (endDate < now) {
-                const valRight = getInterpolatedValue(endDate, processedData);
-                if (valRight !== null) {
-                    finalDataPoints.push({ x: endDate, y: Math.round(valRight), type: 'ghost' });
+                // FIX : Éviter le doublon à droite
+                const hasExactEnd = finalDataPoints.some(pt => pt.x.getTime() === endDate.getTime());
+                if (!hasExactEnd) {
+                    const valRight = getInterpolatedValue(endDate, processedData);
+                    if (valRight !== null) {
+                        finalDataPoints.push({ x: endDate, y: Math.round(valRight), type: 'ghost' });
+                    }
                 }
             }
         }
