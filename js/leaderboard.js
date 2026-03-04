@@ -196,6 +196,15 @@ window.filterMobileBrawlerList = function() {
     select.innerHTML = selectOptionsHtml;
 };
 
+window.selectBrawlerFromDatalist = function(name) {
+    const brawler = globalBrawlersList.find(b => b.name.toLowerCase() === name.toLowerCase());
+    if (brawler) {
+        selectBrawler(brawler.id);
+        // On retire le focus pour fermer le clavier sur mobile
+        document.getElementById('mobile-brawler-select').blur();
+    }
+};
+
 async function selectBrawler(id, skipPushState = false) {
     if (!id) return;
     selectedBrawlerId = id;
