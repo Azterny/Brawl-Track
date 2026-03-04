@@ -1,0 +1,65 @@
+/* =========================================
+   BASE.CSS — Typographie, couleurs, fond,
+   conteneurs globaux, utilitaires et animations
+   ========================================= */
+
+/* --- RESET & BODY --- */
+body {
+    background-color: #121212;
+    color: white;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    color-scheme: dark;
+    overflow-x: hidden;
+}
+
+h1, h2, h3 {
+    font-family: 'Lilita One', cursive;
+    text-transform: uppercase;
+    color: #ffce00;
+    letter-spacing: 1px;
+}
+
+a { text-decoration: none; transition: 0.2s; }
+a:hover { text-decoration: underline; }
+
+/* --- CONTENEURS --- */
+.container {
+    padding: 25px;
+    max-width: 400px;
+    margin: 40px auto;
+    background: #1e1e1e;
+    border-radius: 20px;
+    text-align: center;
+    border: 1px solid #333;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+}
+
+.container.wide {
+    max-width: 900px;
+}
+
+/* --- UTILITAIRE --- */
+.hidden { display: none !important; }
+
+/* --- ANIMATIONS GLOBALES --- */
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes menuPop {
+    from { opacity: 0; transform: scale(0.8) translateY(-10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}

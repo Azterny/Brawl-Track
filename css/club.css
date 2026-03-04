@@ -1,0 +1,93 @@
+/* =========================================
+   CLUB.CSS — Styles spécifiques à la page
+   club (liste des membres)
+   ========================================= */
+
+/* =========================================
+   1. LIGNE DE MEMBRE
+   ========================================= */
+.member-row {
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.member-row:hover {
+    transform: translateX(5px);
+    background: #222;
+    border-color: #ffce00;
+}
+
+/* =========================================
+   2. SOUS-ÉLÉMENTS MEMBRE
+   ========================================= */
+.member-rank {
+    font-family: 'Lilita One', cursive;
+    color: #555;
+    font-size: 1.2rem;
+    width: 30px;
+    text-align: center;
+}
+.member-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    border: 2px solid #444;
+    background: #000;
+}
+.member-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+.member-name {
+    font-family: 'Lilita One', cursive;
+    font-size: 1.3rem;
+    text-shadow: 1px 2px 3px rgba(0, 0, 0, 0.8);
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.member-tag {
+    font-family: monospace;
+    color: #888;
+    font-size: 0.85rem;
+    margin-top: 2px;
+}
+
+/* =========================================
+   3. RÔLE MEMBRE
+   ========================================= */
+.member-role-container { width: 130px; text-align: center; }
+.member-role {
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.role-senior   { background: rgba(0, 210, 255, 0.1);  color: #00d2ff; border: 1px solid rgba(0, 210, 255, 0.3); }
+.role-vice     { background: rgba(255, 153, 0, 0.1);   color: #ff9900; border: 1px solid rgba(255, 153, 0, 0.3); }
+.role-president { background: rgba(255, 206, 0, 0.1); color: #ffce00; border: 1px solid rgba(255, 206, 0, 0.3); }
+
+/* =========================================
+   4. TROPHÉES MEMBRE
+   ========================================= */
+.member-trophies {
+    font-family: 'Lilita One', cursive;
+    color: #ffce00;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100px;
+    justify-content: flex-end;
+}
+.member-trophies img { height: 1em; }

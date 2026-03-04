@@ -1,0 +1,97 @@
+/* =========================================
+   RESPONSIVE.CSS — Toutes les media queries
+   regroupées et dédupliquées
+   ========================================= */
+
+/* =========================================
+   MOBILE — max-width: 480px
+   ========================================= */
+@media (max-width: 480px) {
+    .header-bar    { padding-bottom: 10px; margin-bottom: 15px; }
+    .landing-column { min-width: 100%; }
+    .logo-img      { height: 32px; }
+}
+
+/* =========================================
+   TABLETTE / MOBILE LARGE — max-width: 600px
+   ========================================= */
+@media (max-width: 600px) {
+    /* Club card */
+    .club-card      { padding: 15px; }
+    .club-title-area { width: calc(100% - 70px); }
+    .club-stats-row { width: 100%; margin-top: 5px; justify-content: flex-start; }
+    .club-deco-glow { display: none !important; }
+
+    /* Membres du club */
+    .member-role-container { display: none; }
+    .member-row   { padding: 10px; gap: 10px; }
+    .member-rank  { width: 20px; font-size: 1rem; }
+    .member-name  { font-size: 1.1rem; }
+    .member-trophies { font-size: 1.1rem; width: auto; }
+
+    /* Events */
+    .event-body       { padding-right: 50px; }
+    .event-mode-icon  { height: 40px; right: 10px; bottom: 12px; opacity: 1 !important; }
+}
+
+/* =========================================
+   TABLETTE — max-width: 768px
+   ========================================= */
+@media (max-width: 768px) {
+    /* Navbar */
+    .desktop-only { display: none !important; }
+    .nav-burger   { display: block; }
+
+    /* Dashboard */
+    #dashboard-header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 15px;
+    }
+
+    /* Leaderboard */
+    .leaderboard-header { flex-direction: column; align-items: stretch; }
+    .zone-selector  { width: 100% !important; }
+    .search-bar     { max-width: 100%; }
+    .brawler-sidebar { display: none; }
+    #mobile-brawler-select-container { display: block; }
+    .list-stats { flex-direction: column; align-items: flex-end; gap: 5px; font-size: 1.1rem; }
+    .stat-img-icon { height: 16px !important; }
+    .list-item  { padding: 10px; }
+    .list-rank  { width: 35px; font-size: 1.1rem; }
+    .list-icon  { width: 40px; height: 40px; }
+
+    /* Performance : suppression des ombres lourdes */
+    .club-card,
+    .club-card::before,
+    .brawler-card,
+    .profile-card,
+    .btn-3d { box-shadow: none !important; }
+
+    .rank-prestige1 { box-shadow: none !important; border: 2px solid; border-color: #ff44ff !important; }
+    .rank-prestige2 { box-shadow: none !important; border: 2px solid; border-color: #ff0055 !important; }
+    .rank-prestige3 { box-shadow: none !important; border: 2px solid; border-color: #00ffff !important; }
+
+    .club-icon,
+    .profile-icon,
+    .brawler-identity-icon { filter: none !important; }
+}
+
+/* =========================================
+   DESKTOP — min-width: 600px
+   (overrides du dashboard header en flex)
+   ========================================= */
+@media (min-width: 600px) {
+    #dashboard-header {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+        padding: 10px;
+    }
+    #player-icon   { width: 84px; height: 84px; margin: 0; }
+    #player-info   { flex-grow: 1; margin: 0; }
+    #header-actions { margin: 0; justify-self: auto; }
+    #player-name   { font-size: 2.2rem; }
+}

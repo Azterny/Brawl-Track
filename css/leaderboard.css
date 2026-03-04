@@ -1,0 +1,196 @@
+/* =========================================
+   LEADERBOARD.CSS — Styles spécifiques à
+   la page classements (header, liste,
+   brawler split-screen, stats items)
+   ========================================= */
+
+/* =========================================
+   1. HEADER LEADERBOARD
+   ========================================= */
+.leaderboard-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+    gap: 15px;
+    width: 100%;
+}
+
+.zone-selector {
+    background: #222;
+    color: #fff;
+    border: 1px solid #444;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    width: auto !important;
+    min-width: 180px;
+    margin: 0 !important;
+}
+
+.search-bar {
+    flex-grow: 1;
+    max-width: 600px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    background: #222;
+    color: #fff;
+    font-size: 1rem;
+    margin: 0 !important;
+}
+
+/* =========================================
+   2. MENU CARTES (page d'accueil leaderboard)
+   ========================================= */
+.menu-cards {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+.menu-card {
+    background: #2a2a2a;
+    padding: 30px 20px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    width: 280px;
+    border: 1px solid #333;
+}
+.menu-card:hover { background: #333; transform: translateY(-5px); border-color: #555; }
+.menu-card h2   { margin: 15px 0 5px 0; font-size: 1.5rem; }
+.menu-card p    { color: #aaa; margin: 0; }
+
+/* =========================================
+   3. LISTE D'ITEMS
+   ========================================= */
+.list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+.list-item {
+    display: flex;
+    align-items: center;
+    background: #2a2a2a;
+    padding: 12px 20px;
+    border-radius: 8px;
+    gap: 15px;
+    transition: 0.2s;
+    border: 1px solid transparent;
+}
+.list-item:hover { background: #333; border-color: #444; }
+
+.list-rank {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #888;
+    width: 50px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.list-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 0;        /* Pas d'arrondi pour les icônes mode/club */
+    object-fit: cover;
+}
+.list-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+}
+.list-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.list-tag { font-size: 0.85rem; color: #aaa; margin-top: 2px; }
+
+.list-stats {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    font-weight: bold;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+.list-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.stat-img-icon {
+    height: 24px !important;
+    vertical-align: middle;
+}
+
+/* =========================================
+   4. SPLIT SCREEN BRAWLERS
+   ========================================= */
+.brawler-split {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    width: 100%;
+}
+.brawler-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: #222;
+    padding: 15px;
+    border-radius: 12px;
+    max-height: 75vh;
+    overflow-y: auto;
+    border: 1px solid #333;
+}
+.brawler-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+.brawler-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.2s;
+    margin-bottom: 5px;
+}
+.brawler-item:hover,
+.brawler-item.active { background: #333; border-left: 4px solid #ffce00; }
+.brawler-item img {
+    width: 45px;
+    height: 45px;
+    border: 2px solid #555;
+    border-radius: 6px;
+    padding: 2px;
+    background: #111;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.8);
+}
+
+/* Sélecteur mobile brawler */
+#mobile-brawler-select-container { display: none; }
+.mobile-brawler-select {
+    display: none;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto 15px auto;
+    padding: 12px;
+    background: #222;
+    color: white;
+    border-radius: 8px;
+    border: 1px solid #444;
+    font-size: 1rem;
+}

@@ -1,0 +1,302 @@
+/* =========================================
+   DASHBOARD.CSS — Styles spécifiques au
+   dashboard joueur (graphique, filtres,
+   brawlers grid, vue détail brawler,
+   overlays, flatpickr)
+   ========================================= */
+
+/* =========================================
+   1. FILTRES GRAPHIQUE (SCROLL MOBILE)
+   ========================================= */
+.chart-filters {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 8px;
+    margin-bottom: 15px;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 5px;
+}
+.chart-filters::-webkit-scrollbar { display: none; }
+
+.filter-btn {
+    width: auto !important;
+    margin-top: 0 !important;
+    flex: 0 0 auto;
+    background: #333;
+    color: #ccc;
+    border: 1px solid #444;
+    padding: 8px 16px;
+    font-size: 0.85em;
+    border-radius: 20px;
+    box-shadow: none !important;
+}
+.filter-btn:hover        { background: #444; color: white; transform: translateY(-1px); }
+.filter-btn.active       {
+    background: #ffce00;
+    color: black;
+    border-color: #ffce00;
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(255, 206, 0, 0.4) !important;
+}
+
+/* Variante bleue (brawler chart) */
+button.filter-btn.blue-active.active {
+    background-color: #00d2ff !important;
+    border-color: #00d2ff !important;
+    color: #000 !important;
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.6) !important;
+}
+button.filter-btn.blue-active:hover          { color: #00d2ff; border-color: #00d2ff; }
+button.filter-btn.blue-active.active:hover   { background-color: #33cfff !important; color: #000 !important; }
+
+/* =========================================
+   2. BRAWLERS GRID
+   ========================================= */
+#brawlers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    gap: 10px;
+}
+.brawler-card {
+    background: #222;
+    border-radius: 8px;
+    padding: 6px;
+    text-align: center;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+    position: relative;
+    min-height: 130px;
+    padding-bottom: 6px !important;
+}
+.brawler-card:hover               { transform: scale(1.1) translateY(-5px); z-index: 10; background: #333; border-color: #ffce00; }
+.brawler-card[style*="grayscale"] { opacity: 0.5; filter: grayscale(100%); }
+.brawler-card[style*="grayscale"]:hover { filter: grayscale(0%); opacity: 1; }
+
+.brawler-card .brawler-trophy-count { font-size: 0.82em !important; font-weight: bold; }
+.brawler-card .brawler-name-label   { font-size: 0.85em !important; }
+
+/* =========================================
+   3. NAVIGATION GRAPHIQUE
+   ========================================= */
+.chart-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    background: #181818;
+    margin: 10px auto 15px auto;
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid #333;
+    width: fit-content;
+}
+
+#chart-period-label {
+    font-weight: bold;
+    color: #fff;
+    font-size: 0.95em;
+    min-width: 140px;
+    text-align: center;
+    user-select: none;
+}
+
+.nav-arrow {
+    background: transparent !important;
+    border: 1px solid #444 !important;
+    color: #ffce00 !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: none !important;
+}
+.nav-arrow:hover  { background: #333 !important; border-color: #ffce00 !important; transform: scale(1.1); }
+.nav-arrow:active { transform: scale(0.95); }
+.nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: #333 !important;
+    color: #888 !important;
+    transform: none !important;
+    pointer-events: none;
+}
+
+.date-picker-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.date-picker-wrapper:hover { transform: scale(1.2); }
+
+/* =========================================
+   4. VUE DÉTAIL BRAWLER
+   ========================================= */
+.brawler-header-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+}
+
+.btn-back {
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    width: auto;
+    min-width: 100px;
+    height: 40px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9em;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.btn-back:hover {
+    background-color: #444;
+    border-color: #00d2ff;
+    box-shadow: 0 0 8px rgba(0, 210, 255, 0.2);
+}
+
+.brawler-identity-card {
+    display: flex;
+    align-items: center;
+    background: #252525;
+    padding: 15px;
+    border-radius: 12px;
+    border-left: 5px solid #00d2ff;
+    margin-bottom: 10px;
+}
+.brawler-identity-icon {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-right: 20px;
+    border: 2px solid #333;
+}
+#selected-brawler-name { margin: 0; font-size: 1.8em; line-height: 1.2; }
+
+/* =========================================
+   5. OVERLAYS / VERROUILLAGE GRAPHIQUE
+   ========================================= */
+.chart-locked-container { position: relative; overflow: hidden; }
+.blur-content { filter: blur(5px); pointer-events: none; user-select: none; }
+
+.lock-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(18, 18, 18, 0.6);
+    z-index: 10;
+    text-align: center;
+}
+.lock-message {
+    background: #1e1e1e;
+    padding: 20px 30px;
+    border: 1px solid #ffce00;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.lock-message h3 { margin: 0 0 10px 0; color: white; }
+.lock-message p  { margin: 0 0 15px 0; color: #aaa; }
+
+/* =========================================
+   6. PERSONNALISATION FLATPICKR
+   ========================================= */
+.flatpickr-calendar,
+.flatpickr-calendar.hasWeeks .dayContainer {
+    background: #1e1e1e !important;
+    border: 1px solid #333 !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9) !important;
+    border-radius: 12px !important;
+    font-family: 'Roboto', sans-serif !important;
+}
+.flatpickr-months .flatpickr-month {
+    background: #1e1e1e !important;
+    color: #fff !important;
+    fill: #fff !important;
+    padding-top: 10px;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year { color: #fff !important; font-weight: bold !important; }
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month  { color: #fff !important; fill: #fff !important; }
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg { fill: #ffce00 !important; }
+
+span.flatpickr-weekday { background: #1e1e1e !important; color: #888 !important; }
+
+.flatpickr-day { color: #ccc !important; }
+.flatpickr-day:hover,
+.flatpickr-day:focus { background: #333 !important; border-color: #444 !important; }
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected.inRange,
+.flatpickr-day.startRange.inRange,
+.flatpickr-day.endRange.inRange {
+    background: #ffce00 !important;
+    border-color: #ffce00 !important;
+    color: #000 !important;
+    font-weight: bold !important;
+    box-shadow: none !important;
+}
+.flatpickr-day.today              { border-color: #ffce00 !important; color: #ffce00 !important; }
+.flatpickr-day.today:hover        { background: #ffce00 !important; color: #000 !important; }
+
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay,
+.flatpickr-day.notAllowed,
+.flatpickr-day.notAllowed.prevMonthDay,
+.flatpickr-day.notAllowed.nextMonthDay {
+    color: #444 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+    cursor: default !important;
+}
+
+.flatpickr-monthSelect-theme-dark { background: #1e1e1e !important; }
+.flatpickr-monthSelect-month {
+    color: #ccc !important;
+    background: #1e1e1e !important;
+    border: 1px solid transparent;
+}
+.flatpickr-monthSelect-month:hover  { background: #333 !important; color: #fff !important; }
+.flatpickr-monthSelect-month.selected {
+    background: #ffce00 !important;
+    border-color: #ffce00 !important;
+    color: #000 !important;
+    font-weight: bold;
+}
+.flatpickr-monthSelect-month.disabled { color: #444 !important; }

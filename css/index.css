@@ -1,0 +1,78 @@
+/* =========================================
+   INDEX.CSS — Styles spécifiques à la
+   page d'accueil (landing, événements)
+   ========================================= */
+
+/* =========================================
+   1. LAYOUT LANDING (SPLIT COLUMNS)
+   ========================================= */
+.landing-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 10px;
+}
+.landing-column {
+    flex: 1;
+    min-width: 300px;
+    background: #1e1e1e;
+    border-radius: 20px;
+    border: 1px solid #333;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    padding: 25px;
+    text-align: center;
+}
+
+/* =========================================
+   2. CARTES ÉVÉNEMENTS
+   ========================================= */
+.event-card {
+    background: #252525;
+    border: 1px solid #333;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    position: relative;
+    text-align: left;
+    transition: transform 0.2s;
+}
+.event-card:hover { transform: scale(1.02); border-color: #555; }
+
+.event-header {
+    padding: 8px 12px;
+    background: linear-gradient(90deg, #333, #222);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    color: #ffce00;
+}
+
+.event-body {
+    padding: 12px;
+    padding-right: 60px;   /* Espace pour l'icône de mode */
+    position: relative;
+    z-index: 1;
+}
+.event-body > * { position: relative; z-index: 1; }
+
+.map-name   { font-size: 1.1em; font-weight: bold; color: white; }
+.event-timer { font-size: 0.8em; color: #888; margin-top: 5px; }
+
+.event-mode-icon {
+    position: absolute;
+    right: 15px;
+    bottom: 15px;
+    height: 45px;
+    object-fit: contain;
+    opacity: 1;
+    pointer-events: none;
+    z-index: 2;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
