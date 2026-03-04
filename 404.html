@@ -33,8 +33,12 @@
             window.location.replace(`/userhome.html`);
         }
         // 4. Route Leaderboard : /leaderboard/...
-        else if (path.startsWith('/leaderboard')) {
-            window.location.replace('/leaderboard.html' + window.location.search);
+        else if (parts[0] === 'leaderboard') {
+            let redirect = `/leaderboard.html?`;
+            if (parts[1]) redirect += `zone=${parts[1]}`;
+            if (parts[2]) redirect += `&cat=${parts[2]}`;
+            if (parts[3]) redirect += `&id=${parts[3]}`;
+            window.location.replace(redirect);
         }
     </script>
     <link rel="icon" type="image/png" href="/assets/logo.png">
