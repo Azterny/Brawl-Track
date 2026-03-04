@@ -1,9 +1,8 @@
 let currentZone = 'global';
-let currentCategory = null; // 'trophies', 'club', 'brawler'
+let currentCategory = null; 
 let selectedBrawlerId = null;
-let currentDataList = []; // Pour la recherche en temps réel
+let currentDataList = []; 
 
-// RANK_CONFIG copié/adapté de dashboard.js pour les rangs Brawlers
 const RANK_CONFIG = {
     wood:      { label: 'Wood',        icon: '/assets/ranks/wood.webp',      trophyIcon: '/assets/trophy_normal.png' },
     bronze:    { label: 'Bronze',      icon: '/assets/ranks/bronze.webp',    trophyIcon: '/assets/trophy_normal.png' },
@@ -48,11 +47,12 @@ async function initLeaderboardRouter() {
         category = urlParams.get('cat');
         brawlerId = urlParams.get('id');
         
-        // Restaure la jolie URL dans la barre de recherche (sans le .html)
+        // Restaure la jolie URL dans la barre d'adresse
         let cleanUrl = `/leaderboard/${zone}/${category}`;
         if (category === 'brawler' && brawlerId) cleanUrl += `/${brawlerId}`;
         window.history.replaceState({}, '', cleanUrl);
     }
+
     if (category) {
         currentZone = zone;
         document.getElementById('zone-select').value = currentZone;
@@ -78,7 +78,7 @@ function changeZone() {
 
 function renderMenu() {
     document.getElementById('lb-header').style.display = 'none';
-    document.getElementById('mobile-brawler-select-container').innerHTML = ''; // Nettoyer
+    document.getElementById('mobile-brawler-select-container').innerHTML = ''; 
     document.getElementById('page-title').innerText = "Sélectionnez un Classement";
     
     const content = document.getElementById('dynamic-content');
@@ -111,9 +111,8 @@ function goTo(url) {
 async function loadCategory(category) {
     const content = document.getElementById('dynamic-content');
     content.innerHTML = `<div style="text-align:center;"><img src="/assets/loading_icon.png" class="spin" width="50"></div>`;
-    document.getElementById('search-input').value = ""; // Reset recherche
+    document.getElementById('search-input').value = ""; 
     
-    // Nettoyer le select mobile par défaut
     if (category !== 'brawler') {
         document.getElementById('mobile-brawler-select-container').innerHTML = '';
     }
@@ -156,19 +155,17 @@ async function renderBrawlerSplitScreen() {
         <option value="${b.id}" ${selectedBrawlerId == b.id ? 'selected' : ''}>${b.name}</option>
     `).join('');
 
-    // Menu déroulant Mobile + Barre de recherche Brawler
     mobileContainer.innerHTML = `
-        <input type="text" id="mobile-brawler-filter" placeholder="Chercher un brawler..." oninput="filterMobileBrawlerList()" style="width: 100%; max-width: 600px; display: block; margin: 0 auto 10px auto; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 1rem;">
+        <input type="text" id="mobile-brawler-filter" placeholder="Chercher un brawler..." oninput="filterMobileBrawlerList()" style="width: 100%; max-width: 600px; display: none; margin: 0 auto 10px auto; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 1rem;">
         <select class="mobile-brawler-select" id="mobile-brawler-select" onchange="selectBrawler(this.value)">
             ${selectOptionsHtml}
         </select>
     `;
 
-    // Injecter le reste (Sidebar avec recherche PC + Contenu de droite)
     content.innerHTML = `
         <div class="brawler-split">
             <div class="brawler-sidebar">
-                <input type="text" id="brawler-filter" placeholder="Chercher un brawler..." oninput="filterBrawlerList()" style="width: 100%; margin-bottom: 15px; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #111; color: #fff; font-size: 0.95rem;">
+                <input type="text" id="brawler-filter" placeholder="Chercher un brawler..." oninput="filterBrawlerList()" style="width: 100%; box-sizing:border-box; margin-bottom: 15px; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #111; color: #fff; font-size: 0.95rem;">
                 <div id="brawler-list-container">${brawlerListHtml}</div>
             </div>
             <div class="brawler-content" id="brawler-ranking-content">
@@ -182,7 +179,6 @@ async function renderBrawlerSplitScreen() {
     }
 }
 
-// Ajouter ces deux petites fonctions de filtrage n'importe où dans le fichier :
 window.filterBrawlerList = function() {
     const query = document.getElementById('brawler-filter').value.toLowerCase();
     document.querySelectorAll('.brawler-item').forEach(el => {
@@ -205,7 +201,6 @@ async function selectBrawler(id, skipPushState = false) {
     selectedBrawlerId = id;
     if (!skipPushState) window.history.pushState({}, '', `/leaderboard/${currentZone}/brawler/${id}`);
 
-    // Update active class
     document.querySelectorAll('.brawler-item').forEach(el => el.classList.remove('active'));
     const targetEl = document.querySelector(`.brawler-item[onclick="selectBrawler(${id})"]`);
     if (targetEl) targetEl.classList.add('active');
