@@ -1343,3 +1343,50 @@ span.flatpickr-weekday {
     #header-actions { margin: 0; justify-self: auto; }
     #player-name { font-size: 2.2rem; }
 }
+
+/* ========================================================= */
+/* === PAGE LEADERBOARD ==================================== */
+/* ========================================================= */
+
+.leaderboard-header { display: flex; justify-content: center; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; width: 100%; }
+.zone-selector { background: #222; color: #fff; border: 1px solid #444; padding: 12px; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+.search-bar { flex-grow: 1; max-width: 600px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 1rem; }
+
+.menu-cards { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+.menu-card { background: #2a2a2a; padding: 30px 20px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s; width: 280px; border: 1px solid #333; }
+.menu-card:hover { background: #333; transform: translateY(-5px); border-color: #555; }
+.menu-card h2 { margin: 15px 0 5px 0; font-size: 1.5rem; }
+.menu-card p { color: #aaa; margin: 0; }
+
+.list-container { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.list-item { display: flex; align-items: center; background: #2a2a2a; padding: 12px 20px; border-radius: 8px; gap: 15px; transition: 0.2s; border: 1px solid transparent; }
+.list-item:hover { background: #333; border-color: #444; }
+.list-rank { font-size: 1.4rem; font-weight: bold; color: #888; width: 50px; text-align: center; flex-shrink: 0; }
+.list-icon { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+.list-info { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+.list-name { font-size: 1.2rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-tag { font-size: 0.85rem; color: #aaa; margin-top: 2px; }
+.list-stats { display: flex; align-items: center; gap: 20px; font-weight: bold; font-size: 1.1rem; flex-shrink: 0; }
+.list-stat-item { display: flex; align-items: center; gap: 6px; }
+
+/* Brawlers Split Screen */
+.brawler-split { display: flex; gap: 20px; align-items: flex-start; width: 100%; }
+.brawler-sidebar { width: 260px; flex-shrink: 0; background: #222; padding: 15px; border-radius: 12px; max-height: 75vh; overflow-y: auto; border: 1px solid #333; }
+.brawler-content { flex-grow: 1; min-width: 0; }
+.brawler-item { display: flex; align-items: center; gap: 12px; padding: 10px; cursor: pointer; border-radius: 8px; transition: 0.2s; margin-bottom: 5px; }
+.brawler-item:hover, .brawler-item.active { background: #333; border-left: 4px solid #ffce00; }
+.brawler-item img { width: 40px; height: 40px; }
+
+.mobile-brawler-select { display: none; width: 100%; max-width: 600px; margin: 0 auto 15px auto; padding: 12px; background: #222; color: white; border-radius: 8px; border: 1px solid #444; font-size: 1rem; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .brawler-sidebar { display: none; }
+    .mobile-brawler-select { display: block; }
+    .list-stats { flex-direction: column; align-items: flex-end; gap: 5px; font-size: 1rem; }
+    .list-item { padding: 10px; }
+    .list-rank { width: 35px; font-size: 1.1rem; }
+    .list-icon { width: 40px; height: 40px; }
+    .leaderboard-header { flex-direction: column; align-items: stretch; }
+    .search-bar { max-width: 100%; }
+}
