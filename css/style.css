@@ -1448,3 +1448,55 @@ span.flatpickr-weekday {
     width: 45px;
     height: 45px;
 }
+
+/* --- LEADERBOARD HEADER (CÔTE À CÔTE SUR PC) --- */
+.leaderboard-header { 
+    display: flex; 
+    flex-direction: row; 
+    justify-content: center; 
+    align-items: center; 
+    margin-bottom: 30px; 
+    gap: 15px; 
+    width: 100%; 
+}
+@media (max-width: 768px) {
+    .leaderboard-header { flex-direction: column; align-items: stretch; }
+    #mobile-brawler-filter { display: block !important; }
+}
+
+/* --- ICÔNES JOUER/CLUB (PAS D'ARRONDIS) --- */
+.list-icon { 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 0 !important;
+    object-fit: cover; 
+}
+
+/* --- STATS DU LEADERBOARD (PLUS GROS SUR PC) --- */
+.list-stats { 
+    display: flex; 
+    align-items: center; 
+    gap: 30px; 
+    font-weight: bold; 
+    font-size: 1.5rem; 
+    flex-shrink: 0; 
+}
+.stat-img-icon {
+    height: 24px !important; 
+    vertical-align: middle;
+}
+@media (max-width: 768px) {
+    .list-stats { flex-direction: column; align-items: flex-end; gap: 5px; font-size: 1.1rem; }
+    .stat-img-icon { height: 16px !important; }
+}
+
+/* --- CADRES AUTOURS DES ICONES BRAWLERS (UNIQUEMENT LEADERBOARD) --- */
+.brawler-item img {
+    border: 2px solid #555 !important;
+    border-radius: 6px !important;
+    padding: 2px !important;
+    background: #111 !important;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.8);
+    width: 45px;
+    height: 45px;
+}
