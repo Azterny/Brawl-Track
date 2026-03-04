@@ -125,7 +125,7 @@ async function renderBrawlerSplitScreen() {
     }
 
     let brawlerListHtml = globalBrawlersList.map(b => `
-        <div class="brawler-item ${selectedBrawlerId == b.id ? 'active' : ''}" onclick="selectBrawler(${b.id})">
+        <div class="brawler-item ${selectedBrawlerId == b.id ? 'active' : ''}" onclick="selectBrawler(${b.id})" data-name="${b.name.toLowerCase()}">
             <img src="https://cdn.brawlify.com/brawlers/borderless/${b.id}.png">
             <span>${b.name}</span>
         </div>
@@ -135,17 +135,21 @@ async function renderBrawlerSplitScreen() {
         <option value="${b.id}" ${selectedBrawlerId == b.id ? 'selected' : ''}>${b.name}</option>
     `).join('');
 
-    // Injecter le menu déroulant dans le conteneur du HAUT (au-dessus de la recherche)
+    // Menu déroulant Mobile + Barre de recherche Brawler
     mobileContainer.innerHTML = `
-        <select class="mobile-brawler-select" onchange="selectBrawler(this.value)">
+        <input type="text" id="mobile-brawler-filter" placeholder="Chercher un brawler..." oninput="filterMobileBrawlerList()" style="width: 100%; max-width: 600px; display: block; margin: 0 auto 10px auto; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 1rem;">
+        <select class="mobile-brawler-select" id="mobile-brawler-select" onchange="selectBrawler(this.value)">
             ${selectOptionsHtml}
         </select>
     `;
 
-    // Injecter le reste (Sidebar + Contenu de droite) en bas
+    // Injecter le reste (Sidebar avec recherche PC + Contenu de droite)
     content.innerHTML = `
         <div class="brawler-split">
-            <div class="brawler-sidebar">${brawlerListHtml}</div>
+            <div class="brawler-sidebar">
+                <input type="text" id="brawler-filter" placeholder="Chercher un brawler..." oninput="filterBrawlerList()" style="width: 100%; margin-bottom: 15px; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #111; color: #fff; font-size: 0.95rem;">
+                <div id="brawler-list-container">${brawlerListHtml}</div>
+            </div>
             <div class="brawler-content" id="brawler-ranking-content">
                 <div style="text-align:center; color:#aaa; margin-top: 50px;">Veuillez sélectionner un brawler</div>
             </div>
@@ -156,6 +160,24 @@ async function renderBrawlerSplitScreen() {
         selectBrawler(selectedBrawlerId, true);
     }
 }
+
+// Ajouter ces deux petites fonctions de filtrage n'importe où dans le fichier :
+window.filterBrawlerList = function() {
+    const query = document.getElementById('brawler-filter').value.toLowerCase();
+    document.querySelectorAll('.brawler-item').forEach(el => {
+        el.style.display = el.getAttribute('data-name').includes(query) ? 'flex' : 'none';
+    });
+};
+
+window.filterMobileBrawlerList = function() {
+    const query = document.getElementById('mobile-brawler-filter').value.toLowerCase();
+    const select = document.getElementById('mobile-brawler-select');
+    let selectOptionsHtml = `<option value="">-- Choisir un Brawler --</option>` + globalBrawlersList
+        .filter(b => b.name.toLowerCase().includes(query))
+        .map(b => `<option value="${b.id}" ${selectedBrawlerId == b.id ? 'selected' : ''}>${b.name}</option>`)
+        .join('');
+    select.innerHTML = selectOptionsHtml;
+};
 
 async function selectBrawler(id, skipPushState = false) {
     if (!id) return;
@@ -214,7 +236,7 @@ function renderList(items, type, targetId = 'dynamic-content') {
                         <div class="list-tag">${item.tag}</div>
                     </div>
                     <div class="list-stats">
-                        <span style="color:#ffce00;"><img src="/assets/trophy_normal.png" height="15"> ${item.trophies}</span>
+                        <span style="color:#ffce00;" class="list-stat-item"><img src="/assets/trophy_normal.png" class="stat-img-icon"> ${item.trophies}</span>
                     </div>
                 </div>`;
         } 
@@ -229,8 +251,8 @@ function renderList(items, type, targetId = 'dynamic-content') {
                         <div class="list-tag">${item.tag}</div>
                     </div>
                     <div class="list-stats">
-                        <span style="color:#aaa;" class="list-stat-item"><img src="/assets/icons/solo.png" height="15" style="filter: grayscale(100%);"> ${item.memberCount}</span>
-                        <span style="color:#ffce00;"><img src="/assets/trophy_normal.png" height="15"> ${item.trophies}</span>
+                        <span style="color:#aaa;" class="list-stat-item"><img src="/assets/icons/wipeout.png" class="stat-img-icon" style="filter: grayscale(100%);"> ${item.memberCount}</span>
+                        <span style="color:#ffce00;" class="list-stat-item"><img src="/assets/trophy_normal.png" class="stat-img-icon"> ${item.trophies}</span>
                     </div>
                 </div>`;
         }
@@ -240,14 +262,14 @@ function renderList(items, type, targetId = 'dynamic-content') {
             html += `
                 <div class="list-item" style="cursor:pointer;" onclick="window.location.href='/player/${item.tag.replace('#','')}'">
                     <div class="list-rank">#${item.rank}</div>
-                    <img src="${RANK_CONFIG[rankData].icon}" style="height:40px;" title="${RANK_CONFIG[rankData].label}">
+                    <img src="${RANK_CONFIG[rankData].icon}" style="height:40px; border-radius: 0;" title="${RANK_CONFIG[rankData].label}">
                     <div class="list-info">
                         <div class="list-name" style="color: ${nameColor}">${item.name}</div>
                         <div class="list-tag">${item.tag}</div>
                     </div>
                     <div class="list-stats">
-                        ${prestige > 0 ? `<span style="color:#8A4FE8;"><img src="/assets/total prestige.png" height="15"> ${prestige}</span>` : ''}
-                        <span style="color:#ffce00;"><img src="${RANK_CONFIG[rankData].trophyIcon}" height="15"> ${item.trophies}</span>
+                        ${prestige > 0 ? `<span style="color:#8A4FE8;" class="list-stat-item"><img src="/assets/total prestige.png" class="stat-img-icon"> ${prestige}</span>` : ''}
+                        <span style="color:#ffce00;" class="list-stat-item"><img src="${RANK_CONFIG[rankData].trophyIcon}" class="stat-img-icon"> ${item.trophies}</span>
                     </div>
                 </div>`;
         }
