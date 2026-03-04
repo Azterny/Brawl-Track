@@ -30,16 +30,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function initLeaderboardRouter() {
     const pathParts = window.location.pathname.split('/').filter(p => p);
+    const urlParams = new URLSearchParams(window.location.search);
     
-    // /leaderboard/{zone}/{category}/{brawlerId}
-    if (pathParts.length > 1) {
-        currentZone = pathParts[1];
+    let zone = null;
+    let category = null;
+    let brawlerId = null;
+
+    // 1. Détection via Clean URL directe du navigateur
+    if (pathParts.length > 1 && pathParts[0] === 'leaderboard') {
+        zone = pathParts[1];
+        category = pathParts[2];
+        brawlerId = pathParts[3];
+    } 
+    // 2. Détection via la redirection 404.html (?zone=...&cat=...)
+    else if (urlParams.has('cat')) {
+        zone = urlParams.get('zone') || 'global';
+        category = urlParams.get('cat');
+        brawlerId = urlParams.get('id');
+        
+        // Restaure la jolie URL dans la barre de recherche (sans le .html)
+        let cleanUrl = `/leaderboard/${zone}/${category}`;
+        if (category === 'brawler' && brawlerId) cleanUrl += `/${brawlerId}`;
+        window.history.replaceState({}, '', cleanUrl);
+    }
+    if (category) {
+        currentZone = zone;
         document.getElementById('zone-select').value = currentZone;
         document.getElementById('lb-header').style.display = 'flex';
+        currentCategory = category;
         
-        currentCategory = pathParts[2];
-        if (currentCategory === 'brawler' && pathParts[3]) {
-            selectedBrawlerId = pathParts[3];
+        if (category === 'brawler' && brawlerId) {
+            selectedBrawlerId = brawlerId;
         }
         loadCategory(currentCategory);
     } else {
