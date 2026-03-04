@@ -78,9 +78,9 @@ function changeZone() {
 
 function renderMenu() {
     document.getElementById('lb-header').style.display = 'none';
-    document.getElementById('mobile-brawler-select-container').innerHTML = ''; 
+    document.getElementById('mobile-brawler-select-container').innerHTML = '';
     document.getElementById('page-title').innerText = "Sélectionnez un Classement";
-    
+
     const content = document.getElementById('dynamic-content');
     content.innerHTML = `
         <div class="menu-cards">
@@ -95,7 +95,8 @@ function renderMenu() {
                 <p>Top Trophées Clubs</p>
             </div>
             <div class="menu-card" onclick="goTo('/leaderboard/global/brawler')">
-                <img src="https://cdn.brawlify.com/brawlers/borderless/16000000.png" height="55" alt="Brawlers">
+                <img src="https://cdn.brawlify.com/brawlers/borderless/16000000.png"
+                     class="menu-card-brawler-icon" alt="Brawlers">
                 <h2>Brawlers</h2>
                 <p>Top Joueurs par Brawler</p>
             </div>
