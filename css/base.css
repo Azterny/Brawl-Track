@@ -3,6 +3,9 @@
    conteneurs globaux, utilitaires et animations
    ========================================= */
 
+/* --- FONTS (Chargé ici une seule fois pour tout le site) --- */
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap');
+
 /* --- RESET & BODY --- */
 body {
     background-color: #121212;
