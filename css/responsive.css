@@ -46,10 +46,20 @@
     #dashboard-header {
         display: flex;
         flex-direction: row;
+        flex-wrap: wrap;
         align-items: center;
         gap: 15px;
     }
-
+   
+    #header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 5px;
+    }
+   
     /* Leaderboard */
     .leaderboard-header { flex-direction: column; align-items: stretch; }
     .zone-selector  { width: 100% !important; }
