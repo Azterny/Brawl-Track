@@ -94,30 +94,27 @@
 .member-trophies img { height: 1em; }
 
 /* =========================================
-   5. BORDURES GRADES (MOBILE UNIQUEMENT)
+   5 & 6. ADAPTATIONS MOBILES ET TABLETTES
    ========================================= */
-@media (max-width: 768px) {
+@media (max-width: 850px) {
+    /* --- Lignes des Membres --- */
     .member-icon.role-senior-border { border-color: #00d2ff !important; }
     .member-icon.role-vice-border { border-color: #ff9900 !important; }
     .member-icon.role-president-border { border-color: #ffce00 !important; }
-
+    
     .member-role-container {
-         display: none; /* Inutile puisqu'on a la bordure de couleur */
-     }
-     .member-row {
-         padding: 10px;
-         gap: 10px;
-     }
-     .member-trophies {
-         width: auto;
-         font-size: 1.1rem;
-     }
-}
+        display: none !important; /* !important garantit que le texte disparaît bien */
+    }
+    .member-row {
+        padding: 10px;
+        gap: 10px;
+    }
+    .member-trophies {
+        width: auto;
+        font-size: 1.1rem;
+    }
 
-/* =========================================
-   6. ADAPTATION EN-TÊTE CLUB (MOBILE)
-   ========================================= */
-@media (max-width: 768px) {
+    /* --- En-tête du Club --- */
     #dashboard-header {
         flex-direction: column;
         text-align: center;
