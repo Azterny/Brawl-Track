@@ -87,32 +87,39 @@
     border-color: #ffce00;
     box-shadow: 0 15px 40px rgba(255, 206, 0, 0.15);
 }
-.menu-card-icon-wrapper {
-    background: rgba(0,0,0,0.3);
-    border-radius: 50%;
-    width: 110px;
-    height: 110px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    border: 2px solid #444;
-    transition: all 0.3s ease;
-}
-.menu-card:hover .menu-card-icon-wrapper {
-    border-color: #ffce00;
-    transform: scale(1.1);
-    box-shadow: inset 0 0 15px rgba(255, 206, 0, 0.2);
-}
 .menu-card h2 { margin: 0 0 10px 0; font-size: 1.8rem; color: #fff; }
 .menu-card p  { color: #aaa; margin: 0; font-size: 1.05rem; }
 
-.menu-card-brawler-icon {
-    width: 60px;
-    height: 60px;
+/* Icônes générales (Trophée & Club) libres, sans fond */
+.menu-card-icon {
+    height: 80px;
     object-fit: contain;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
 }
 
+/* Cadre stylisé spécifiquement pour l'icône de Brawler */
+.menu-card-brawler-icon {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 20px;
+    border: 2px solid #555;
+    border-radius: 12px;
+    padding: 4px;
+    background: #111;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+    transition: all 0.3s ease;
+}
+
+/* Effets de survol (agrandissement et bordure dorée pour le brawler) */
+.menu-card:hover .menu-card-icon,
+.menu-card:hover .menu-card-brawler-icon {
+    transform: scale(1.1);
+}
+.menu-card:hover .menu-card-brawler-icon {
+    border-color: #ffce00;
+}
 /* =========================================
    3. LISTE D'ITEMS & DESIGN TOP 3
    ========================================= */
