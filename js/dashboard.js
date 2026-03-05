@@ -12,6 +12,9 @@ let mainFlatpickr = null;
 let brawlerFlatpickr = null;
 let currentUserId = null;
 
+let fullHistoryData = [];
+let currentLiveTrophies = 0;
+
 let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
 // FIX BUG-JS-3: Suppression de `let ChartInstance = null` (jamais utilisé)
