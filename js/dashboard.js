@@ -6,18 +6,17 @@ const CHART_MODE_HOUR = 0.042;
 
 let currentChartMode = 0;
 let currentChartOffset = 0;         // Offset graphique GLOBAL (trophées joueur)
-let currentBrawlerChartOffset = 0;  // FIX BUG-JS-2: Offset graphique BRAWLER séparé
+let currentBrawlerChartOffset = 0;  // Offset graphique BRAWLER séparé
 let currentTagString = null;
 let mainFlatpickr = null;
 let brawlerFlatpickr = null;
 let currentUserId = null;
 
+// Variables globales pour les graphiques
 let fullHistoryData = [];
 let currentLiveTrophies = 0;
-
 let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
-// FIX BUG-JS-3: Suppression de `let ChartInstance = null` (jamais utilisé)
 let brawlerChartInstance = null;
 
 const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : '';
