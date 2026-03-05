@@ -64,7 +64,7 @@ async function initLeaderboardRouter() {
         }
         loadCategory(currentCategory);
     } else {
-        renderMenu();
+        );
     }
 }
 
@@ -85,29 +85,24 @@ function renderMenu() {
     content.innerHTML = `
         <div class="menu-cards">
             <div class="menu-card" onclick="goTo('/leaderboard/global/trophies')">
-                <div class="menu-card-icon-wrapper">
-                    <img src="/assets/trophy_escape.png" height="60" alt="Joueurs">
-                </div>
+                <img src="/assets/icons/trophy_escape.png" class="menu-card-icon" alt="Joueurs">
                 <h2>Top Joueurs</h2>
                 <p>Les meilleurs joueurs du monde</p>
             </div>
             <div class="menu-card" onclick="goTo('/leaderboard/global/club/trophies')">
-                <div class="menu-card-icon-wrapper">
-                    <img src="https://brawlify.com/images/club-badges/96/8000000.webp" height="60" alt="Clubs">
-                </div>
+                <img src="https://brawlify.com/images/club-badges/96/8000000.webp" class="menu-card-icon" alt="Clubs">
                 <h2>Top Clubs</h2>
                 <p>Les clubs les plus performants</p>
             </div>
             <div class="menu-card" onclick="goTo('/leaderboard/global/brawler')">
-                <div class="menu-card-icon-wrapper">
-                    <img src="https://cdn.brawlify.com/brawlers/borderless/16000000.png" class="menu-card-brawler-icon" alt="Brawlers">
-                </div>
+                <img src="https://cdn.brawlify.com/brawlers/borderless/16000000.png" class="menu-card-brawler-icon" alt="Brawlers">
                 <h2>Top Brawlers</h2>
                 <p>Les experts de chaque brawler</p>
             </div>
         </div>
     `;
 }
+
 function goTo(url) {
     window.history.pushState({}, '', url);
     initLeaderboardRouter();
