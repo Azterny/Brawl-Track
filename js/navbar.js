@@ -27,16 +27,15 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
 
-        <div id="mobile-nav-overlay" class="mobile-nav-overlay hidden">
-            <div class="mobile-nav-content">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <span style="font-family:'Lilita One'; color:#ffce00; font-size:1.5em;">MENU</span>
-                    <button onclick="toggleMobileNav()" style="background:none; border:none; color:white; font-size:1.5em; width:auto; margin:0;">✕</button>
-                </div>
-                ${getMobileLinks(token, safeUsername, username)}
+        </nav> <div id="mobile-nav-overlay" class="mobile-nav-overlay hidden">
+        <div class="mobile-nav-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <span style="font-family:'Lilita One'; color:#ffce00; font-size:1.5em;">MENU</span>
+                <button onclick="toggleMobileNav()" style="background:none; border:none; color:white; font-size:1.5em; width:auto; margin:0;">✕</button>
             </div>
+            ${getMobileLinks(token, safeUsername, username)}
         </div>
-    </nav>
+    </div>
     `;
 
     navContainer.innerHTML = html;
