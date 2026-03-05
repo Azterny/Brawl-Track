@@ -45,12 +45,12 @@ document.addEventListener("DOMContentLoaded", function() {
 // --- GÉNÉRATEURS DE HTML ---
 
 function getCenterLinks(token) {
-    let links = `<a href="/leaderboard" class="nav-link">Classements</a>`;
+    let links = `<a href="/leaderboard" class="nav-link"><img src="/assets/icons/leaderboard.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Classements</a>`;
     
     if (!token) {
         links += `<a href="#" onclick="focusSearch()" class="nav-link">🔎 Recherche</a>`;
     } else {
-        links = `<a href="/" class="nav-link">🏠 Accueil</a>` + links;
+        links = `<a href="/" class="nav-link"><img src="/assets/icons/mastery_point.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Accueil</a>` + links;
     }
     
     return links;
@@ -62,11 +62,11 @@ function getRightActions(token, safeUsername, username) {
             <div class="dropdown">
                 <button class="btn-3d btn-yellow btn-sm">👤 ${username} ▾</button>
                 <div class="dropdown-menu right-aligned">
-                    <a href="/home">🏠 Mes Comptes</a>
-                    <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')">⭐ Abonnement</a>
-                    <a href="#" onclick="alert('Paramètres : Bientôt Disponible !')">⚙️ Paramètres</a>
+                    <a href="/home"><img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Mes Comptes</a>
+                    <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')"><img src="/assets/icons/subscribe.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Abonnement</a>
+                    <a href="#" onclick="alert('Paramètres : Bientôt Disponible !')"><img src="/assets/icons/settings.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Paramètres</a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" onclick="logoutNav()">🚪 Déconnexion</a>
+                    <a href="#" onclick="logoutNav()" style="color: #ff5555;">Déconnexion</a>
                 </div>
             </div>
         `;
@@ -83,19 +83,19 @@ function getMobileLinks(token, safeUsername, username) {
     if (token) {
         html += `
             <div class="mobile-user-info">Connecté en tant que <strong>${username}</strong></div>
-            <a href="/" class="mobile-link">🏠 Accueil</a>
-            <a href="/home" class="mobile-link">👤 Mes Comptes</a>
-            <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link">⭐ Abonnement</a>
-            <a href="/leaderboard" class="mobile-link">Classements</a>
-            <a href="#" class="mobile-link">⚙️ Paramètres</a>
+            <a href="/" class="mobile-link"><img src="/assets/icons/mastery_point.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Accueil</a>
+            <a href="/home" class="mobile-link"><img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Mes Comptes</a>
+            <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link"><img src="/assets/icons/subscribe.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Abonnement</a>
+            <a href="/leaderboard" class="mobile-link"><img src="/assets/icons/leaderboard.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Classements</a>
+            <a href="#" class="mobile-link"><img src="/assets/icons/settings.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Paramètres</a>
             <hr style="border-color:#333; width:100%; opacity:0.3;">
-            <button onclick="logoutNav()" class="btn-danger" style="margin-top:20px;">Déconnexion</button>
+            <button onclick="logoutNav()" class="btn-danger" style="margin-top:20px; color: #ff5555;">Déconnexion</button>
         `;
     } else {
         html += `
-            <a href="/" class="mobile-link">🏠 Accueil</a>
+            <a href="/" class="mobile-link"><img src="/assets/icons/mastery_point.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Accueil</a>
             <a href="#" onclick="focusSearch()" class="mobile-link">🔎 Recherche</a>
-            <a href="/leaderboard" class="mobile-link">🏆 Classements</a>
+            <a href="/leaderboard" class="mobile-link"><img src="/assets/icons/leaderboard.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Classements</a>
             <hr style="border-color:#333; width:100%; opacity:0.3;">
             <a href="/" class="nav-btn-cta" style="text-align:center; display:block;">Se Connecter</a>
         `;
