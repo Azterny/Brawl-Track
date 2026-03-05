@@ -58,48 +58,63 @@
 }
 
 /* =========================================
-   2. MENU CARTES (page d'accueil leaderboard)
+   2. MENU CARTES (Refonte Accueil)
    ========================================= */
 .menu-cards {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
 }
 .menu-card {
-    background: #2a2a2a;
-    padding: 30px 20px;
-    border-radius: 12px;
+    background: linear-gradient(145deg, #252525, #1e1e1e);
+    padding: 35px 20px;
+    border-radius: 16px;
+    border: 1px solid #333;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
     cursor: pointer;
-    transition: 0.2s;
-    width: 280px;
-    border: 1px solid #333;
+    transition: all 0.3s ease;
 }
-.menu-card:hover { background: #333; transform: translateY(-5px); border-color: #555; }
-.menu-card h2   { margin: 15px 0 5px 0; font-size: 1.5rem; }
-.menu-card p    { color: #aaa; margin: 0; }
-
-/* Cadre spécifique autour de l'icône brawler dans le menu */
-.menu-card-brawler-icon {
-    width: 55px;
-    height: 55px;
-    border: 2px solid #555;
-    border-radius: 8px;
-    padding: 4px;
-    background: #111;
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
-    object-fit: contain;
-    transition: border-color 0.2s;
-}
-.menu-card:hover .menu-card-brawler-icon {
+.menu-card:hover { 
+    background: linear-gradient(145deg, #2a2a2a, #222); 
+    transform: translateY(-8px); 
     border-color: #ffce00;
-    box-shadow: 0 0 10px rgba(255, 206, 0, 0.3), inset 0 0 8px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 15px 40px rgba(255, 206, 0, 0.15);
+}
+.menu-card-icon-wrapper {
+    background: rgba(0,0,0,0.3);
+    border-radius: 50%;
+    width: 110px;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    border: 2px solid #444;
+    transition: all 0.3s ease;
+}
+.menu-card:hover .menu-card-icon-wrapper {
+    border-color: #ffce00;
+    transform: scale(1.1);
+    box-shadow: inset 0 0 15px rgba(255, 206, 0, 0.2);
+}
+.menu-card h2 { margin: 0 0 10px 0; font-size: 1.8rem; color: #fff; }
+.menu-card p  { color: #aaa; margin: 0; font-size: 1.05rem; }
+
+.menu-card-brawler-icon {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
 }
 
 /* =========================================
-   3. LISTE D'ITEMS
+   3. LISTE D'ITEMS & DESIGN TOP 3
    ========================================= */
 .list-container {
     display: flex;
@@ -129,12 +144,10 @@
 }
 .list-icon {
     height: 50px;
-    width: auto;
-    max-width: 50px;
+    width: 50px;
     border-radius: 0;
     object-fit: contain;
 }
-
 .list-info {
     flex-grow: 1;
     display: flex;
@@ -142,15 +155,8 @@
     justify-content: center;
     overflow: hidden;
 }
-.list-name {
-    font-size: 1.2rem;
-    font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.list-tag { font-size: 0.85rem; color: #aaa; margin-top: 2px; }
-
+.list-name { font-size: 1.2rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-tag  { font-size: 0.85rem; color: #aaa; margin-top: 2px; }
 .list-stats {
     display: flex;
     align-items: center;
@@ -159,16 +165,31 @@
     font-size: 1.5rem;
     flex-shrink: 0;
 }
-.list-stat-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.stat-img-icon {
-    height: 24px !important;
-    vertical-align: middle;
-}
+.list-stat-item { display: flex; align-items: center; gap: 6px; }
+.stat-img-icon  { height: 24px !important; vertical-align: middle; }
 
+/* --- DESIGN DES 3 PREMIERS (OR, ARGENT, BRONZE) --- */
+.list-item.top-1 {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, #2a2a2a 80%);
+    border: 1px solid #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+}
+.list-item.top-1 .list-rank { color: #FFD700; font-size: 2rem; font-weight: 900; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+.list-item.top-1 .list-icon { border: 2px solid #FFD700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); border-radius: 10px; }
+
+.list-item.top-2 {
+    background: linear-gradient(90deg, rgba(192, 192, 192, 0.15) 0%, #2a2a2a 80%);
+    border: 1px solid #C0C0C0;
+}
+.list-item.top-2 .list-rank { color: #C0C0C0; font-size: 1.8rem; font-weight: 800; text-shadow: 0 0 10px rgba(192, 192, 192, 0.5); }
+.list-item.top-2 .list-icon { border: 2px solid #C0C0C0; box-shadow: 0 0 10px rgba(192, 192, 192, 0.3); border-radius: 8px; }
+
+.list-item.top-3 {
+    background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, #2a2a2a 80%);
+    border: 1px solid #CD7F32;
+}
+.list-item.top-3 .list-rank { color: #CD7F32; font-size: 1.6rem; font-weight: 800; text-shadow: 0 0 10px rgba(205, 127, 50, 0.5); }
+.list-item.top-3 .list-icon { border: 2px solid #CD7F32; box-shadow: 0 0 10px rgba(205, 127, 50, 0.3); border-radius: 6px; }
 /* =========================================
    4. SPLIT SCREEN BRAWLERS
    ========================================= */
