@@ -52,7 +52,6 @@ async function initLeaderboardRouter() {
         if (category === 'brawler' && brawlerId) cleanUrl += `/${brawlerId}`;
         window.history.replaceState({}, '', cleanUrl);
     }
-
     if (category) {
         currentZone = zone;
         document.getElementById('zone-select').value = currentZone;
