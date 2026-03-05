@@ -222,10 +222,34 @@ function renderProfile(data) {
         : 0;
 
     document.getElementById('stats-area').innerHTML = `
-        <div class="stat-card"><div>Trophées</div><div class="stat-value" style="color:#ffce00; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/trophy_normal.png" style="height:0.9em;"> ${data.trophies}</div></div>
-        <div class="stat-card"><div>3vs3</div><div class="stat-value" style="color:#007bff; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/icons/duels.png" style="height:0.9em;"> ${data['3vs3Victories']}</div></div>
-        <div class="stat-card"><div>Survivant</div><div class="stat-value" style="color:#28a745; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/icons/solo.png" style="height:0.9em;"> ${survivorVictories}</div></div>
-        <div class="stat-card"><div>Prestiges</div><div class="stat-value" style="color:#8A4FE8; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/total prestige.png" style="height:0.9em;"> ${prestiges}</div></div>
+        <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
+            <div>
+                <div style="font-size: 0.9em; color: #ccc; margin-bottom: 4px;">Trophées</div>
+                <div class="stat-value" style="color:#ffce00;">${data.trophies}</div>
+            </div>
+            <img src="/assets/trophy_normal.png" style="height: 2.5em; object-fit: contain;">
+        </div>
+        <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
+            <div>
+                <div style="font-size: 0.9em; color: #ccc; margin-bottom: 4px;">3vs3</div>
+                <div class="stat-value" style="color:#007bff;">${data['3vs3Victories']}</div>
+            </div>
+            <img src="/assets/icons/duels.png" style="height: 2.5em; object-fit: contain;">
+        </div>
+        <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
+            <div>
+                <div style="font-size: 0.9em; color: #ccc; margin-bottom: 4px;">Survivant</div>
+                <div class="stat-value" style="color:#28a745;">${survivorVictories}</div>
+            </div>
+            <img src="/assets/icons/solo.png" style="height: 2.5em; object-fit: contain;">
+        </div>
+        <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
+            <div>
+                <div style="font-size: 0.9em; color: #ccc; margin-bottom: 4px;">Prestiges</div>
+                <div class="stat-value" style="color:#8A4FE8;">${prestiges}</div>
+            </div>
+            <img src="/assets/total prestige.png" style="height: 2.5em; object-fit: contain;">
+        </div>
     `;
 
     const clubCard = document.getElementById('club-card');
@@ -261,8 +285,8 @@ function checkClaimStatus(tagData) {
     btn.style.border = "none";
     btn.style.transition = "all 0.2s";
 
-    if (tagData.is_reserved) {
-        btn.innerText = "🔒 RESERVED";
+if (tagData.is_reserved) {
+        btn.innerText = "RESERVED"; // Ancien: "🔒 RESERVED"
         btn.className = "btn-3d btn-purple";
         btn.disabled = true;
         btn.style.cursor = "not-allowed";
@@ -271,7 +295,7 @@ function checkClaimStatus(tagData) {
     }
 
     if (tagData.claimer_id === currentUserId) {
-        btn.innerText = "❌ UNCLAIM";
+        btn.innerText = "UNCLAIM"; // Ancien: "❌ UNCLAIM"
         btn.className = "btn-3d btn-red";
         btn.onclick = () => unclaimTagAction();
         actionsDiv.prepend(btn);
@@ -279,7 +303,7 @@ function checkClaimStatus(tagData) {
     }
 
     if (tagData.claimer_id && tagData.claimer_id !== currentUserId) {
-        btn.innerText = "👤 CLAIMED";
+        btn.innerText = "CLAIMED"; // Ancien: "👤 CLAIMED"
         btn.className = "btn-3d btn-grey";
         btn.disabled = true;
         btn.style.cursor = "not-allowed";
@@ -287,7 +311,7 @@ function checkClaimStatus(tagData) {
         return;
     }
 
-    btn.innerText = "⚡ CLAIM";
+    btn.innerText = "CLAIM"; // Ancien: "⚡ CLAIM"
     btn.className = "btn-3d btn-yellow";
     btn.onclick = () => claimTagAction();
     actionsDiv.prepend(btn);
@@ -1100,7 +1124,7 @@ function renderClubCard(club) {
                 <span class="stat-text">${club.trophies.toLocaleString('fr-FR')}</span>
             </div>
             <div class="club-stat-item members" title="Membres du club">
-                <span class="stat-icon-emoji">👥</span>
+                <img src="/assets/icons/wipeout.png" style="height: 1.1em; vertical-align: middle; filter: grayscale(100%) brightness(1.5); margin-right: 5px;" onerror="this.style.display='none'" alt="Membres">
                 <span class="stat-text">${membersCount} <span class="max-members">/ 30</span></span>
             </div>
         </div>
