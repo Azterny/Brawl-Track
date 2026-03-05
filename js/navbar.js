@@ -135,7 +135,7 @@ function initSmartNavbar() {
     navbar.style.position = 'fixed';
     navbar.style.top = '0';
     navbar.style.left = '0';
-    navbar.style.width = '100%';
+    navbar.style.right = '0'; /* Plus sûr que width: 100% */
     navbar.style.zIndex = '9999';
     navbar.style.transition = 'transform 0.3s ease-in-out';
 
@@ -148,6 +148,12 @@ function initSmartNavbar() {
     window.addEventListener('scroll', () => {
         let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         
+        // Sécurité anti-rebond (bounce iOS)
+        if (scrollTop < 0) return;
+        
+        // Tolérance de 5px pour éviter les clignotements au moindre tremblement
+        if (Math.abs(scrollTop - lastScrollTop) < 5) return;
+
         // Si on scroll vers le bas et qu'on a dépassé la hauteur de la navbar
         if (scrollTop > lastScrollTop && scrollTop > navHeight) {
             navbar.style.transform = 'translateY(-100%)'; // Cache la navbar vers le haut
@@ -156,7 +162,6 @@ function initSmartNavbar() {
             navbar.style.transform = 'translateY(0)'; // Fait réapparaître la navbar
         }
         
-        // Pour gérer le rebond sur Safari/iOS
-        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; 
+        lastScrollTop = scrollTop; 
     });
 }
