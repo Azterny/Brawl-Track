@@ -79,31 +79,35 @@ function changeZone() {
 function renderMenu() {
     document.getElementById('lb-header').style.display = 'none';
     document.getElementById('mobile-brawler-select-container').innerHTML = '';
-    document.getElementById('page-title').innerText = "Sélectionnez un Classement";
+    document.getElementById('page-title').innerText = "Catégories de Classement";
 
     const content = document.getElementById('dynamic-content');
     content.innerHTML = `
         <div class="menu-cards">
             <div class="menu-card" onclick="goTo('/leaderboard/global/trophies')">
-                <img src="/assets/trophy_normal.png" height="55" alt="Joueurs">
-                <h2>Joueurs</h2>
-                <p>Top Trophées Joueurs</p>
+                <div class="menu-card-icon-wrapper">
+                    <img src="/assets/trophy_escape.png" height="60" alt="Joueurs">
+                </div>
+                <h2>Top Joueurs</h2>
+                <p>Les meilleurs joueurs du monde</p>
             </div>
             <div class="menu-card" onclick="goTo('/leaderboard/global/club/trophies')">
-                <img src="https://brawlify.com/images/club-badges/96/8000000.webp" height="55" alt="Clubs">
-                <h2>Clubs</h2>
-                <p>Top Trophées Clubs</p>
+                <div class="menu-card-icon-wrapper">
+                    <img src="https://brawlify.com/images/club-badges/96/8000000.webp" height="60" alt="Clubs">
+                </div>
+                <h2>Top Clubs</h2>
+                <p>Les clubs les plus performants</p>
             </div>
             <div class="menu-card" onclick="goTo('/leaderboard/global/brawler')">
-                <img src="https://cdn.brawlify.com/brawlers/borderless/16000000.png"
-                     class="menu-card-brawler-icon" alt="Brawlers">
-                <h2>Brawlers</h2>
-                <p>Top Joueurs par Brawler</p>
+                <div class="menu-card-icon-wrapper">
+                    <img src="https://cdn.brawlify.com/brawlers/borderless/16000000.png" class="menu-card-brawler-icon" alt="Brawlers">
+                </div>
+                <h2>Top Brawlers</h2>
+                <p>Les experts de chaque brawler</p>
             </div>
         </div>
     `;
 }
-
 function goTo(url) {
     window.history.pushState({}, '', url);
     initLeaderboardRouter();
@@ -250,10 +254,16 @@ function renderList(items, type, targetId = 'dynamic-content') {
     items.forEach(item => {
         let nameColor = item.nameColor ? (item.nameColor.startsWith('0x') ? '#' + item.nameColor.slice(4) : item.nameColor) : '#fff';
         
+        // --- NOUVEAU : Logique Top 3 ---
+        let topClass = '';
+        if (item.rank === 1) topClass = 'top-1';
+        else if (item.rank === 2) topClass = 'top-2';
+        else if (item.rank === 3) topClass = 'top-3';
+
         if (type === 'player') {
             let icon = (item.icon && item.icon.id) ? `https://cdn.brawlify.com/profile-icons/regular/${item.icon.id}.png` : '/assets/default_icon.png';
             html += `
-                <div class="list-item" style="cursor:pointer;" onclick="window.location.href='/player/${item.tag.replace('#','')}'">
+                <div class="list-item ${topClass}" style="cursor:pointer;" onclick="window.location.href='/player/${item.tag.replace('#','')}'">
                     <div class="list-rank">#${item.rank}</div>
                     <img src="${icon}" class="list-icon" onerror="this.src='/assets/default_icon.png'">
                     <div class="list-info">
@@ -267,7 +277,7 @@ function renderList(items, type, targetId = 'dynamic-content') {
         } else if (type === 'club') {
             let icon = item.badgeId ? `https://brawlify.com/images/club-badges/96/${item.badgeId}.webp` : '/assets/default_icon.png';
             html += `
-                <div class="list-item" style="cursor:pointer;" onclick="window.location.href='/club/${item.tag.replace('#','')}'">
+                <div class="list-item ${topClass}" style="cursor:pointer;" onclick="window.location.href='/club/${item.tag.replace('#','')}'">
                     <div class="list-rank">#${item.rank}</div>
                     <img src="${icon}" class="list-icon" onerror="this.src='/assets/default_icon.png'">
                     <div class="list-info">
@@ -282,11 +292,10 @@ function renderList(items, type, targetId = 'dynamic-content') {
         } else if (type === 'brawler_ranking') {
             let rankData = getBrawlerRank(item.trophies);
             let prestige = Math.floor(item.trophies / 1000);
-            // Récupération de l'icône de profil du joueur
             let icon = (item.icon && item.icon.id) ? `https://cdn.brawlify.com/profile-icons/regular/${item.icon.id}.png` : '/assets/default_icon.png';
             
             html += `
-                <div class="list-item" style="cursor:pointer;" onclick="window.location.href='/player/${item.tag.replace('#','')}'">
+                <div class="list-item ${topClass}" style="cursor:pointer;" onclick="window.location.href='/player/${item.tag.replace('#','')}'">
                     <div class="list-rank">#${item.rank}</div>
                     <img src="${icon}" class="list-icon" onerror="this.src='/assets/default_icon.png'">
                     <div class="list-info">
