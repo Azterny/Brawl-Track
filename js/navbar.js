@@ -40,6 +40,8 @@ document.addEventListener("DOMContentLoaded", function() {
     `;
 
     navContainer.innerHTML = html;
+    
+    initSmartNavbar();
 });
 
 // --- GÉNÉRATEURS DE HTML ---
@@ -123,4 +125,38 @@ function focusSearch() {
     } else {
         window.location.href = '/';
     }
+}
+
+function initSmartNavbar() {
+    const navbar = document.querySelector('.navbar');
+    if (!navbar) return;
+
+    // Force les styles pour rendre la navbar fixe et animable
+    navbar.style.position = 'fixed';
+    navbar.style.top = '0';
+    navbar.style.left = '0';
+    navbar.style.width = '100%';
+    navbar.style.zIndex = '9999';
+    navbar.style.transition = 'transform 0.3s ease-in-out';
+
+    // Compense la hauteur de la navbar sur le body pour éviter que le contenu passe en dessous
+    const navHeight = navbar.offsetHeight;
+    document.body.style.paddingTop = navHeight + 'px';
+
+    let lastScrollTop = 0;
+
+    window.addEventListener('scroll', () => {
+        let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        // Si on scroll vers le bas et qu'on a dépassé la hauteur de la navbar
+        if (scrollTop > lastScrollTop && scrollTop > navHeight) {
+            navbar.style.transform = 'translateY(-100%)'; // Cache la navbar vers le haut
+        } else {
+            // Si on scroll vers le haut
+            navbar.style.transform = 'translateY(0)'; // Fait réapparaître la navbar
+        }
+        
+        // Pour gérer le rebond sur Safari/iOS
+        lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; 
+    });
 }
