@@ -12,9 +12,9 @@ let mainFlatpickr = null;
 let brawlerFlatpickr = null;
 let currentUserId = null;
 
-// Variables globales pour les graphiques
 let fullHistoryData = [];
 let currentLiveTrophies = 0;
+
 let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
 let brawlerChartInstance = null;
