@@ -12,9 +12,6 @@ let mainFlatpickr = null;
 let brawlerFlatpickr = null;
 let currentUserId = null;
 
-let fullHistoryData = [];
-let currentLiveTrophies = 0;
-
 let currentBrawlerHistory = [];
 let currentBrawlerMode = 0;
 let brawlerChartInstance = null;
@@ -1270,7 +1267,7 @@ function renderGenericChart(config) {
 
     const pointColors = finalDataPoints.map(p => getPointColor(p));
 
-    const ctx = document.getElementById(canvasId).getContext('2d');
+    const canvasCtx = document.getElementById(canvasId).getContext('2d');
     let timeUnit = 'day';
     if (isHourMode(mode))                 timeUnit = 'minute';
     else if (mode === 1)                   timeUnit = 'hour';
@@ -1283,7 +1280,7 @@ function renderGenericChart(config) {
         scaleMax = endDate;
     }
 
-    return new Chart(ctx, {
+    return new Chart(canvasCtx, {
         type: 'line',
         data: {
             datasets: [{
@@ -1304,8 +1301,8 @@ function renderGenericChart(config) {
                 },
                 pointHoverRadius: p => (p.raw && p.raw.type === 'ghost' ? 0 : 6),
                 segment: {
-                    borderColor: ctx => {
-                        const p1 = finalDataPoints[ctx.p1DataIndex];
+                    borderColor: canvasCtx => {
+                        const p1 = finalDataPoints[canvasCtx.p1DataIndex];
                         if (p1 && (p1.cType === 'locked' || p1.cType === 'unlocked')) return '#ffffff';
                         return color;
                     }
