@@ -26,13 +26,17 @@
         <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 40px; flex-wrap: wrap;">
             <div style="display: flex; gap: 10px; max-width: 400px; width: 100%;">
                 <input type="text" id="userhome-search-input" placeholder="Chercher un tag (#...)" style="margin: 0;">
-                <button onclick="searchFromUserhome()" class="btn-3d btn-yellow w-auto" style="margin: 0; padding: 0 20px;">🔎</button>
+                <button onclick="searchFromUserhome()" class="btn-3d btn-yellow w-auto" style="margin: 0; padding: 0 20px;">
+                    <img src="/assets/icons/emoji_moba_right.png" alt="Chercher" style="height: 1.2em; vertical-align: middle;" onerror="this.style.display='none'">
+                </button>
             </div>
-            <button onclick="logout()" class="btn-3d btn-red w-auto" style="margin: 0;">🚪 Déconnexion</button>
+            <button onclick="logout()" class="btn-3d btn-red w-auto" style="margin: 0;">Déconnexion</button>
         </div>
         
         <div class="section-header">
-            <h2 class="section-title">🔐 Vos Comptes</h2>
+            <h2 class="section-title">
+                <img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px; filter: hue-rotate(70deg) brightness(1.2);" onerror="this.style.display='none'">Vos Comptes
+            </h2>
             <span id="counter-claims" class="section-counter">...</span>
         </div>
         
@@ -42,7 +46,9 @@
 
 
         <div class="section-header" style="margin-top: 50px;">
-            <h2 class="section-title" style="color: #00d2ff;">👀 Comptes Suivis</h2>
+            <h2 class="section-title" style="color: #00d2ff;">
+                <img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px; filter: hue-rotate(210deg) brightness(1.2);" onerror="this.style.display='none'">Comptes Suivis
+            </h2>
             <span id="counter-follows" class="section-counter">...</span>
         </div>
 
@@ -50,6 +56,18 @@
             <div style="grid-column: 1/-1; text-align: center; color: #666; padding: 20px;">Chargement...</div>
         </div>
 
+        <div class="section-header" style="margin-top: 50px;">
+            <h2 class="section-title" style="color: #ff3333;">
+                <img src="/assets/icons/power_match.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Mon Club
+            </h2>
+            <span id="counter-club" class="section-counter">-</span>
+        </div>
+
+        <div id="club-grid" class="grid-section">
+            <div style="grid-column: 1/-1; text-align: center; color: #666; padding: 20px; font-style: italic;">
+                Fonctionnalité à venir...
+            </div>
+        </div>
     </div>
 
     <script src="/js/config.js"></script>
