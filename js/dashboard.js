@@ -984,9 +984,9 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
     let daysOfHistory = 0;
 
     if (historyData && historyData.length > 0) {
-        const d = historyData[0].date || historyData[0].recorded_at;
+        const minTime = Math.min(...historyData.map(d => new Date((d.date || d.recorded_at).replace(' ', 'T') + 'Z').getTime()));
         if (d) {
-            minDate = new Date(d.replace(' ', 'T') + 'Z');
+            minDate = new Date(minTime);
             const now = new Date();
             daysOfHistory = (now - minDate) / (1000 * 60 * 60 * 24);
         }
