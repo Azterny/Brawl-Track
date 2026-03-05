@@ -626,10 +626,10 @@ function updateBrawlerNavigationUI(data) {
 
     if (!btnPrev || !btnNext) return;
 
-    let firstDataPointDate = new Date();
+let firstDataPointDate = new Date();
     if (data && data.length > 0) {
-        let d = data[0].date || data[0].recorded_at;
-        firstDataPointDate = new Date(d.replace(' ', 'T') + 'Z');
+        const minTime = Math.min(...data.map(d => new Date((d.date || d.recorded_at).replace(' ', 'T') + 'Z').getTime()));
+        firstDataPointDate = new Date(minTime);
     }
 
     const range = calculateDateRange(currentBrawlerMode, currentBrawlerChartOffset, firstDataPointDate);
@@ -684,9 +684,7 @@ function getInterpolatedValue(targetDate, allData) {
     let prev = null, next = null;
 
     for (let pt of allData) {
-        let d = pt.date || pt.recorded_at;
-        if (d) d = d.replace(' ', 'T') + 'Z';
-        let ptTs = new Date(d).getTime();
+        let ptTs = new Date(pt.date).getTime();
 
         if (ptTs <= targetTs) prev = { ...pt, ts: ptTs };
         if (ptTs >= targetTs && !next) { next = { ...pt, ts: ptTs }; break; }
@@ -835,9 +833,9 @@ function renderMainChart() {
 function manageGenericFilters(data, idPrefix) {
     let diffDays = 0;
     if (data && data.length > 0) {
-        let d = data[0].date || data[0].recorded_at;
-        const dateStr = d.replace(' ', 'T');
-        const oldest = new Date(dateStr);
+        // FIX : Trouver la vraie date la plus ancienne (les données brutes de l'API sont inversées)
+        const minTime = Math.min(...data.map(d => new Date((d.date || d.recorded_at).replace(' ', 'T') + 'Z').getTime()));
+        const oldest = new Date(minTime);
         const now = new Date();
         diffDays = (now - oldest) / (1000 * 60 * 60 * 24);
     }
