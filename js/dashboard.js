@@ -1120,7 +1120,15 @@ function renderClubCard(club) {
 function preprocessData(rawData, isBrawler) {
     let processed = [];
 
-    rawData.forEach((d, index) => {
+    // FIX : On s'assure que les données sont TOUJOURS triées du plus ancien au plus récent.
+    // L'API les renvoie souvent en DESC, ce qui cassait l'interpolation et les limites de temps !
+    let sortedRaw = [...rawData].sort((a, b) => {
+        const dateA = new Date((a.date || a.recorded_at).replace(' ', 'T') + 'Z').getTime();
+        const dateB = new Date((b.date || b.recorded_at).replace(' ', 'T') + 'Z').getTime();
+        return dateA - dateB;
+    });
+
+    sortedRaw.forEach((d, index) => {
         const rawVal = d.trophies;
         let displayVal = rawVal;
         let specialType = 'real';
@@ -1128,7 +1136,7 @@ function preprocessData(rawData, isBrawler) {
 
         if (isBrawler) {
             if (rawVal === -1) {
-                const nextRaw = (index + 1 < rawData.length) ? rawData[index+1].trophies : null;
+                const nextRaw = (index + 1 < sortedRaw.length) ? sortedRaw[index+1].trophies : null;
                 if (nextRaw !== null && nextRaw !== -1) {
                     specialType = 'unlocked';
                     specialLabel = "Débloqué";
@@ -1151,8 +1159,10 @@ function preprocessData(rawData, isBrawler) {
             customLabel: specialLabel
         });
     });
+    
     return processed;
 }
+
 
 function renderGenericChart(config) {
     let { rawData, mode, offset, liveValue, color, canvasId, variationId, isBrawler } = config;
