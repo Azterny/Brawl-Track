@@ -158,14 +158,15 @@ function formatBrawlText(text) {
         '10': '#ffffff' // Blanc
     };
 
-    // 3. Remplacement des balises &lt;c...&gt; par des <span> colorés
-    safeText = safeText.replace(/&lt;c(\d+)&gt;/g, (match, colorCode) => {
-        const color = brawlColors[colorCode] || '#ffffff'; // Blanc par défaut si code inconnu
+    // 3. Remplacement des balises &lt;c...&gt; (Codes standards et HEX) par des <span> colorés
+    safeText = safeText.replace(/&lt;c([0-9a-fA-F]{6}|\d+)&gt;/gi, (match, colorCode) => {
+        const color = colorCode.length === 6 ? '#' + colorCode : (brawlColors[colorCode] || '#ffffff');
         return `<span style="color: ${color};">`;
     });
 
-    // 4. Remplacement des balises de fermeture &lt;/c&gt;
-    safeText = safeText.replace(/&lt;\/c&gt;/g, '</span>');
+    // 4. Remplacement des balises de fermeture &lt;/c&gt; et du cas particulier &lt;c
+    safeText = safeText.replace(/&lt;\/c&gt;/gi, '</span>');
+    safeText = safeText.replace(/&lt;c(?!\w)/gi, '</span>');
 
     return `"${safeText}"`;
 }
