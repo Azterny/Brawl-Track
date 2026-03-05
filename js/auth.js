@@ -64,7 +64,7 @@ async function register() {
             alert("✅ Compte créé ! Connecte-toi.");
             toggleForms();
         } else {
-            if(msg) msg.innerText = "⚠️ " + data.message;
+            if(msg) msg.innerHTML = `<img src="/assets/icons/pin_crysmile.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 5px;" onerror="this.style.display='none'"> ` + data.message;
         }
     } catch (e) { if(msg) msg.innerText = "❌ Erreur serveur"; }
 }
