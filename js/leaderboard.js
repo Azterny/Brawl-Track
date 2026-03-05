@@ -63,8 +63,6 @@ async function initLeaderboardRouter() {
             selectedBrawlerId = brawlerId;
         }
         loadCategory(currentCategory);
-    } else {
-        );
     }
 }
 
