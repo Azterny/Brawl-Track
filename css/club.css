@@ -91,3 +91,12 @@
     justify-content: flex-end;
 }
 .member-trophies img { height: 1em; }
+
+/* =========================================
+   5. BORDURES GRADES (MOBILE UNIQUEMENT)
+   ========================================= */
+@media (max-width: 768px) {
+    .member-icon.role-senior-border { border-color: #00d2ff !important; }
+    .member-icon.role-vice-border { border-color: #ff9900 !important; }
+    .member-icon.role-president-border { border-color: #ffce00 !important; }
+}
