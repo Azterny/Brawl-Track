@@ -73,10 +73,33 @@ function renderClub(club) {
     const clubType = typeTranslations[club.type] || club.type;
 
     document.getElementById('stats-area').innerHTML = `
-        <div class="stat-card"><div>Total Trophées</div><div class="stat-value" style="color:#ffce00; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/trophy_normal.png" style="height:0.9em;"> ${club.trophies.toLocaleString('fr-FR')}</div></div>
-        <div class="stat-card"><div>Moyenne / Joueur</div><div class="stat-value" style="color:#28a745; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/trophy_normal.png" style="height:0.9em;"> ${avgTrophies.toLocaleString('fr-FR')}</div></div>
-        <div class="stat-card"><div>Trophées Requis</div><div class="stat-value" style="color:#ff5555; display:flex; align-items:center; justify-content:center; gap:5px;"><img src="/assets/trophy_normal.png" style="height:0.9em;"> ${(club.requiredTrophies || 0).toLocaleString('fr-FR')}</div></div>
-        <div class="stat-card"><div>Accès</div><div class="stat-value" style="color:#fff; font-size: 1.1rem;">${clubType}</div></div>
+        <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
+            <div>
+                <div style="font-size: 0.9em; color: #ccc; margin-bottom: 4px;">Trophées</div>
+                <div class="stat-value" style="color:#ffce00;">${club.trophies.toLocaleString('fr-FR')}</div>
+            </div>
+            <img src="/assets/trophy_normal.png" style="height: 2.5em; object-fit: contain;">
+        </div>
+        <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
+            <div>
+                <div style="font-size: 0.9em; color: #ccc; margin-bottom: 4px;">Moyenne</div>
+                <div class="stat-value" style="color:#28a745;">${avgTrophies.toLocaleString('fr-FR')}</div>
+            </div>
+            <img src="/assets/trophy_normal.png" style="height: 2.5em; object-fit: contain;">
+        </div>
+        <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
+            <div>
+                <div style="font-size: 0.9em; color: #ccc; margin-bottom: 4px;">Requis</div>
+                <div class="stat-value" style="color:#ff5555;">${(club.requiredTrophies || 0).toLocaleString('fr-FR')}</div>
+            </div>
+            <img src="/assets/trophy_normal.png" style="height: 2.5em; object-fit: contain;">
+        </div>
+        <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
+            <div>
+                <div style="font-size: 0.9em; color: #ccc; margin-bottom: 4px;">Accès</div>
+                <div class="stat-value" style="color:#fff; font-size: 1.1rem;">${clubType}</div>
+            </div>
+        </div>
     `;
 
     // 4. Lancement du rendu des membres
@@ -168,7 +191,7 @@ function renderMembers(members) {
         // Aligné à gauche et avec sécurité d'image (onerror)
         row.innerHTML = `
             <div class="member-rank">${index + 1}</div>
-            <img src="https://cdn.brawlify.com/profile-icons/regular/${m.icon.id}.png" class="member-icon" onerror="this.src='/assets/default_icon.png'">
+            <img src="https://cdn.brawlify.com/profile-icons/regular/${m.icon.id}.png" class="member-icon ${roleClass ? roleClass + '-border' : ''}" onerror="this.src='/assets/default_icon.png'">
             <div class="member-info" style="text-align: left;">
                 <div class="member-name" style="color: ${nameColor};">${m.name}</div>
                 <div class="member-tag">${m.tag}</div>
