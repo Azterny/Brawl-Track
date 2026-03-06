@@ -35,11 +35,15 @@
         #export-content.mode-horizontal { width: 1280px; min-height: 720px; }
 
         .export-brawlers-grid {
-            display: grid; gap: 6px; margin-top: 15px; align-content: flex-start; 
+            display: grid; 
+            gap: 5px; /* Écart réduit entre les cases */
+            margin-top: 15px; 
+            align-content: flex-start; 
         }
         
-        #export-content.mode-vertical .export-brawlers-grid { grid-template-columns: repeat(4, 1fr); }
-        #export-content.mode-horizontal .export-brawlers-grid { grid-template-columns: repeat(7, 1fr); }
+        /* OPTIMISATION DENSITÉ : 5 colonnes en portrait, 9 en paysage */
+        #export-content.mode-vertical .export-brawlers-grid { grid-template-columns: repeat(5, 1fr); }
+        #export-content.mode-horizontal .export-brawlers-grid { grid-template-columns: repeat(9, 1fr); }
 
         #status { margin-top: 15px; color: #aaa; font-style: italic; font-size: 0.9rem; }
         
@@ -50,7 +54,6 @@
             flex-shrink: 0;
         }
 
-        /* --- Zone de prévisualisation --- */
         #preview-area {
             margin-top: 25px;
             display: flex;
@@ -72,7 +75,7 @@
 
     <div class="beta-ui">
         <h1 style="color: #ffce00; font-family: 'Lilita One', cursive; margin-top: 0;">Générateur d'Image</h1>
-        <p style="font-size: 0.95rem; color: #ccc;">Saisissez un tag pour prévisualiser la carte</p>
+        <p style="font-size: 0.95rem; color: #ccc;">Densité maximale : 5 colonnes (Portrait) / 9 colonnes (Paysage)</p>
         
         <input type="text" id="tag-input" placeholder="Tag Joueur (ex: 98V02L)" style="text-align: center;">
         
@@ -88,7 +91,6 @@
         </div>
         
         <div id="status"></div>
-
         <div id="preview-area"></div>
     </div>
 
@@ -160,7 +162,7 @@
             }
 
             statusDiv.innerHTML = "Téléchargement des données (Supercell)...";
-            previewArea.innerHTML = ""; // On nettoie l'ancienne prévisualisation
+            previewArea.innerHTML = "";
 
             try {
                 const res = await fetch(`${API_URL}/api/public/player/${tagInput}`);
@@ -205,24 +207,26 @@
 
                     totalPrestigeCalculated += Math.floor(brawler.trophies / 1000);
 
+                    // Taille du texte encore plus adaptative en raison de la compression
                     let fontSize = "0.75rem";
-                    if (brawler.name.length > 11) fontSize = "0.65rem";
-                    if (brawler.name.length > 14) fontSize = "0.55rem";
+                    if (brawler.name.length > 9) fontSize = "0.65rem";
+                    if (brawler.name.length > 12) fontSize = "0.55rem";
 
+                    // Padding gauche/droite réduit à 6px pour optimiser
                     brawlersContainer.innerHTML += `
-                        <div class="brawler-card ${rankClass}" style="padding: 4px 8px !important; border-radius: 6px; border-width: 1.5px !important; display: flex; align-items: center; justify-content: space-between; box-shadow: none !important; height: auto !important; min-height: 0 !important;">
-                            <div style="display: flex; align-items: center; gap: 6px; max-width: 78%; overflow: hidden;">
-                                <img src="https://cdn.brawlify.com/brawlers/borderless/${brawler.id}.png" style="width: 28px; height: 28px; object-fit: contain; background: #111; border: 1px solid #444; border-radius: 4px; flex-shrink: 0;">
+                        <div class="brawler-card ${rankClass}" style="padding: 4px 6px !important; border-radius: 6px; border-width: 1.5px !important; display: flex; align-items: center; justify-content: space-between; box-shadow: none !important; height: auto !important; min-height: 0 !important;">
+                            <div style="display: flex; align-items: center; gap: 5px; max-width: 78%; overflow: hidden;">
+                                <img src="https://cdn.brawlify.com/brawlers/borderless/${brawler.id}.png" style="width: 26px; height: 26px; object-fit: contain; background: #111; border: 1px solid #444; border-radius: 4px; flex-shrink: 0;">
                                 <div style="display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; line-height: 1.1;">
                                     <div style="color: #fff; font-weight: 800; font-size: ${fontSize}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-transform: uppercase;">
                                         ${brawler.name}
                                     </div>
-                                    <div style="color: #ffce00; font-weight: 900; font-size: 0.95rem; margin-top: 2px;">
+                                    <div style="color: #ffce00; font-weight: 900; font-size: 0.95rem; margin-top: 1px;">
                                         ${brawler.trophies}
                                     </div>
                                 </div>
                             </div>
-                            <img src="${rankIconUrl}" style="height: 24px; width: auto; max-width: 26px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
+                            <img src="${rankIconUrl}" style="height: 22px; width: auto; max-width: 24px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
                         </div>
                     `;
                 });
@@ -243,13 +247,11 @@
                     }).then(canvas => {
                         const imgDataUrl = canvas.toDataURL("image/png");
                         
-                        // 1. Afficher l'image générée
                         const previewImg = document.createElement('img');
                         previewImg.src = imgDataUrl;
                         previewImg.className = 'preview-image';
                         previewArea.appendChild(previewImg);
 
-                        // 2. Ajouter le bouton de téléchargement final
                         const downloadBtn = document.createElement('button');
                         downloadBtn.className = 'btn-3d btn-green w-auto';
                         downloadBtn.innerHTML = '⬇️ Télécharger l\'image HD';
