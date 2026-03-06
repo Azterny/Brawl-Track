@@ -12,43 +12,30 @@
 
     <style>
         .beta-ui {
-            max-width: 600px; margin: 50px auto; padding: 30px;
+            max-width: 650px; margin: 50px auto; padding: 30px;
             background: #222; border-radius: 12px; text-align: center;
             border: 1px solid #444; color: white;
         }
 
         #export-wrapper {
             position: absolute; left: -9999px; top: 0;
-            padding: 20px; /* Espace de sécurité hors écran */
+            padding: 20px; 
         }
 
-        /* --- CONTENEUR PRINCIPAL AVEC PROPORTIONS FIXES --- */
         #export-content {
             background: #1a1a1a; 
             padding: 20px; 
             border-radius: 12px;
             box-sizing: border-box;
             display: flex;
-            flex-direction: column; /* Permet de pousser le footer en bas */
+            flex-direction: column; 
         }
 
-        /* Portrait (Ratio standard Smartphone ~9:16) */
-        #export-content.mode-vertical { 
-            width: 720px; 
-            min-height: 1280px; 
-        }
-        
-        /* Paysage (Ratio standard Écran ~16:9) */
-        #export-content.mode-horizontal { 
-            width: 1280px; 
-            min-height: 720px; 
-        }
+        #export-content.mode-vertical { width: 720px; min-height: 1280px; }
+        #export-content.mode-horizontal { width: 1280px; min-height: 720px; }
 
         .export-brawlers-grid {
-            display: grid;
-            gap: 6px; 
-            margin-top: 15px;
-            align-content: flex-start; /* Aligne les cases en haut si espace vide */
+            display: grid; gap: 6px; margin-top: 15px; align-content: flex-start; 
         }
         
         #export-content.mode-vertical .export-brawlers-grid { grid-template-columns: repeat(4, 1fr); }
@@ -62,13 +49,30 @@
             padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
             flex-shrink: 0;
         }
+
+        /* --- Zone de prévisualisation --- */
+        #preview-area {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .preview-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 2px solid #444;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            animation: slideUpFade 0.4s ease-out;
+        }
     </style>
 </head>
 <body>
 
     <div class="beta-ui">
         <h1 style="color: #ffce00; font-family: 'Lilita One', cursive; margin-top: 0;">Générateur d'Image</h1>
-        <p style="font-size: 0.95rem; color: #ccc;">Layout : Proportions Fixes (16:9) & Intégration Club</p>
+        <p style="font-size: 0.95rem; color: #ccc;">Saisissez un tag pour prévisualiser la carte</p>
         
         <input type="text" id="tag-input" placeholder="Tag Joueur (ex: 98V02L)" style="text-align: center;">
         
@@ -84,13 +88,13 @@
         </div>
         
         <div id="status"></div>
+
+        <div id="preview-area"></div>
     </div>
 
     <div id="export-wrapper">
         <div id="export-content">
-            
             <div class="export-header">
-                
                 <div style="display: flex; align-items: center; gap: 15px; max-width: 35%; flex-shrink: 0;">
                     <img id="export-player-icon" src="/assets/default_icon.png" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;">
                     <div style="line-height: 1.1; overflow: hidden;">
@@ -129,7 +133,6 @@
                 <img src="/assets/logo.png" style="height: 16px; opacity: 0.7; filter: grayscale(50%);">
                 BRAWL-TRACK.COM
             </div>
-            
         </div>
     </div>
 
@@ -148,21 +151,22 @@
         async function generateImage(mode) {
             const tagInput = document.getElementById('tag-input').value.trim().toUpperCase().replace('#', '').replace('O', '0');
             const statusDiv = document.getElementById('status');
+            const previewArea = document.getElementById('preview-area');
             const brawlersContainer = document.getElementById('export-brawlers');
             
             if (!tagInput) {
-                statusDiv.innerHTML = "<span style='color: #ff5555;'>Veuillez entrer un Tag !</span>"; return;
+                statusDiv.innerHTML = "<span style='color: #ff5555;'>Veuillez entrer un Tag !</span>"; 
+                return;
             }
 
             statusDiv.innerHTML = "Téléchargement des données (Supercell)...";
+            previewArea.innerHTML = ""; // On nettoie l'ancienne prévisualisation
 
             try {
-                // Fetch Profil Joueur
                 const res = await fetch(`${API_URL}/api/public/player/${tagInput}`);
                 if (!res.ok) throw new Error("Joueur introuvable");
                 const data = await res.json();
 
-                // 1. Identité
                 let nameColor = data.nameColor ? (data.nameColor.startsWith('0x') ? '#' + data.nameColor.slice(4) : data.nameColor) : '#fff';
                 document.getElementById('export-player-name').innerText = data.name;
                 document.getElementById('export-player-name').style.color = nameColor;
@@ -171,14 +175,12 @@
                     document.getElementById('export-player-icon').src = `https://cdn.brawlify.com/profile-icons/regular/${data.icon.id}.png`;
                 }
 
-                // 2. Traitement du Club
                 const clubContainer = document.getElementById('export-club-info');
                 if (data.club && data.club.name) {
                     document.getElementById('export-club-name').innerText = data.club.name;
                     document.getElementById('export-club-tag').innerText = data.club.tag;
                     clubContainer.style.display = 'flex';
                     
-                    // Récupération asynchrone du badge HD du club
                     try {
                         const clubRes = await fetch(`${API_URL}/api/public/club/${data.club.tag.replace('#', '')}`);
                         if (clubRes.ok) {
@@ -187,12 +189,11 @@
                                 document.getElementById('export-club-icon').src = `https://brawlify.com/images/club-badges/96/${clubData.badgeId}.webp`;
                             }
                         }
-                    } catch(e) { console.log("Erreur badge club:", e); }
+                    } catch(e) {}
                 } else {
                     clubContainer.style.display = 'none';
                 }
 
-                // 3. Traitement Brawlers
                 brawlersContainer.innerHTML = "";
                 const activeBrawlers = data.brawlers.filter(b => b.trophies !== -1).sort((a, b) => b.trophies - a.trophies);
                 let totalPrestigeCalculated = 0;
@@ -226,33 +227,46 @@
                     `;
                 });
 
-                // 4. Stats
                 const totalVictoriesCalculated = (data['3vs3Victories'] || 0) + (data.soloVictories || 0) + (data.duoVictories || 0);
                 document.getElementById('export-player-trophies').innerText = data.trophies.toLocaleString('en-US');
                 document.getElementById('export-player-victories').innerText = totalVictoriesCalculated.toLocaleString('en-US');
                 document.getElementById('export-player-prestiges').innerText = totalPrestigeCalculated;
 
-                // 5. Rendu html2canvas
                 document.getElementById('export-content').className = `mode-${mode}`;
                 statusDiv.innerHTML = "Rendu de l'image en cours (Ne pas quitter la page)...";
 
                 setTimeout(() => {
-                    // On cible directement export-content pour avoir les dimensions exactes sans bords vides
                     html2canvas(document.getElementById('export-content'), {
                         backgroundColor: '#1a1a1a',
                         useCORS: true,
                         scale: 2
                     }).then(canvas => {
-                        let link = document.createElement('a');
-                        link.download = `BrawlTrack_${data.name}_${mode}.png`;
-                        link.href = canvas.toDataURL("image/png");
-                        link.click();
-                        statusDiv.innerHTML = `<span style="color: #28a745;">✓ Image téléchargée avec succès !</span>`;
+                        const imgDataUrl = canvas.toDataURL("image/png");
+                        
+                        // 1. Afficher l'image générée
+                        const previewImg = document.createElement('img');
+                        previewImg.src = imgDataUrl;
+                        previewImg.className = 'preview-image';
+                        previewArea.appendChild(previewImg);
+
+                        // 2. Ajouter le bouton de téléchargement final
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.className = 'btn-3d btn-green w-auto';
+                        downloadBtn.innerHTML = '⬇️ Télécharger l\'image HD';
+                        downloadBtn.onclick = () => {
+                            let link = document.createElement('a');
+                            link.download = `BrawlTrack_${data.name}_${mode}.png`;
+                            link.href = imgDataUrl;
+                            link.click();
+                        };
+                        previewArea.appendChild(downloadBtn);
+
+                        statusDiv.innerHTML = `<span style="color: #28a745;">✓ Aperçu généré avec succès !</span>`;
                     }).catch(err => {
                         console.error(err);
                         statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur de rendu HTML2Canvas.</span>";
                     });
-                }, 1000); // 1 sec pour laisser le temps au fetch du badge club
+                }, 1000);
 
             } catch (e) {
                 statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur : Joueur introuvable ou API indisponible.</span>";
