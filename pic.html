@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brawl Track - Générateur d'Image (Bêta Compacte)</title>
+    <title>Brawl Track - Générateur d'Image (Ultra Compact)</title>
     
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/style.css">
@@ -17,44 +17,55 @@
             border: 1px solid #444; color: white;
         }
 
+        /* --- ZONE FANTÔME (Ultra optimisée) --- */
         #export-wrapper {
             position: absolute; left: -9999px; top: 0;
-            background: #1a1a1a; padding: 30px; border-radius: 16px;
+            background: #1a1a1a; 
+            padding: 15px; /* Marges globales réduites au max */
+            border-radius: 12px;
         }
 
-        #export-content.mode-vertical { width: 650px; }
+        /* Largeurs fixes pour forcer la proportion */
+        #export-content.mode-vertical { width: 720px; }
         #export-content.mode-horizontal { width: 1200px; }
 
-        /* Grille compacte avec des espaces réduits */
+        /* Grille des Brawlers (Ultra compacte) */
         .export-brawlers-grid {
             display: grid;
-            gap: 10px; /* Espace réduit entre les cases */
-            margin-top: 25px;
+            gap: 5px; /* Écart minuscule entre les cases */
+            margin-top: 15px;
         }
         
-        /* On passe à 3 colonnes en vertical et 5 en horizontal pour laisser la place au texte */
-        #export-content.mode-vertical .export-brawlers-grid { grid-template-columns: repeat(3, 1fr); }
-        #export-content.mode-horizontal .export-brawlers-grid { grid-template-columns: repeat(5, 1fr); }
+        /* 4 colonnes = format Portrait parfait | 7 colonnes = format Paysage parfait */
+        #export-content.mode-vertical .export-brawlers-grid { grid-template-columns: repeat(4, 1fr); }
+        #export-content.mode-horizontal .export-brawlers-grid { grid-template-columns: repeat(7, 1fr); }
 
-        #status { margin-top: 15px; color: #aaa; font-style: italic; }
+        #status { margin-top: 15px; color: #aaa; font-style: italic; font-size: 0.9rem; }
+        
+        /* Ajustement du header pour prendre moins de place */
+        .export-header {
+            display: flex; align-items: center; gap: 15px; 
+            background-color: rgba(0, 0, 0, 0.4); 
+            padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
 
     <div class="beta-ui">
-        <h1 style="color: #ffce00; font-family: 'Lilita One', cursive;">Générateur d'Image (Compact)</h1>
-        <p>Entrez un Tag Joueur pour générer sa carte :</p>
+        <h1 style="color: #ffce00; font-family: 'Lilita One', cursive; margin-top: 0;">Générateur d'Image</h1>
+        <p style="font-size: 0.95rem; color: #ccc;">(Optimisé pour 100+ Brawlers)</p>
         
-        <input type="text" id="tag-input" placeholder="Tag (ex: 98V02L)" style="text-align: center;">
+        <input type="text" id="tag-input" placeholder="Tag Joueur (ex: 98V02L)" style="text-align: center;">
         
         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
             <button class="btn-3d btn-blue w-auto" onclick="generateImage('vertical')">
-                <img src="/assets/icons/picture.png" style="height: 18px; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'"> 
-                Mode Vertical
+                <img src="/assets/icons/picture.png" style="height: 18px; vertical-align: middle; margin-right: 5px;" onerror="this.style.display='none'"> 
+                Portrait
             </button>
             <button class="btn-3d btn-yellow w-auto" onclick="generateImage('horizontal')">
-                <img src="/assets/icons/picture.png" style="height: 18px; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'"> 
-                Mode Horizontal
+                <img src="/assets/icons/picture.png" style="height: 18px; vertical-align: middle; margin-right: 5px;" onerror="this.style.display='none'"> 
+                Paysage
             </button>
         </div>
         
@@ -63,21 +74,21 @@
 
     <div id="export-wrapper">
         <div id="export-content">
-            <div class="header-bar" style="display: flex; align-items: center; gap: 20px; box-shadow: none;">
-                <img id="export-player-icon" src="/assets/default_icon.png" style="width: 84px; height: 84px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2);">
-                <div style="flex-grow: 1;">
-                    <h2 id="export-player-name" style="margin: 0; font-size: 2.2rem; color: #fff;">Nom</h2>
-                    <div id="export-player-tag" style="color: #888; font-family: monospace; font-size: 1rem;">#TAG</div>
+            <div class="export-header">
+                <img id="export-player-icon" src="/assets/default_icon.png" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2);">
+                <div style="flex-grow: 1; line-height: 1.1;">
+                    <h2 id="export-player-name" style="margin: 0; font-size: 1.8rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;">Nom</h2>
+                    <div id="export-player-tag" style="color: #888; font-family: monospace; font-size: 0.9rem;">#TAG</div>
                 </div>
-                <div style="text-align: right; color: #ffce00; font-size: 1.8rem; font-weight: bold; font-family: 'Lilita One', cursive;">
-                    <img src="/assets/trophy_normal.png" style="height: 28px; vertical-align: middle; margin-right: 5px;">
+                <div style="text-align: right; color: #ffce00; font-size: 1.6rem; font-weight: bold; font-family: 'Lilita One', cursive;">
+                    <img src="/assets/trophy_normal.png" style="height: 24px; vertical-align: middle; margin-right: 2px; margin-top: -4px;">
                     <span id="export-player-trophies">0</span>
                 </div>
             </div>
 
             <div id="export-brawlers" class="export-brawlers-grid"></div>
             
-            <div style="text-align: center; margin-top: 20px; color: #666; font-family: 'Audiowide', cursive;">
+            <div style="text-align: right; margin-top: 10px; color: #555; font-family: 'Audiowide', cursive; font-size: 0.75rem;">
                 BRAWL-TRACK.COM
             </div>
         </div>
@@ -104,13 +115,14 @@
                 statusDiv.innerHTML = "<span style='color: #ff5555;'>Veuillez entrer un Tag !</span>"; return;
             }
 
-            statusDiv.innerHTML = "Récupération des données...";
+            statusDiv.innerHTML = "Téléchargement des données (Supercell)...";
 
             try {
                 const res = await fetch(`${API_URL}/api/public/player/${tagInput}`);
                 if (!res.ok) throw new Error("Joueur introuvable");
                 const data = await res.json();
 
+                // En-tête
                 let nameColor = data.nameColor ? (data.nameColor.startsWith('0x') ? '#' + data.nameColor.slice(4) : data.nameColor) : '#fff';
                 document.getElementById('export-player-name').innerText = data.name;
                 document.getElementById('export-player-name').style.color = nameColor;
@@ -120,55 +132,55 @@
                     document.getElementById('export-player-icon').src = `https://cdn.brawlify.com/profile-icons/regular/${data.icon.id}.png`;
                 }
 
+                // Génération des Brawlers
                 brawlersContainer.innerHTML = "";
                 const activeBrawlers = data.brawlers.filter(b => b.trophies !== -1).sort((a, b) => b.trophies - a.trophies);
 
                 activeBrawlers.forEach(brawler => {
                     const rankName = getBrawlerRank(brawler.trophies);
                     const rankClass = `rank-${rankName}`;
-                    const rankIconUrl = `/assets/ranks/${rankName}.webp`; // Utilise tes images locales de rangs
+                    const rankIconUrl = `/assets/ranks/${rankName}.webp`;
 
-                    // --- NOUVEAU DESIGN COMPACT ---
+                    // --- CARTE ULTRA COMPACTE (padding 4px 8px, typo réduite) ---
                     brawlersContainer.innerHTML += `
-                        <div class="brawler-card ${rankClass}" style="padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+                        <div class="brawler-card ${rankClass}" style="padding: 4px 8px; border-radius: 6px; border-width: 1.5px !important; display: flex; align-items: center; justify-content: space-between; box-shadow: none !important;">
                             
-                            <div style="color: white; font-weight: bold; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%;">
+                            <div style="color: white; font-weight: bold; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%;">
                                 ${brawler.name}
                             </div>
                             
-                            <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-                                <img src="${rankIconUrl}" style="width: 20px; height: 20px; object-fit: contain;">
-                                <div style="color: #ffce00; font-weight: bold; font-size: 1rem; display: flex; align-items: center; gap: 4px;">
-                                    ${brawler.trophies} <img src="/assets/trophy_normal.png" style="width: 14px;">
+                            <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                                <img src="${rankIconUrl}" style="width: 16px; height: 16px; object-fit: contain;">
+                                <div style="color: #ffce00; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 2px;">
+                                    ${brawler.trophies} <img src="/assets/trophy_normal.png" style="width: 12px; height: 12px; margin-top: -1px;">
                                 </div>
                             </div>
-
                         </div>
                     `;
                 });
 
                 document.getElementById('export-content').className = `mode-${mode}`;
-                statusDiv.innerHTML = "Génération de l'image en cours...";
+                statusDiv.innerHTML = "Rendu de l'image en cours (Ne pas quitter la page)...";
 
                 setTimeout(() => {
                     html2canvas(document.getElementById('export-wrapper'), {
                         backgroundColor: '#1a1a1a',
                         useCORS: true,
-                        scale: 2
+                        scale: 2 // On garde x2 pour une belle résolution
                     }).then(canvas => {
                         let link = document.createElement('a');
                         link.download = `BrawlTrack_${data.name}_${mode}.png`;
                         link.href = canvas.toDataURL("image/png");
                         link.click();
-                        statusDiv.innerHTML = `<span style="color: #28a745;">Image téléchargée !</span>`;
+                        statusDiv.innerHTML = `<span style="color: #28a745;">✓ Image téléchargée avec succès !</span>`;
                     }).catch(err => {
                         console.error(err);
-                        statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur de génération.</span>";
+                        statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur de rendu HTML2Canvas.</span>";
                     });
                 }, 800);
 
             } catch (e) {
-                statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur : Joueur introuvable.</span>";
+                statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur : Joueur introuvable ou API indisponible.</span>";
             }
         }
     </script>
