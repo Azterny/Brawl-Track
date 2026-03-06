@@ -37,7 +37,7 @@
         #status { margin-top: 15px; color: #aaa; font-style: italic; font-size: 0.9rem; }
         
         .export-header {
-            display: flex; align-items: center; gap: 15px; 
+            display: flex; align-items: center; justify-content: space-between; gap: 15px; 
             background-color: rgba(0, 0, 0, 0.4); 
             padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -47,7 +47,7 @@
 
     <div class="beta-ui">
         <h1 style="color: #ffce00; font-family: 'Lilita One', cursive; margin-top: 0;">Générateur d'Image</h1>
-        <p style="font-size: 0.95rem; color: #ccc;">Layout final : Icône Brawler + Texte Adaptatif + Ratio Fixe</p>
+        <p style="font-size: 0.95rem; color: #ccc;">Layout final : Icônes, Stats Totales & Ratio Fixe</p>
         
         <input type="text" id="tag-input" placeholder="Tag Joueur (ex: 98V02L)" style="text-align: center;">
         
@@ -67,23 +67,43 @@
 
     <div id="export-wrapper">
         <div id="export-content">
+            
             <div class="export-header">
-                <img id="export-player-icon" src="/assets/default_icon.png" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2);">
-                <div style="flex-grow: 1; line-height: 1.1;">
-                    <h2 id="export-player-name" style="margin: 0; font-size: 1.8rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;">Nom</h2>
-                    <div id="export-player-tag" style="color: #888; font-family: monospace; font-size: 0.9rem;">#TAG</div>
+                <div style="display: flex; align-items: center; gap: 15px; max-width: 45%;">
+                    <img id="export-player-icon" src="/assets/default_icon.png" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;">
+                    <div style="line-height: 1.1; overflow: hidden;">
+                        <h2 id="export-player-name" style="margin: 0; font-size: 1.8rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nom</h2>
+                        <div id="export-player-tag" style="color: #888; font-family: monospace; font-size: 0.9rem;">#TAG</div>
+                    </div>
                 </div>
-                <div style="text-align: right; color: #ffce00; font-size: 1.6rem; font-weight: bold; font-family: 'Lilita One', cursive;">
-                    <img src="/assets/trophy_normal.png" style="height: 24px; vertical-align: middle; margin-right: 2px; margin-top: -4px;">
-                    <span id="export-player-trophies">0</span>
+
+                <div style="display: flex; align-items: center; gap: 20px; font-family: 'Lilita One', cursive; flex-shrink: 0;">
+                    
+                    <div style="color: #ccc; font-size: 1.3rem; display: flex; align-items: center; gap: 6px;">
+                        <img src="/assets/icons/wipeout.png" style="height: 18px; filter: grayscale(100%) brightness(1.5);">
+                        <span id="export-player-victories">0</span>
+                    </div>
+
+                    <div style="color: #C83FA0; font-size: 1.3rem; display: flex; align-items: center; gap: 6px;">
+                        <img src="/assets/total prestige.png" style="height: 18px; filter: drop-shadow(0 0 2px rgba(200,63,160,0.5));">
+                        <span id="export-player-prestiges">0</span>
+                    </div>
+
+                    <div style="color: #ffce00; font-size: 1.6rem; font-weight: bold; display: flex; align-items: center; gap: 6px;">
+                        <img src="/assets/trophy_normal.png" style="height: 24px; margin-top: -4px;">
+                        <span id="export-player-trophies">0</span>
+                    </div>
+
                 </div>
             </div>
 
             <div id="export-brawlers" class="export-brawlers-grid"></div>
             
-            <div style="text-align: right; margin-top: 10px; color: #555; font-family: 'Audiowide', cursive; font-size: 0.75rem;">
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 10px; color: #555; font-family: 'Audiowide', cursive; font-size: 0.75rem;">
+                <img src="/assets/logo.png" style="height: 14px; opacity: 0.7; filter: grayscale(50%);">
                 BRAWL-TRACK.COM
             </div>
+            
         </div>
     </div>
 
@@ -115,37 +135,38 @@
                 if (!res.ok) throw new Error("Joueur introuvable");
                 const data = await res.json();
 
+                // 1. Mise à jour de l'Identité
                 let nameColor = data.nameColor ? (data.nameColor.startsWith('0x') ? '#' + data.nameColor.slice(4) : data.nameColor) : '#fff';
                 document.getElementById('export-player-name').innerText = data.name;
                 document.getElementById('export-player-name').style.color = nameColor;
                 document.getElementById('export-player-tag').innerText = data.tag;
-                document.getElementById('export-player-trophies').innerText = data.trophies;
                 if (data.icon && data.icon.id) {
                     document.getElementById('export-player-icon').src = `https://cdn.brawlify.com/profile-icons/regular/${data.icon.id}.png`;
                 }
 
+                // 2. Traitement des Brawlers & Calcul des Prestiges
                 brawlersContainer.innerHTML = "";
                 const activeBrawlers = data.brawlers.filter(b => b.trophies !== -1).sort((a, b) => b.trophies - a.trophies);
+                
+                let totalPrestigeCalculated = 0;
 
                 activeBrawlers.forEach(brawler => {
                     const rankName = getBrawlerRank(brawler.trophies);
                     const rankClass = `rank-${rankName}`;
                     const rankIconUrl = `/assets/ranks/${rankName}.webp`;
 
-                    // LOGIQUE TEXTE ADAPTATIF :
-                    // On réduit la taille de la police si le nom est long pour qu'il rentre toujours
-                    let fontSize = "0.75rem"; // Taille normale
-                    if (brawler.name.length > 11) fontSize = "0.65rem"; // Taille réduite (ex: LARRY & LAWRIE)
-                    if (brawler.name.length > 14) fontSize = "0.55rem"; // Taille ultra réduite
+                    // Ajout du prestige de ce brawler au total
+                    totalPrestigeCalculated += Math.floor(brawler.trophies / 1000);
 
-                    // NOUVEAU LAYOUT : [Icône Brawler] [Nom + Trophées] -------- [Rang]
+                    // Taille du texte
+                    let fontSize = "0.75rem";
+                    if (brawler.name.length > 11) fontSize = "0.65rem";
+                    if (brawler.name.length > 14) fontSize = "0.55rem";
+
                     brawlersContainer.innerHTML += `
                         <div class="brawler-card ${rankClass}" style="padding: 4px 8px !important; border-radius: 6px; border-width: 1.5px !important; display: flex; align-items: center; justify-content: space-between; box-shadow: none !important; height: auto !important; min-height: 0 !important;">
-                            
                             <div style="display: flex; align-items: center; gap: 6px; max-width: 78%; overflow: hidden;">
-                                
                                 <img src="https://cdn.brawlify.com/brawlers/borderless/${brawler.id}.png" style="width: 28px; height: 28px; object-fit: contain; background: #111; border: 1px solid #444; border-radius: 4px; flex-shrink: 0;">
-                                
                                 <div style="display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; line-height: 1.1;">
                                     <div style="color: #fff; font-weight: 800; font-size: ${fontSize}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-transform: uppercase;">
                                         ${brawler.name}
@@ -155,13 +176,19 @@
                                     </div>
                                 </div>
                             </div>
-                            
                             <img src="${rankIconUrl}" style="height: 24px; width: auto; max-width: 26px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
-                            
                         </div>
                     `;
                 });
 
+                // 3. Mise à jour des Statistiques Globales
+                const totalVictoriesCalculated = (data['3vs3Victories'] || 0) + (data.soloVictories || 0) + (data.duoVictories || 0);
+
+                document.getElementById('export-player-trophies').innerText = data.trophies.toLocaleString('en-US');
+                document.getElementById('export-player-victories').innerText = totalVictoriesCalculated.toLocaleString('en-US');
+                document.getElementById('export-player-prestiges').innerText = totalPrestigeCalculated;
+
+                // Rendu
                 document.getElementById('export-content').className = `mode-${mode}`;
                 statusDiv.innerHTML = "Rendu de l'image en cours (Ne pas quitter la page)...";
 
