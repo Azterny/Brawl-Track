@@ -212,26 +212,16 @@ input:focus, select:focus {
 .brawler-card.rank-prestige2 { background: linear-gradient(160deg, #2a0e22 0%, #1a0815 100%); }
 .brawler-card.rank-prestige3 { background: linear-gradient(160deg, #1a1a2e 0%, #0e0e1a 100%); }
 
-/* Bordures par rang */
+/* Bordures par rang (sans effets néons) */
 .brawler-card.rank-wood   { border: 2px solid #6B4F2A !important; box-shadow: 0 2px 8px rgba(107, 79, 42, 0.2); }
 .brawler-card.rank-bronze { border: 2px solid #CD7F32 !important; box-shadow: 0 2px 8px rgba(205, 127, 50, 0.25); }
 .brawler-card.rank-silver { border: 2px solid #A0A8B8 !important; box-shadow: 0 2px 8px rgba(160, 168, 184, 0.2); }
 .brawler-card.rank-gold   { border: 2px solid #E6B800 !important; box-shadow: 0 2px 10px rgba(230, 184, 0, 0.3); }
 
-.brawler-card.rank-prestige1 {
-    border: 2.5px solid #7B3FD8 !important;
-    box-shadow: 0 0 8px rgba(123, 63, 216, 0.45), inset 0 0 6px rgba(123, 63, 216, 0.06);
-    animation: neon-prestige1 3s ease-in-out infinite;
-}
-.brawler-card.rank-prestige2 {
-    border: 2.5px solid #C83FA0 !important;
-    box-shadow: 0 0 8px rgba(200, 63, 160, 0.45), inset 0 0 6px rgba(200, 63, 160, 0.06);
-    animation: neon-prestige2 3s ease-in-out infinite;
-}
-.brawler-card.rank-prestige3 {
-    border: 2.5px solid #FFD700 !important;
-    animation: neon-prestige3 3s ease-in-out infinite;
-}
+/* Prestiges en version "Flat" pour les performances */
+.brawler-card.rank-prestige1 { border: 2.5px solid #7B3FD8 !important; }
+.brawler-card.rank-prestige2 { border: 2.5px solid #C83FA0 !important; }
+.brawler-card.rank-prestige3 { border: 2.5px solid #FFD700 !important; }
 
 /* Hover par rang */
 .brawler-card.rank-wood:hover {
@@ -254,40 +244,22 @@ input:focus, select:focus {
     border-color: #FFD700 !important;
     box-shadow: 0 6px 20px rgba(255, 215, 0, 0.55) !important;
 }
+
+/* Hover des Prestiges allégé (juste le changement de couleur et l'agrandissement) */
 .brawler-card.rank-prestige1:hover {
     transform: scale(1.08) translateY(-4px);
-    animation-play-state: paused;
     border-color: #AA66FF !important;
-    box-shadow: 0 6px 22px rgba(170, 102, 255, 0.7), inset 0 0 10px rgba(123, 63, 216, 0.12) !important;
 }
 .brawler-card.rank-prestige2:hover {
     transform: scale(1.08) translateY(-4px);
-    animation-play-state: paused;
     border-color: #FF66CC !important;
-    box-shadow: 0 6px 22px rgba(255, 102, 204, 0.7), inset 0 0 10px rgba(200, 63, 160, 0.12) !important;
 }
 .brawler-card.rank-prestige3:hover {
     transform: scale(1.08) translateY(-4px);
-    animation-play-state: paused;
     border-color: #FFE566 !important;
-    box-shadow: 0 6px 24px rgba(255, 215, 0, 0.75), inset 0 0 10px rgba(255, 215, 0, 0.12) !important;
 }
 
-/* Animations neon prestige */
-@keyframes neon-prestige1 {
-    0%, 100% { box-shadow: 0 0 6px rgba(123, 63, 216, 0.4), inset 0 0 5px rgba(123, 63, 216, 0.05); border-color: #7B3FD8; }
-    50%       { box-shadow: 0 0 14px rgba(155, 95, 240, 0.65), inset 0 0 8px rgba(123, 63, 216, 0.08); border-color: #9B5FF0; }
-}
-@keyframes neon-prestige2 {
-    0%, 100% { box-shadow: 0 0 6px rgba(200, 63, 160, 0.4), inset 0 0 5px rgba(200, 63, 160, 0.05); border-color: #C83FA0; }
-    50%       { box-shadow: 0 0 14px rgba(230, 95, 190, 0.65), inset 0 0 8px rgba(200, 63, 160, 0.08); border-color: #E65FBE; }
-}
-@keyframes neon-prestige3 {
-    0%, 100% { border-color: #FFD700; box-shadow: 0 0 6px rgba(255, 215, 0, 0.45), inset 0 0 5px rgba(255, 215, 0, 0.05); }
-    50%       { border-color: #FFE566; box-shadow: 0 0 14px rgba(255, 229, 102, 0.7), inset 0 0 8px rgba(255, 215, 0, 0.1); }
-}
-
-/* Badge de rang et icône de trophée sur les cartes */
+/* Badge de rang et icône de trophée sur les cartes ( inchangé ) */
 .brawler-rank-badge {
     position: absolute;
     bottom: 44px;
