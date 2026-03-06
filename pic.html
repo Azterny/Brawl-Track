@@ -19,16 +19,36 @@
 
         #export-wrapper {
             position: absolute; left: -9999px; top: 0;
-            background: #1a1a1a; padding: 15px; border-radius: 12px;
+            padding: 20px; /* Espace de sécurité hors écran */
         }
 
-        #export-content.mode-vertical { width: 720px; }
-        #export-content.mode-horizontal { width: 1200px; }
+        /* --- CONTENEUR PRINCIPAL AVEC PROPORTIONS FIXES --- */
+        #export-content {
+            background: #1a1a1a; 
+            padding: 20px; 
+            border-radius: 12px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column; /* Permet de pousser le footer en bas */
+        }
+
+        /* Portrait (Ratio standard Smartphone ~9:16) */
+        #export-content.mode-vertical { 
+            width: 720px; 
+            min-height: 1280px; 
+        }
+        
+        /* Paysage (Ratio standard Écran ~16:9) */
+        #export-content.mode-horizontal { 
+            width: 1280px; 
+            min-height: 720px; 
+        }
 
         .export-brawlers-grid {
             display: grid;
             gap: 6px; 
             margin-top: 15px;
+            align-content: flex-start; /* Aligne les cases en haut si espace vide */
         }
         
         #export-content.mode-vertical .export-brawlers-grid { grid-template-columns: repeat(4, 1fr); }
@@ -40,6 +60,7 @@
             display: flex; align-items: center; justify-content: space-between; gap: 15px; 
             background-color: rgba(0, 0, 0, 0.4); 
             padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -47,7 +68,7 @@
 
     <div class="beta-ui">
         <h1 style="color: #ffce00; font-family: 'Lilita One', cursive; margin-top: 0;">Générateur d'Image</h1>
-        <p style="font-size: 0.95rem; color: #ccc;">Layout final : Icônes, Stats Totales & Ratio Fixe</p>
+        <p style="font-size: 0.95rem; color: #ccc;">Layout : Proportions Fixes (16:9) & Intégration Club</p>
         
         <input type="text" id="tag-input" placeholder="Tag Joueur (ex: 98V02L)" style="text-align: center;">
         
@@ -69,38 +90,43 @@
         <div id="export-content">
             
             <div class="export-header">
-                <div style="display: flex; align-items: center; gap: 15px; max-width: 45%;">
+                
+                <div style="display: flex; align-items: center; gap: 15px; max-width: 35%; flex-shrink: 0;">
                     <img id="export-player-icon" src="/assets/default_icon.png" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;">
                     <div style="line-height: 1.1; overflow: hidden;">
-                        <h2 id="export-player-name" style="margin: 0; font-size: 1.8rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nom</h2>
+                        <h2 id="export-player-name" style="margin: 0; font-size: 1.6rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Nom</h2>
                         <div id="export-player-tag" style="color: #888; font-family: monospace; font-size: 0.9rem;">#TAG</div>
                     </div>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 20px; font-family: 'Lilita One', cursive; flex-shrink: 0;">
-                    
+                <div id="export-club-info" style="display: none; align-items: center; gap: 10px; border-left: 2px solid rgba(255,255,255,0.1); border-right: 2px solid rgba(255,255,255,0.1); padding: 0 15px; flex-grow: 1; justify-content: center; overflow: hidden;">
+                    <img id="export-club-icon" src="https://brawlify.com/images/club-badges/96/8000000.webp" style="width: 36px; height: 36px; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); flex-shrink: 0;">
+                    <div style="line-height: 1.1; overflow: hidden; text-align: left;">
+                        <div id="export-club-name" style="color: #fff; font-weight: bold; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Club</div>
+                        <div id="export-club-tag" style="color: #ffce00; font-family: monospace; font-size: 0.8rem;">#TAG</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 15px; font-family: 'Lilita One', cursive; flex-shrink: 0;">
                     <div style="color: #ccc; font-size: 1.3rem; display: flex; align-items: center; gap: 6px;">
                         <img src="/assets/icons/wipeout.png" style="height: 18px; filter: grayscale(100%) brightness(1.5);">
                         <span id="export-player-victories">0</span>
                     </div>
-
                     <div style="color: #C83FA0; font-size: 1.3rem; display: flex; align-items: center; gap: 6px;">
                         <img src="/assets/total prestige.png" style="height: 18px; filter: drop-shadow(0 0 2px rgba(200,63,160,0.5));">
                         <span id="export-player-prestiges">0</span>
                     </div>
-
                     <div style="color: #ffce00; font-size: 1.6rem; font-weight: bold; display: flex; align-items: center; gap: 6px;">
                         <img src="/assets/trophy_normal.png" style="height: 24px; margin-top: -4px;">
                         <span id="export-player-trophies">0</span>
                     </div>
-
                 </div>
             </div>
 
             <div id="export-brawlers" class="export-brawlers-grid"></div>
             
-            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 10px; color: #555; font-family: 'Audiowide', cursive; font-size: 0.75rem;">
-                <img src="/assets/logo.png" style="height: 14px; opacity: 0.7; filter: grayscale(50%);">
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: auto; padding-top: 15px; color: #555; font-family: 'Audiowide', cursive; font-size: 0.85rem;">
+                <img src="/assets/logo.png" style="height: 16px; opacity: 0.7; filter: grayscale(50%);">
                 BRAWL-TRACK.COM
             </div>
             
@@ -131,11 +157,12 @@
             statusDiv.innerHTML = "Téléchargement des données (Supercell)...";
 
             try {
+                // Fetch Profil Joueur
                 const res = await fetch(`${API_URL}/api/public/player/${tagInput}`);
                 if (!res.ok) throw new Error("Joueur introuvable");
                 const data = await res.json();
 
-                // 1. Mise à jour de l'Identité
+                // 1. Identité
                 let nameColor = data.nameColor ? (data.nameColor.startsWith('0x') ? '#' + data.nameColor.slice(4) : data.nameColor) : '#fff';
                 document.getElementById('export-player-name').innerText = data.name;
                 document.getElementById('export-player-name').style.color = nameColor;
@@ -144,10 +171,30 @@
                     document.getElementById('export-player-icon').src = `https://cdn.brawlify.com/profile-icons/regular/${data.icon.id}.png`;
                 }
 
-                // 2. Traitement des Brawlers & Calcul des Prestiges
+                // 2. Traitement du Club
+                const clubContainer = document.getElementById('export-club-info');
+                if (data.club && data.club.name) {
+                    document.getElementById('export-club-name').innerText = data.club.name;
+                    document.getElementById('export-club-tag').innerText = data.club.tag;
+                    clubContainer.style.display = 'flex';
+                    
+                    // Récupération asynchrone du badge HD du club
+                    try {
+                        const clubRes = await fetch(`${API_URL}/api/public/club/${data.club.tag.replace('#', '')}`);
+                        if (clubRes.ok) {
+                            const clubData = await clubRes.json();
+                            if (clubData.badgeId) {
+                                document.getElementById('export-club-icon').src = `https://brawlify.com/images/club-badges/96/${clubData.badgeId}.webp`;
+                            }
+                        }
+                    } catch(e) { console.log("Erreur badge club:", e); }
+                } else {
+                    clubContainer.style.display = 'none';
+                }
+
+                // 3. Traitement Brawlers
                 brawlersContainer.innerHTML = "";
                 const activeBrawlers = data.brawlers.filter(b => b.trophies !== -1).sort((a, b) => b.trophies - a.trophies);
-                
                 let totalPrestigeCalculated = 0;
 
                 activeBrawlers.forEach(brawler => {
@@ -155,10 +202,8 @@
                     const rankClass = `rank-${rankName}`;
                     const rankIconUrl = `/assets/ranks/${rankName}.webp`;
 
-                    // Ajout du prestige de ce brawler au total
                     totalPrestigeCalculated += Math.floor(brawler.trophies / 1000);
 
-                    // Taille du texte
                     let fontSize = "0.75rem";
                     if (brawler.name.length > 11) fontSize = "0.65rem";
                     if (brawler.name.length > 14) fontSize = "0.55rem";
@@ -181,19 +226,19 @@
                     `;
                 });
 
-                // 3. Mise à jour des Statistiques Globales
+                // 4. Stats
                 const totalVictoriesCalculated = (data['3vs3Victories'] || 0) + (data.soloVictories || 0) + (data.duoVictories || 0);
-
                 document.getElementById('export-player-trophies').innerText = data.trophies.toLocaleString('en-US');
                 document.getElementById('export-player-victories').innerText = totalVictoriesCalculated.toLocaleString('en-US');
                 document.getElementById('export-player-prestiges').innerText = totalPrestigeCalculated;
 
-                // Rendu
+                // 5. Rendu html2canvas
                 document.getElementById('export-content').className = `mode-${mode}`;
                 statusDiv.innerHTML = "Rendu de l'image en cours (Ne pas quitter la page)...";
 
                 setTimeout(() => {
-                    html2canvas(document.getElementById('export-wrapper'), {
+                    // On cible directement export-content pour avoir les dimensions exactes sans bords vides
+                    html2canvas(document.getElementById('export-content'), {
                         backgroundColor: '#1a1a1a',
                         useCORS: true,
                         scale: 2
@@ -207,7 +252,7 @@
                         console.error(err);
                         statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur de rendu HTML2Canvas.</span>";
                     });
-                }, 800);
+                }, 1000); // 1 sec pour laisser le temps au fetch du badge club
 
             } catch (e) {
                 statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur : Joueur introuvable ou API indisponible.</span>";
