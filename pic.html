@@ -47,7 +47,7 @@
 
     <div class="beta-ui">
         <h1 style="color: #ffce00; font-family: 'Lilita One', cursive; margin-top: 0;">Générateur d'Image</h1>
-        <p style="font-size: 0.95rem; color: #ccc;">Layout optimisé : Nom/Trophées à gauche, Rang à droite.</p>
+        <p style="font-size: 0.95rem; color: #ccc;">Layout final : Icône Brawler + Texte Adaptatif + Ratio Fixe</p>
         
         <input type="text" id="tag-input" placeholder="Tag Joueur (ex: 98V02L)" style="text-align: center;">
         
@@ -132,21 +132,31 @@
                     const rankClass = `rank-${rankName}`;
                     const rankIconUrl = `/assets/ranks/${rankName}.webp`;
 
-                    // --- NOUVEAU DESIGN : GAUCHE (Nom + Trophées) / DROITE (Icone) ---
-                    // Ajout de height: auto !important et min-height: 0 !important pour écraser les paramètres de base.
+                    // LOGIQUE TEXTE ADAPTATIF :
+                    // On réduit la taille de la police si le nom est long pour qu'il rentre toujours
+                    let fontSize = "0.75rem"; // Taille normale
+                    if (brawler.name.length > 11) fontSize = "0.65rem"; // Taille réduite (ex: LARRY & LAWRIE)
+                    if (brawler.name.length > 14) fontSize = "0.55rem"; // Taille ultra réduite
+
+                    // NOUVEAU LAYOUT : [Icône Brawler] [Nom + Trophées] -------- [Rang]
                     brawlersContainer.innerHTML += `
-                        <div class="brawler-card ${rankClass}" style="padding: 6px 10px !important; border-radius: 6px; border-width: 1.5px !important; display: flex; align-items: center; justify-content: space-between; box-shadow: none !important; height: auto !important; min-height: 0 !important;">
+                        <div class="brawler-card ${rankClass}" style="padding: 4px 8px !important; border-radius: 6px; border-width: 1.5px !important; display: flex; align-items: center; justify-content: space-between; box-shadow: none !important; height: auto !important; min-height: 0 !important;">
                             
-                            <div style="display: flex; flex-direction: column; align-items: flex-start; max-width: 75%; overflow: hidden; line-height: 1.1;">
-                                <div style="color: #fff; font-weight: 800; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    ${brawler.name}
-                                </div>
-                                <div style="color: #ffce00; font-weight: 900; font-size: 1rem; margin-top: 3px;">
-                                    ${brawler.trophies}
+                            <div style="display: flex; align-items: center; gap: 6px; max-width: 78%; overflow: hidden;">
+                                
+                                <img src="https://cdn.brawlify.com/brawlers/borderless/${brawler.id}.png" style="width: 28px; height: 28px; object-fit: contain; background: #111; border: 1px solid #444; border-radius: 4px; flex-shrink: 0;">
+                                
+                                <div style="display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; line-height: 1.1;">
+                                    <div style="color: #fff; font-weight: 800; font-size: ${fontSize}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-transform: uppercase;">
+                                        ${brawler.name}
+                                    </div>
+                                    <div style="color: #ffce00; font-weight: 900; font-size: 0.95rem; margin-top: 2px;">
+                                        ${brawler.trophies}
+                                    </div>
                                 </div>
                             </div>
                             
-                            <img src="${rankIconUrl}" style="width: 26px; height: 26px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
+                            <img src="${rankIconUrl}" style="height: 24px; width: auto; max-width: 26px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
                             
                         </div>
                     `;
