@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brawl Track - Générateur d'Image</title>
+    <title>Brawl Track - Simulation Export Dashboard</title>
     
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/style.css">
@@ -11,106 +11,144 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
-        .beta-ui {
-            max-width: 650px; margin: 50px auto; padding: 30px;
-            background: #222; border-radius: 12px; text-align: center;
-            border: 1px solid #444; color: white;
+        /* --- SIMULATION DU DASHBOARD --- */
+        body {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #111;
+        }
+        .dashboard-sim {
+            text-align: center; color: white;
         }
 
-        #export-wrapper {
-            position: absolute; left: -9999px; top: 0;
-            padding: 20px; 
+        /* --- MODALE (POP-UP CENTRÉE) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            display: none; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(5px);
+            animation: fadeIn 0.2s ease-out;
         }
+        .modal-content {
+            background: #222; border: 1px solid #444; border-radius: 16px;
+            width: 90%; max-width: 500px; padding: 30px;
+            position: relative; text-align: center; color: white;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            animation: slideUpFade 0.3s ease-out;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .close-btn {
+            position: absolute; top: 15px; right: 20px;
+            font-size: 1.8rem; color: #888; cursor: pointer; transition: color 0.2s;
+        }
+        .close-btn:hover { color: #fff; }
 
+        /* --- STYLES INTERNES MODALE --- */
+        .format-options {
+            display: flex; flex-direction: column; gap: 15px; margin: 25px 0;
+        }
+        .format-card {
+            background: #1a1a1a; border: 2px solid #333; border-radius: 12px;
+            padding: 15px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 15px;
+        }
+        .format-card:hover { border-color: #555; background: #252525; }
+        .format-card.selected { border-color: #ffce00; background: rgba(255, 206, 0, 0.1); }
+        .format-card input { display: none; }
+        .format-card h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #fff; }
+        .format-card p { margin: 0; font-size: 0.85rem; color: #aaa; }
+
+        /* Animation de chargement */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spin-anim { animation: spin 1s linear infinite; width: 50px; margin: 20px auto; }
+
+        /* --- CSS DE LA ZONE D'EXPORT (FANTÔME) --- */
+        #export-wrapper { position: absolute; left: -9999px; top: 0; padding: 20px; }
         #export-content {
-            background: #1a1a1a; 
-            padding: 20px; 
-            border-radius: 12px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column; 
+            background: #1a1a1a; padding: 20px; border-radius: 12px;
+            box-sizing: border-box; display: flex; flex-direction: column; 
         }
-
         #export-content.mode-vertical { width: 720px; min-height: 1280px; }
         #export-content.mode-horizontal { width: 1280px; min-height: 720px; }
-
-        .export-brawlers-grid {
-            display: grid; gap: 5px; margin-top: 15px; align-content: flex-start; 
-        }
-        
+        .export-brawlers-grid { display: grid; gap: 5px; margin-top: 15px; align-content: flex-start; }
         #export-content.mode-vertical .export-brawlers-grid { grid-template-columns: repeat(5, 1fr); }
         #export-content.mode-horizontal .export-brawlers-grid { grid-template-columns: repeat(9, 1fr); }
-
-        #status { margin-top: 15px; color: #aaa; font-style: italic; font-size: 0.9rem; }
-        
         .export-header {
             display: flex; align-items: center; justify-content: space-between; gap: 15px; 
-            background-color: rgba(0, 0, 0, 0.4); 
-            padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
-            flex-shrink: 0;
+            background-color: rgba(0, 0, 0, 0.4); padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); flex-shrink: 0;
         }
-
-        /* =========================================
-           DYNAMISME DES STATISTIQUES
-           ========================================= */
-        /* Tailles par défaut (Mode Portrait) */
         .stat-box { display: flex; align-items: center; gap: 6px; font-family: 'Lilita One', cursive; }
         .stat-text { font-size: 1.3rem; }
         .stat-img { height: 18px; }
         .stat-trophy-text { font-size: 1.6rem; color: #ffce00; }
         .stat-trophy-img { height: 24px; margin-top: -4px; }
-
-        /* Tailles Agrandies (Mode Paysage uniquement) */
         #export-content.mode-horizontal .stat-text { font-size: 1.7rem; }
         #export-content.mode-horizontal .stat-img { height: 24px; }
         #export-content.mode-horizontal .stat-trophy-text { font-size: 2.3rem; }
         #export-content.mode-horizontal .stat-trophy-img { height: 34px; margin-top: -6px; }
 
-
-        #preview-area {
-            margin-top: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-        .preview-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            border: 2px solid #444;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            animation: slideUpFade 0.4s ease-out;
-        }
+        .preview-image { max-width: 100%; height: auto; border-radius: 8px; border: 2px solid #444; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="beta-ui">
-        <h1 style="color: #ffce00; font-family: 'Lilita One', cursive; margin-top: 0;">Générateur d'Image</h1>
-        <p style="font-size: 0.95rem; color: #ccc;">Stats dynamiques et chargement des images corrigé</p>
+    <div class="dashboard-sim">
+        <h2 style="font-family: 'Lilita One', cursive; color: #ffce00;">Dashboard de #2RUPLG8G</h2>
+        <p style="color: #aaa;">Simulation de l'intégration finale</p>
         
-        <input type="text" id="tag-input" placeholder="Tag Joueur (ex: 98V02L)" style="text-align: center;">
-        
-        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-            <button class="btn-3d btn-blue w-auto" onclick="generateImage('vertical')">
-                <img src="/assets/icons/picture.png" style="height: 18px; vertical-align: middle; margin-right: 5px;" onerror="this.style.display='none'"> 
-                Portrait
-            </button>
-            <button class="btn-3d btn-yellow w-auto" onclick="generateImage('horizontal')">
-                <img src="/assets/icons/picture.png" style="height: 18px; vertical-align: middle; margin-right: 5px;" onerror="this.style.display='none'"> 
-                Paysage
-            </button>
-        </div>
-        
-        <div id="status"></div>
-        <div id="preview-area"></div>
+        <button class="btn-3d btn-grey w-auto" onclick="openExportModal()" title="Générer une image">
+            <img src="/assets/icons/picture.png" style="height: 24px; vertical-align: middle;" onerror="this.style.display='none'">
+        </button>
     </div>
+
+    <div id="export-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeExportModal()">&times;</span>
+            
+            <div id="modal-step-config">
+                <h2 style="font-family: 'Lilita One', cursive; color: #ffce00; margin-top: 0;">Générer une Carte</h2>
+                <p style="color: #ccc; font-size: 0.95rem;">Choisissez le format de l'image :</p>
+                
+                <div class="format-options">
+                    <label class="format-card selected" id="card-vertical" onclick="selectFormat('vertical')">
+                        <input type="radio" name="export-format" value="vertical" checked>
+                        <div style="font-size: 2rem;">📱</div>
+                        <div style="text-align: left;">
+                            <h3>Portrait (Mobile)</h3>
+                            <p>Parfait pour les stories et téléphones.</p>
+                        </div>
+                    </label>
+                    <label class="format-card" id="card-horizontal" onclick="selectFormat('horizontal')">
+                        <input type="radio" name="export-format" value="horizontal">
+                        <div style="font-size: 2rem;">💻</div>
+                        <div style="text-align: left;">
+                            <h3>Paysage (PC/Twitter)</h3>
+                            <p>Idéal pour les écrans larges et bannières.</p>
+                        </div>
+                    </label>
+                </div>
+                
+                <button class="btn-3d btn-yellow" onclick="startGeneration()">
+                    <img src="/assets/icons/picture.png" style="height: 18px; vertical-align: middle; margin-right: 8px;"> 
+                    Générer l'image
+                </button>
+            </div>
+
+            <div id="modal-step-loading" style="display: none;">
+                <h2 style="font-family: 'Lilita One', cursive; margin-top: 0;">Création en cours...</h2>
+                <img src="/assets/loading_icon.png" class="spin-anim">
+                <p id="export-status" style="color: #aaa; font-style: italic;">Récupération des données...</p>
+            </div>
+
+            <div id="modal-step-result" style="display: none;">
+                <h2 style="font-family: 'Lilita One', cursive; color: #28a745; margin-top: 0;">Carte prête !</h2>
+                <div id="preview-area"></div>
+                </div>
+
+        </div>
+    </div>
+
 
     <div id="export-wrapper">
         <div id="export-content">
             <div class="export-header">
-                
                 <div style="display: flex; align-items: center; gap: 15px; max-width: 35%; flex-shrink: 0;">
                     <img id="export-player-icon" src="/assets/default_icon.png" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;">
                     <div style="line-height: 1.1; overflow: hidden;">
@@ -152,8 +190,33 @@
         </div>
     </div>
 
+
     <script src="/js/config.js"></script>
     <script>
+        // LE TAG EN DUR POUR LA SIMULATION
+        const CURRENT_DASHBOARD_TAG = "2RUPLG8G";
+
+        /* --- LOGIQUE DE L'INTERFACE MODALE --- */
+        function openExportModal() {
+            document.getElementById('export-modal').style.display = 'flex';
+            document.getElementById('modal-step-config').style.display = 'block';
+            document.getElementById('modal-step-loading').style.display = 'none';
+            document.getElementById('modal-step-result').style.display = 'none';
+        }
+
+        function closeExportModal() {
+            document.getElementById('export-modal').style.display = 'none';
+            document.getElementById('preview-area').innerHTML = ''; // Nettoyage
+        }
+
+        function selectFormat(format) {
+            document.getElementById('card-vertical').classList.remove('selected');
+            document.getElementById('card-horizontal').classList.remove('selected');
+            document.getElementById(`card-${format}`).classList.add('selected');
+            document.querySelector(`input[value="${format}"]`).checked = true;
+        }
+
+        /* --- LOGIQUE DE GÉNÉRATION --- */
         function getBrawlerRank(trophies) {
             if (trophies >= 3000) return 'prestige3';
             if (trophies >= 2000) return 'prestige2';
@@ -164,28 +227,28 @@
             return 'wood';
         }
 
-        async function generateImage(mode) {
-            const tagInput = document.getElementById('tag-input').value.trim().toUpperCase().replace('#', '').replace('O', '0');
-            const statusDiv = document.getElementById('status');
+        async function startGeneration() {
+            // Passer à l'écran de chargement
+            const mode = document.querySelector('input[name="export-format"]:checked').value;
+            document.getElementById('modal-step-config').style.display = 'none';
+            document.getElementById('modal-step-loading').style.display = 'block';
+            const statusDiv = document.getElementById('export-status');
             const previewArea = document.getElementById('preview-area');
             const brawlersContainer = document.getElementById('export-brawlers');
             
-            if (!tagInput) {
-                statusDiv.innerHTML = "<span style='color: #ff5555;'>Veuillez entrer un Tag !</span>"; 
-                return;
-            }
-
-            statusDiv.innerHTML = "Téléchargement des données (Supercell)...";
+            statusDiv.innerText = "Téléchargement des données depuis Supercell...";
             previewArea.innerHTML = "";
 
             try {
-                const res = await fetch(`${API_URL}/api/public/player/${tagInput}`);
+                // Fetch Profil (Utilisation du Tag en dur)
+                const res = await fetch(`${API_URL}/api/public/player/${CURRENT_DASHBOARD_TAG}`);
                 if (!res.ok) throw new Error("Joueur introuvable");
                 const data = await res.json();
 
-                // 1. Appliquer le mode immédiatement pour que le CSS agrandisse les stats si nécessaire
+                // 1. Appliquer le mode au wrapper
                 document.getElementById('export-content').className = `mode-${mode}`;
 
+                // 2. Remplir l'Identité
                 let nameColor = data.nameColor ? (data.nameColor.startsWith('0x') ? '#' + data.nameColor.slice(4) : data.nameColor) : '#fff';
                 document.getElementById('export-player-name').innerText = data.name;
                 document.getElementById('export-player-name').style.color = nameColor;
@@ -194,10 +257,8 @@
                     document.getElementById('export-player-icon').src = `https://cdn.brawlify.com/profile-icons/regular/${data.icon.id}.png`;
                 }
 
-                // 2. Gestion du Club (Uniquement en mode Paysage)
+                // 3. Remplir le Club (Seulement en Horizontal)
                 const clubContainer = document.getElementById('export-club-info');
-                
-                // Si on a un club ET qu'on est en mode horizontal
                 if (data.club && data.club.name && mode === 'horizontal') {
                     document.getElementById('export-club-name').innerText = data.club.name;
                     document.getElementById('export-club-tag').innerText = data.club.tag;
@@ -209,22 +270,19 @@
                             const clubData = await clubRes.json();
                             if (clubData.badgeId) {
                                 const badgeImg = document.getElementById('export-club-icon');
-                                
-                                // FIX : On force le script à attendre le téléchargement total de l'image du club
                                 await new Promise((resolve) => {
-                                    badgeImg.onload = resolve; // Quand chargée -> OK
-                                    badgeImg.onerror = resolve; // Si erreur (ex: Brawlify down) -> on continue quand même
+                                    badgeImg.onload = resolve; 
+                                    badgeImg.onerror = resolve;
                                     badgeImg.src = `https://brawlify.com/images/club-badges/96/${clubData.badgeId}.webp`;
                                 });
                             }
                         }
-                    } catch(e) { console.warn("Impossible de charger le club", e); }
+                    } catch(e) {}
                 } else {
-                    // Si on est en vertical ou sans club, on masque.
                     clubContainer.style.display = 'none';
                 }
 
-                // 3. Gestion des Brawlers
+                // 4. Remplir les Brawlers
                 brawlersContainer.innerHTML = "";
                 const activeBrawlers = data.brawlers.filter(b => b.trophies !== -1).sort((a, b) => b.trophies - a.trophies);
                 let totalPrestigeCalculated = 0;
@@ -258,14 +316,15 @@
                     `;
                 });
 
+                // 5. Remplir les Stats Globales
                 const totalVictoriesCalculated = (data['3vs3Victories'] || 0) + (data.soloVictories || 0) + (data.duoVictories || 0);
                 document.getElementById('export-player-trophies').innerText = data.trophies.toLocaleString('en-US');
                 document.getElementById('export-player-victories').innerText = totalVictoriesCalculated.toLocaleString('en-US');
                 document.getElementById('export-player-prestiges').innerText = totalPrestigeCalculated;
 
-                statusDiv.innerHTML = "Rendu de l'image en cours (Ne pas quitter la page)...";
+                statusDiv.innerText = "Construction de l'image (cela peut prendre quelques secondes)...";
 
-                // 4. Lancement de HTML2Canvas (avec un tout petit délai pour assurer le dessin CSS final)
+                // 6. Rendu HTML2Canvas
                 setTimeout(() => {
                     html2canvas(document.getElementById('export-content'), {
                         backgroundColor: '#1a1a1a',
@@ -274,6 +333,7 @@
                     }).then(canvas => {
                         const imgDataUrl = canvas.toDataURL("image/png");
                         
+                        // Injection dans l'étape 3
                         const previewImg = document.createElement('img');
                         previewImg.src = imgDataUrl;
                         previewImg.className = 'preview-image';
@@ -290,15 +350,18 @@
                         };
                         previewArea.appendChild(downloadBtn);
 
-                        statusDiv.innerHTML = `<span style="color: #28a745;">✓ Aperçu généré avec succès !</span>`;
+                        // Basculer l'affichage vers le Résultat final
+                        document.getElementById('modal-step-loading').style.display = 'none';
+                        document.getElementById('modal-step-result').style.display = 'block';
+
                     }).catch(err => {
                         console.error(err);
-                        statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur de rendu HTML2Canvas.</span>";
+                        statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur lors de la capture d'image.</span>";
                     });
                 }, 500);
 
             } catch (e) {
-                statusDiv.innerHTML = "<span style='color: #ff5555;'>Erreur : Joueur introuvable ou API indisponible.</span>";
+                statusDiv.innerHTML = `<span style='color: #ff5555;'>Erreur : ${e.message}</span>`;
             }
         }
     </script>
