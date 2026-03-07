@@ -182,6 +182,10 @@ async function loadTagData(tag) {
         const res = await fetch(`${API_BASE}/api/public/player/${tag}`);
         if (!res.ok) throw new Error("Joueur introuvable");
         const data = await res.json();
+        
+        // --- NOUVEAU : Sauvegarde globale pour le générateur d'image ---
+        window.playerData = data; 
+        
         renderProfile(data);
         await loadBrawlersGrid(data.brawlers);
         loadHistoryChart(data.history || [], data.trophies);
