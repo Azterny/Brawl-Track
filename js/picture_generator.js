@@ -115,10 +115,11 @@ async function buildPlayerTemplate(data, mode) {
         if (b.name.length > 9) fontSize = "0.65rem";
         if (b.name.length > 12) fontSize = "0.55rem";
 
+        // FIX : Ajout de crossorigin="anonymous" sur l'image du brawler
         brawlersHTML += `
             <div class="brawler-card rank-${rankName}" style="padding: 4px 6px !important; border-radius: 6px; border-width: 1.5px !important; display: flex; align-items: center; justify-content: space-between; box-shadow: none !important; height: auto !important; min-height: 0 !important;">
                 <div style="display: flex; align-items: center; gap: 5px; max-width: 78%; overflow: hidden;">
-                    <img src="https://cdn.brawlify.com/brawlers/borderless/${b.id}.png" style="width: 26px; height: 26px; object-fit: contain; background: #111; border: 1px solid #444; border-radius: 4px; flex-shrink: 0;">
+                    <img src="https://cdn.brawlify.com/brawlers/borderless/${b.id}.png" crossorigin="anonymous" style="width: 26px; height: 26px; object-fit: contain; background: #111; border: 1px solid #444; border-radius: 4px; flex-shrink: 0;">
                     <div style="display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; line-height: 1.1;">
                         <div style="color: #fff; font-weight: 800; font-size: ${fontSize}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-transform: uppercase;">
                             ${b.name}
@@ -135,18 +136,23 @@ async function buildPlayerTemplate(data, mode) {
     // Chargement du badge club si horizontal
     let clubHTML = `<div style="display: none;"></div>`;
     if (data.club && data.club.name && mode === 'horizontal') {
-        let badgeUrl = "https://brawlify.com/images/club-badges/96/8000000.webp"; // Défaut
+        let badgeId = "8000000"; // Défaut
         try {
-            const clubRes = await fetch(`${API_URL}/api/public/club/${data.club.tag.replace('#', '')}`);
+            const apiBase = (typeof API_URL !== 'undefined') ? API_URL : '';
+            const clubRes = await fetch(`${apiBase}/api/public/club/${data.club.tag.replace('#', '')}`);
             if (clubRes.ok) {
                 const clubData = await clubRes.json();
-                if (clubData.badgeId) badgeUrl = `https://brawlify.com/images/club-badges/96/${clubData.badgeId}.webp`;
+                if (clubData.badgeId) badgeId = clubData.badgeId;
             }
-        } catch(e) {}
+        } catch(e) { console.error("Erreur fetch club :", e); }
 
-        // Pré-charger l'image pour éviter les bugs html2canvas
+        // FIX ANTI-CACHE : On ajoute "?t=..." pour forcer un téléchargement neuf et éviter le blocage CORS
+        let badgeUrl = `https://brawlify.com/images/club-badges/96/${badgeId}.webp?t=${new Date().getTime()}`;
+
+        // FIX CORS : On force l'anonymat sur le preloader
         await new Promise((resolve) => {
             let img = new Image();
+            img.crossOrigin = "anonymous"; // Indispensable !
             img.onload = resolve;
             img.onerror = resolve;
             img.src = badgeUrl;
@@ -154,7 +160,7 @@ async function buildPlayerTemplate(data, mode) {
 
         clubHTML = `
         <div style="display: flex; align-items: center; gap: 10px; border-left: 2px solid rgba(255,255,255,0.1); border-right: 2px solid rgba(255,255,255,0.1); padding: 0 15px; flex-grow: 1; justify-content: center; overflow: hidden;">
-            <img src="${badgeUrl}" style="height: 40px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); flex-shrink: 0;">
+            <img src="${badgeUrl}" crossorigin="anonymous" style="height: 40px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); flex-shrink: 0;">
             <div style="line-height: 1.1; overflow: hidden; text-align: left;">
                 <div style="color: #fff; font-weight: bold; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${data.club.name}</div>
                 <div style="color: #ffce00; font-family: monospace; font-size: 0.8rem;">${data.club.tag}</div>
@@ -166,7 +172,7 @@ async function buildPlayerTemplate(data, mode) {
     return `
         <div class="export-header">
             <div style="display: flex; align-items: center; gap: 15px; max-width: 35%; flex-shrink: 0;">
-                <img src="${iconUrl}" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;">
+                <img src="${iconUrl}" crossorigin="anonymous" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;">
                 <div style="line-height: 1.1; overflow: hidden;">
                     <h2 style="margin: 0; font-size: 1.6rem; color: ${nameColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${data.name}</h2>
                     <div style="color: #888; font-family: monospace; font-size: 0.9rem;">${data.tag}</div>
