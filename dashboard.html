@@ -34,7 +34,9 @@
                     <h1 id="player-name">Loading...</h1>
                     <div id="player-tag" style="margin-top: 2px;">#TAG</div>
                 </div>
-                <div id="header-actions"></div>
+                <div id="header-actions">
+                    <img src="/assets/icons/picture.png" class="action-icon picture-export-icon" onclick="openExportModal('player')" title="Générer une image" alt="Export">
+                </div>
             </div>
         </div>
 
@@ -169,5 +171,7 @@
             initDashboard();
         };
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="/js/picture_generator.js"></script>
 </body>
 </html>
