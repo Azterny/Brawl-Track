@@ -6,8 +6,9 @@
 
 let currentExportType = null;
 
+// Initialisation au chargement de la page : on injecte la modale et la zone fantôme
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. UI Modale Allégée et plus moderne
+    // 1. UI Modale Allégée et plus moderne (Zéro Lag)
     const modalHTML = `
     <div id="export-modal" class="export-modal-overlay">
         <div class="export-modal-content">
@@ -53,11 +54,14 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     </div>`;
 
+    // 2. Création de la Zone Fantôme (Canvas cible)
     const wrapperHTML = `<div id="export-wrapper"><div id="export-content"></div></div>`;
+
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     document.body.insertAdjacentHTML('beforeend', wrapperHTML);
 });
 
+// Ouvre la modale. (ex: openExportModal('player'))
 function openExportModal(type) {
     currentExportType = type;
     document.getElementById('export-modal').style.display = 'flex';
@@ -78,8 +82,126 @@ function selectExportFormat(format) {
     document.querySelector(`input[name="export-format"][value="${format}"]`).checked = true;
 }
 
-// ... (GARDE LA FONCTION getBrawlerRankForExport ET buildPlayerTemplate TELLES QUELLES ICI) ...
+// Fonction utilitaire pour les rangs (identique à celle du dashboard)
+function getBrawlerRankForExport(trophies) {
+    if (trophies >= 3000) return 'prestige3';
+    if (trophies >= 2000) return 'prestige2';
+    if (trophies >= 1000) return 'prestige1';
+    if (trophies >= 750)  return 'gold';
+    if (trophies >= 500)  return 'silver';
+    if (trophies >= 250)  return 'bronze';
+    return 'wood';
+}
 
+/* =========================================
+   GÉNÉRATEUR DE TEMPLATES
+   ========================================= */
+async function buildPlayerTemplate(data, mode) {
+    let nameColor = data.nameColor ? (data.nameColor.startsWith('0x') ? '#' + data.nameColor.slice(4) : data.nameColor) : '#fff';
+    let iconUrl = (data.icon && data.icon.id) ? `https://cdn.brawlify.com/profile-icons/regular/${data.icon.id}.png` : '/assets/default_icon.png';
+    
+    let totalVictories = (data['3vs3Victories'] || 0) + (data.soloVictories || 0) + (data.duoVictories || 0);
+    let totalPrestige = 0;
+
+    // Construit les brawlers
+    let brawlersHTML = "";
+    const activeBrawlers = data.brawlers.filter(b => b.trophies !== -1).sort((a, b) => b.trophies - a.trophies);
+    
+    activeBrawlers.forEach(b => {
+        const rankName = getBrawlerRankForExport(b.trophies);
+        totalPrestige += Math.floor(b.trophies / 1000);
+
+        let fontSize = "0.75rem";
+        if (b.name.length > 9) fontSize = "0.65rem";
+        if (b.name.length > 12) fontSize = "0.55rem";
+
+        brawlersHTML += `
+            <div class="brawler-card rank-${rankName}" style="padding: 4px 6px !important; border-radius: 6px; border-width: 1.5px !important; display: flex; align-items: center; justify-content: space-between; box-shadow: none !important; height: auto !important; min-height: 0 !important;">
+                <div style="display: flex; align-items: center; gap: 5px; max-width: 78%; overflow: hidden;">
+                    <img src="https://cdn.brawlify.com/brawlers/borderless/${b.id}.png" style="width: 26px; height: 26px; object-fit: contain; background: #111; border: 1px solid #444; border-radius: 4px; flex-shrink: 0;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; line-height: 1.1;">
+                        <div style="color: #fff; font-weight: 800; font-size: ${fontSize}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-transform: uppercase;">
+                            ${b.name}
+                        </div>
+                        <div style="color: #ffce00; font-weight: 900; font-size: 0.95rem; margin-top: 1px;">
+                            ${b.trophies}
+                        </div>
+                    </div>
+                </div>
+                <img src="/assets/ranks/${rankName}.webp" style="height: 22px; width: auto; max-width: 24px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
+            </div>`;
+    });
+
+    // Chargement du badge club si horizontal
+    let clubHTML = `<div style="display: none;"></div>`;
+    if (data.club && data.club.name && mode === 'horizontal') {
+        let badgeUrl = "https://brawlify.com/images/club-badges/96/8000000.webp"; // Défaut
+        try {
+            const clubRes = await fetch(`${API_URL}/api/public/club/${data.club.tag.replace('#', '')}`);
+            if (clubRes.ok) {
+                const clubData = await clubRes.json();
+                if (clubData.badgeId) badgeUrl = `https://brawlify.com/images/club-badges/96/${clubData.badgeId}.webp`;
+            }
+        } catch(e) {}
+
+        // Pré-charger l'image pour éviter les bugs html2canvas
+        await new Promise((resolve) => {
+            let img = new Image();
+            img.onload = resolve;
+            img.onerror = resolve;
+            img.src = badgeUrl;
+        });
+
+        clubHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; border-left: 2px solid rgba(255,255,255,0.1); border-right: 2px solid rgba(255,255,255,0.1); padding: 0 15px; flex-grow: 1; justify-content: center; overflow: hidden;">
+            <img src="${badgeUrl}" style="height: 40px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); flex-shrink: 0;">
+            <div style="line-height: 1.1; overflow: hidden; text-align: left;">
+                <div style="color: #fff; font-weight: bold; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${data.club.name}</div>
+                <div style="color: #ffce00; font-family: monospace; font-size: 0.8rem;">${data.club.tag}</div>
+            </div>
+        </div>`;
+    }
+
+    // Assemblage final du DOM Fantôme
+    return `
+        <div class="export-header">
+            <div style="display: flex; align-items: center; gap: 15px; max-width: 35%; flex-shrink: 0;">
+                <img src="${iconUrl}" style="width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;">
+                <div style="line-height: 1.1; overflow: hidden;">
+                    <h2 style="margin: 0; font-size: 1.6rem; color: ${nameColor}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${data.name}</h2>
+                    <div style="color: #888; font-family: monospace; font-size: 0.9rem;">${data.tag}</div>
+                </div>
+            </div>
+
+            ${clubHTML}
+
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 15px; flex-shrink: 0;">
+                <div class="export-stat-box" style="color: #ccc;">
+                    <img src="/assets/icons/wipeout.png" class="export-stat-img" style="filter: grayscale(100%) brightness(1.5);">
+                    <span class="export-stat-text">${totalVictories.toLocaleString('en-US')}</span>
+                </div>
+                <div class="export-stat-box" style="color: #C83FA0;">
+                    <img src="/assets/total prestige.png" class="export-stat-img" style="filter: drop-shadow(0 0 2px rgba(200,63,160,0.5));">
+                    <span class="export-stat-text">${totalPrestige}</span>
+                </div>
+                <div class="export-stat-box export-stat-trophy-text">
+                    <img src="/assets/trophy_normal.png" class="export-stat-trophy-img">
+                    <span>${data.trophies.toLocaleString('en-US')}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="export-brawlers-grid">${brawlersHTML}</div>
+        
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: auto; padding-top: 15px; color: #555; font-family: 'Audiowide', cursive; font-size: 0.85rem;">
+            <img src="/assets/logo.png" style="height: 16px; opacity: 0.7; filter: grayscale(50%);">
+            BRAWL-TRACK.COM
+        </div>`;
+}
+
+/* =========================================
+   PROCESSUS DE GÉNÉRATION HTML2CANVAS
+   ========================================= */
 async function startImageGeneration() {
     const mode = document.querySelector('input[name="export-format"]:checked').value;
     const statusDiv = document.getElementById('export-status');
@@ -97,7 +219,7 @@ async function startImageGeneration() {
         let fileName = "BrawlTrack_Export.png";
 
         if (currentExportType === 'player') {
-            // FIX : Lecture de la variable window.playerData depuis dashboard.js
+            // Lecture de la variable window.playerData depuis dashboard.js
             if (typeof window.playerData !== 'undefined' && window.playerData) {
                 targetData = window.playerData;
             } else {
