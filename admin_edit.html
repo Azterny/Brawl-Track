@@ -75,10 +75,11 @@
     // Récupération ID URL
     const params = new URLSearchParams(window.location.search);
     const TAG_ID = params.get('tag_id');
-    const ADMIN_KEY = localStorage.getItem('admin_key_v3') || localStorage.getItem('admin_key'); // Compatibilité v2/v3
+    const ADMIN_KEY = localStorage.getItem('admin_key_v3');
 
-    if(!TAG_ID || !ADMIN_KEY) {
-        alert("Accès non autorisé ou Tag manquant.");
+    if (!TAG_ID || !ADMIN_KEY) {
+        alert("Accès non autorisé ou session expirée. Veuillez vous reconnecter.");
+        localStorage.removeItem('admin_key'); // nettoyage clé v2 résiduelle
         window.location.href = 'admin.html';
     }
 
