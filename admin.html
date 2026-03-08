@@ -5,7 +5,6 @@
     <title>Admin Brut - Brawl Track</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <style>
-        /* --- STYLE PRIMAIRE & FONCTIONNEL --- */
         body {
             background-color: #000;
             color: #ccc;
@@ -13,8 +12,6 @@
             margin: 0; padding: 20px;
             font-size: 14px;
         }
-
-        /* Cadre Principal */
         #main-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -22,23 +19,17 @@
             background: #111;
             padding: 10px;
         }
-
-        /* Login Overlay Simple */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         .login-box { border: 2px solid #ffce00; padding: 20px; text-align: center; background: #111; }
-
-        /* Header */
         header {
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 2px solid #ffce00; padding-bottom: 10px; margin-bottom: 15px;
         }
         h1 { margin: 0; color: #ffce00; font-size: 1.5em; text-transform: uppercase; }
-
-        /* Stats Grid (Simple) */
         .stats-grid {
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;
         }
@@ -47,50 +38,33 @@
         }
         .stat-box h3 { margin: 0 0 5px 0; font-size: 0.8em; color: #888; text-transform: uppercase; }
         .stat-box p { margin: 0; font-size: 1.2em; color: #fff; font-weight: bold; }
-
-        /* Barre de Contrôle */
         .controls {
             background: #222; border: 1px solid #444; padding: 10px; margin-bottom: 10px;
             display: flex; flex-wrap: wrap; gap: 15px; align-items: center;
         }
-        
-        /* Inputs & Boutons */
         input, select, button {
             background: #000; color: #fff; border: 1px solid #555;
             padding: 5px 10px; font-family: monospace; font-size: 1em; cursor: pointer;
         }
         input:focus, select:focus { border-color: #ffce00; outline: none; }
-        
         button:hover { background: #333; }
         button.active { background: #ffce00; color: #000; font-weight: bold; border-color: #ffce00; }
-        
-        /* COULEURS DES ACTIONS */
         .btn-green { color: #28a745; border-color: #28a745; }
         .btn-green:hover { background: #28a745; color: #000; }
-        
         .btn-red { color: #ff5555; border-color: #ff5555; }
         .btn-red:hover { background: #ff5555; color: #000; }
-
         .btn-blue { color: #007bff; border-color: #007bff; }
         .btn-blue:hover { background: #007bff; color: #fff; }
-
         .btn-orange { color: #fd7e14; border-color: #fd7e14; }
         .btn-orange:hover { background: #fd7e14; color: #fff; }
-
-        /* Tableaux */
         table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
         th { text-align: left; border-bottom: 2px solid #444; padding: 8px; color: #888; text-transform: uppercase; }
         td { border-bottom: 1px solid #222; padding: 6px 8px; vertical-align: middle; }
         tr:hover { background: #1a1a1a; }
-
         .hidden { display: none !important; }
         .badge { display: inline-block; padding: 2px 5px; border: 1px solid #444; color: #ffce00; font-size: 0.9em; }
-        
-        /* Checkboxes Labels */
         .filter-label { display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; color: #aaa; }
         .filter-label input:checked + span { color: #fff; text-decoration: underline; }
-
-        /* Détails */
         .details-row { background: #080808; border-bottom: 1px solid #444; }
         .details-table td { border: none; color: #888; font-size: 0.9em; padding: 3px 10px; }
     </style>
@@ -142,8 +116,7 @@
 
             <div style="margin-left:auto; display:flex; gap:5px;">
                 <span>Tri:</span>
-                <select id="sort-select" onchange="renderTable()">
-                    </select>
+                <select id="sort-select" onchange="renderTable()"></select>
                 <button onclick="toggleSort()">▼</button>
             </div>
         </div>
@@ -188,19 +161,17 @@
 
         // --- DATA ---
         let rawUsers = [], rawTags = [];
-        let view = 'users'; // 'users' or 'tags'
+        let view = 'users';
         let filters = new Set();
-        let sortDir = 1; // 1 asc, -1 desc
+        let sortDir = 1;
 
         async function loadData() {
             if(!ADMIN_PASS) return;
             document.getElementById('tbody').innerHTML = '<tr><td colspan="8" style="text-align:center">Loading data...</td></tr>';
             
-            // Stats
             fetch(`${API_URL}/api/admin/stats`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(renderStats).catch(e=>console.error(e));
             
-            // Users
             fetch(`${API_URL}/api/admin/users`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(data => {
                     const map = new Map();
@@ -215,7 +186,6 @@
                     if(view === 'users') renderTable();
                 });
 
-            // Tags
             fetch(`${API_URL}/api/admin/tags`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(data => {
                     rawTags = data;
@@ -340,6 +310,10 @@
                     const totTags = u.tags.length;
                     const totArch = u.tags.reduce((acc, t) => acc + t.total, 0);
                     
+                    // BUG-B FIX : JSON.stringify(u.username) au lieu de '${u.username}'.
+                    // Avant : renameUser(5, 'O'Brien') → erreur de syntaxe JS si username
+                    // contient une quote simple (ex: O'Brien, d'Artagnan...).
+                    // JSON.stringify génère toujours une string JS valide et échappée.
                     row.innerHTML = `
                         <td><button style="padding:0 5px" onclick="toggleDetails(${u.id})">▼</button></td>
                         <td>${u.id}</td>
@@ -356,13 +330,12 @@
                         <td>${totArch}</td>
                         <td>
                             <button onclick="addTag(${u.id})" class="btn-green" title="Force Claim">+</button>
-                            <button onclick="renameUser(${u.id}, '${u.username}')" title="Renommer">R</button>
+                            <button onclick="renameUser(${u.id}, ${JSON.stringify(u.username)})" title="Renommer">R</button>
                             <button onclick="deleteUser(${u.id})" class="btn-red" title="Supprimer">X</button>
                         </td>
                     `;
                     tbody.appendChild(row);
 
-                    // Tags Details (Sous-menu User)
                     if(totTags > 0) {
                         const dr = document.createElement('tr');
                         dr.id = `d-${u.id}`;
@@ -385,7 +358,6 @@
                     }
                 });
             } else {
-                // TAGS VIEW
                 thead.innerHTML = `<tr><th>PROPRIÉTAIRE</th><th>TAG</th><th>FREQ</th><th>LAST ARCH.</th><th>NEXT ARCH.</th><th>TROPHÉES</th><th>ARCHIVES</th><th>ACTIONS</th></tr>`;
                 
                 data.forEach(t => {
@@ -432,6 +404,7 @@
                 <div class="stat-box"><h3>RAM</h3><p>${d.ram}%</p></div>
             `;
         }
+
         // --- ACTIONS ---
         function toggleDetails(id) { const r=document.getElementById('d-'+id); if(r) r.classList.toggle('hidden'); }
         
@@ -446,10 +419,9 @@
         function renameUser(id, old) { const n=prompt("Name:", old); if(n && n!==old) api(`user/${id}/rename`, 'POST', {username:n}); }
         function addTag(id) { const t=prompt("Tag (#...):"); if(t) api(`user/${id}/claim`, 'POST', {tag:t}); }
         
-        // Suppression User : Action Rouge -> Confirmation
         function deleteUser(id) { 
             if(confirm("⚠ SUPPRIMER DEFINITIVEMENT CET UTILISATEUR ?\n(Ses tags deviendront orphelins)")) {
-                api(`user/${id}/delete`, 'DELETE'); // Appel API existant ou à implémenter backend
+                api(`user/${id}/delete`, 'DELETE');
             }
         } 
         
@@ -457,7 +429,6 @@
             if(confirm("Unclaim Tag ?")) api(`tag/${tid}/unclaim`); 
         }
         
-        // Suppression Tag : Action Rouge -> Confirmation
         function delTag(tid) { 
             if(confirm("⚠ SUPPRIMER CE TAG ET TOUT SON HISTORIQUE ?\nCette action est irréversible.")) {
                 fetch(`${API_URL}/api/admin/tag/${tid}`, {method:'DELETE', headers:{'X-Admin-Pass':ADMIN_PASS}}).then(loadData); 
@@ -477,7 +448,6 @@
                 });
         }
 
-        // Init view
         setView('users');
     </script>
 </body>
