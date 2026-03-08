@@ -1,6 +1,16 @@
 const API_BASE = (typeof API_URL !== 'undefined') ? API_URL : '';
 let currentClubTag = null;
-let currentClubData = null; // Sauvegarde des données pour le tri rapide
+let currentClubData = null;
+
+// BUG-C FIX : Utilitaire d'échappement HTML pour les données externes (noms API)
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 async function initClub() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -39,9 +49,8 @@ async function loadClubData(tag) {
 }
 
 function renderClub(club) {
-    currentClubData = club; // On sauvegarde les données
+    currentClubData = club;
 
-    // 1. En-tête
     document.getElementById('club-name').innerText = club.name;
     document.getElementById('club-tag').innerText = club.tag;
 
@@ -49,7 +58,6 @@ function renderClub(club) {
     const iconUrl = `https://brawlify.com/images/club-badges/96/${badgeId}.webp`;
     document.getElementById('club-icon').src = iconUrl;
 
-    // 2. Description
     const descElem = document.getElementById('club-description');
     if (club.description) {
         descElem.innerHTML = formatBrawlText(club.description);
@@ -57,14 +65,11 @@ function renderClub(club) {
         descElem.innerText = "Aucune description.";
     }
 
-    // 3. Statistiques Complètes
     const membersCount = club.members ? club.members.length : 0;
     document.getElementById('members-count').innerText = membersCount;
 
-    // Calcul de la moyenne
     const avgTrophies = membersCount > 0 ? Math.round(club.trophies / membersCount) : 0;
     
-    // Traduction de l'accès
     const typeTranslations = {
         'open': '🟢 Ouvert',
         'inviteOnly': '🟠 Invitation',
@@ -102,7 +107,6 @@ function renderClub(club) {
         </div>
     `;
 
-    // 4. Lancement du rendu des membres
     sortClubMembers();
 }
 
@@ -121,7 +125,7 @@ function sortClubMembers() {
             const rA = roleValues[a.role] || 0;
             const rB = roleValues[b.role] || 0;
             if (rA !== rB) return rB - rA;
-            return b.trophies - a.trophies; // Si même grade -> tri par trophées
+            return b.trophies - a.trophies;
         } else if (criteria === 'name') {
             return a.name.localeCompare(b.name);
         }
@@ -131,11 +135,9 @@ function sortClubMembers() {
     renderMembers(members);
 }
 
-// Fonction pour traduire les balises de couleurs Brawl Stars (<c3>...</c>)
 function formatBrawlText(text) {
     if (!text) return "";
     
-    // 1. Sécurité anti-XSS : on convertit le HTML dangereux en texte simple
     let safeText = text
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -143,28 +145,17 @@ function formatBrawlText(text) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 
-    // 2. Palette de couleurs Brawl Stars (adaptée pour ressortir sur un fond sombre)
     const brawlColors = {
-        '0': '#222222', // Noir (légèrement éclairci pour qu'il soit un minimum lisible sur fond noir)
-        '1': '#ffffff', // Blanc
-        '2': '#ff5555', // Rouge clair
-        '3': '#54ff54', // Vert fluo
-        '4': '#3388ff', // Bleu
-        '5': '#00d2ff', // Azur
-        '6': '#ff99cc', // Rose clair
-        '7': '#ffce00', // Jaune (Couleur Brawl Track)
-        '8': '#ff00ff', // Rose foncé
-        '9': '#cc0000', // Rouge foncé
-        '10': '#ffffff' // Blanc
+        '0': '#222222', '1': '#ffffff', '2': '#ff5555', '3': '#54ff54',
+        '4': '#3388ff', '5': '#00d2ff', '6': '#ff99cc', '7': '#ffce00',
+        '8': '#ff00ff', '9': '#cc0000', '10': '#ffffff'
     };
 
-    // 3. Remplacement des balises &lt;c...&gt; (Codes standards et HEX) par des <span> colorés
     safeText = safeText.replace(/&lt;c([0-9a-fA-F]{6}|\d+)&gt;/gi, (match, colorCode) => {
         const color = colorCode.length === 6 ? '#' + colorCode : (brawlColors[colorCode] || '#ffffff');
         return `<span style="color: ${color};">`;
     });
 
-    // 4. Remplacement des balises de fermeture &lt;/c&gt; et du cas particulier &lt;c
     safeText = safeText.replace(/&lt;\/c&gt;/gi, '</span>');
     safeText = safeText.replace(/&lt;c(?!\w)/gi, '</span>');
 
@@ -189,12 +180,16 @@ function renderMembers(members) {
         row.className = 'member-row';
         row.onclick = () => window.location.href = `/player/${m.tag.replace('#', '')}`;
 
-        // Aligné à gauche et avec sécurité d'image (onerror)
+        // BUG-C FIX : m.name échappé avant injection dans innerHTML.
+        // Les noms Brawl Stars peuvent contenir <, >, & etc.
+        // m.tag est toujours #[A-Z0-9], pas de risque — laissé tel quel.
+        const safeName = escapeHtml(m.name);
+
         row.innerHTML = `
             <div class="member-rank">${index + 1}</div>
             <img src="https://cdn.brawlify.com/profile-icons/regular/${m.icon.id}.png" class="member-icon ${roleClass ? roleClass + '-border' : ''}" onerror="this.src='/assets/default_icon.png'">
             <div class="member-info" style="text-align: left;">
-                <div class="member-name" style="color: ${nameColor};">${m.name}</div>
+                <div class="member-name" style="color: ${nameColor};">${safeName}</div>
                 <div class="member-tag">${m.tag}</div>
             </div>
             <div class="member-role-container">
