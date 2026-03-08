@@ -5,8 +5,8 @@
 const CHART_MODE_HOUR = 0.042;
 
 let currentChartMode = 0;
-let currentChartOffset = 0;         // Offset graphique GLOBAL (trophées joueur)
-let currentBrawlerChartOffset = 0;  // Offset graphique BRAWLER séparé
+let currentChartOffset = 0;
+let currentBrawlerChartOffset = 0;
 let currentTagString = null;
 let mainFlatpickr = null;
 let brawlerFlatpickr = null;
@@ -183,8 +183,7 @@ async function loadTagData(tag) {
         if (!res.ok) throw new Error("Joueur introuvable");
         const data = await res.json();
         
-        // --- NOUVEAU : Sauvegarde globale pour le générateur d'image ---
-        window.playerData = data; 
+        window.playerData = data;
         
         renderProfile(data);
         await loadBrawlersGrid(data.brawlers);
@@ -289,8 +288,8 @@ function checkClaimStatus(tagData) {
     btn.style.border = "none";
     btn.style.transition = "all 0.2s";
 
-if (tagData.is_reserved) {
-        btn.innerText = "RESERVED"; // Ancien: "🔒 RESERVED"
+    if (tagData.is_reserved) {
+        btn.innerText = "RESERVED";
         btn.className = "btn-3d btn-purple";
         btn.disabled = true;
         btn.style.cursor = "not-allowed";
@@ -299,7 +298,7 @@ if (tagData.is_reserved) {
     }
 
     if (tagData.claimer_id === currentUserId) {
-        btn.innerText = "UNCLAIM"; // Ancien: "❌ UNCLAIM"
+        btn.innerText = "UNCLAIM";
         btn.className = "btn-3d btn-red";
         btn.onclick = () => unclaimTagAction();
         actionsDiv.prepend(btn);
@@ -307,7 +306,7 @@ if (tagData.is_reserved) {
     }
 
     if (tagData.claimer_id && tagData.claimer_id !== currentUserId) {
-        btn.innerText = "CLAIMED"; // Ancien: "👤 CLAIMED"
+        btn.innerText = "CLAIMED";
         btn.className = "btn-3d btn-grey";
         btn.disabled = true;
         btn.style.cursor = "not-allowed";
@@ -315,7 +314,7 @@ if (tagData.is_reserved) {
         return;
     }
 
-    btn.innerText = "CLAIM"; // Ancien: "⚡ CLAIM"
+    btn.innerText = "CLAIM";
     btn.className = "btn-3d btn-yellow";
     btn.onclick = () => claimTagAction();
     actionsDiv.prepend(btn);
@@ -485,6 +484,9 @@ function renderBrawlersGrid() {
             card.style.filter = "grayscale(100%) opacity(0.3)";
             card.style.cursor = "default";
         } else {
+            // BUG-D FIX : getBrawlerRank() appelé une seule fois par brawler owned.
+            // Avant : appelé 1x dans ce bloc else ET 1x dans le if(b.owned) ci-dessous
+            // → double calcul inutile (~70 brawlers = ~70 appels économisés).
             const rank = getBrawlerRank(b.trophies);
             card.classList.add(`rank-${rank}`);
             card.style.cursor = "pointer";
@@ -496,27 +498,8 @@ function renderBrawlersGrid() {
             badge.className = 'brawler-rank-badge';
             badge.title = RANK_CONFIG[rank].label;
             card.appendChild(badge);
-        }
 
-        const img = document.createElement('img');
-        img.src = b.imageUrl;
-        img.style.width = '100%';
-        img.style.aspectRatio = '1/1';
-        img.style.objectFit = 'contain';
-        img.loading = 'lazy';
-        card.appendChild(img);
-
-        const nameDiv = document.createElement('div');
-        nameDiv.style.fontSize = '0.8em';
-        nameDiv.className = 'brawler-name-label';
-        nameDiv.style.overflow = 'hidden';
-        nameDiv.style.textOverflow = 'ellipsis';
-        nameDiv.style.whiteSpace = 'nowrap';
-        nameDiv.textContent = b.name;
-        card.appendChild(nameDiv);
-
-        if (b.owned) {
-            const rank = getBrawlerRank(b.trophies);
+            // Bloc trophées intégré ici (élimine le if(b.owned) redondant externe)
             const trophyDiv = document.createElement('div');
             trophyDiv.style.color = '#ffce00';
             trophyDiv.style.fontSize = '1em';
@@ -543,7 +526,32 @@ function renderBrawlersGrid() {
                 arrow.style.color = b.change24h > 0 ? '#28a745' : '#ff5555';
                 trophyDiv.appendChild(arrow);
             }
-            card.appendChild(trophyDiv);
+
+            // trophyDiv sera ajouté après nameDiv ci-dessous
+            card._trophyDiv = trophyDiv;
+        }
+
+        const img = document.createElement('img');
+        img.src = b.imageUrl;
+        img.style.width = '100%';
+        img.style.aspectRatio = '1/1';
+        img.style.objectFit = 'contain';
+        img.loading = 'lazy';
+        card.appendChild(img);
+
+        const nameDiv = document.createElement('div');
+        nameDiv.style.fontSize = '0.8em';
+        nameDiv.className = 'brawler-name-label';
+        nameDiv.style.overflow = 'hidden';
+        nameDiv.style.textOverflow = 'ellipsis';
+        nameDiv.style.whiteSpace = 'nowrap';
+        nameDiv.textContent = b.name;
+        card.appendChild(nameDiv);
+
+        // Attache le bloc trophées (préparé dans le bloc owned ci-dessus)
+        if (b.owned && card._trophyDiv) {
+            card.appendChild(card._trophyDiv);
+            delete card._trophyDiv;
         }
 
         grid.appendChild(card);
@@ -587,8 +595,7 @@ async function goToBrawlerStats(id, name) {
 }
 
 // =========================================================
-// === NAVIGATION GRAPHIQUE BRAWLER
-// FIX BUG-JS-2: Utilise currentBrawlerChartOffset (séparé de currentChartOffset)
+// === NAVIGATION GRAPHIQUE BRAWLER ===
 // =========================================================
 
 function navigateBrawlerChart(direction) {
@@ -707,7 +714,6 @@ function updateBrawlerNavigationUI(data) {
 function getInterpolatedValue(targetDate, allData) {
     if (!allData || allData.length === 0) return null;
 
-    // Tri défensif : ne modifie pas l'array original
     const sorted = [...allData].sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
@@ -768,7 +774,7 @@ function setChartMode(mode) {
 
 function setBrawlerChartMode(mode, liveValOverride) {
     currentBrawlerMode = mode;
-    currentBrawlerChartOffset = 0; // FIX BUG-JS-2: Reset de l'offset BRAWLER uniquement
+    currentBrawlerChartOffset = 0;
 
     document.querySelectorAll('.filter-brawler-btn').forEach(btn => btn.classList.remove('active'));
     let btnId = 'btn-brawler-all';
@@ -813,9 +819,9 @@ function setBrawlerChartMode(mode, liveValOverride) {
 }
 
 function renderBrawlerChart() {
-    if (brawlerChartInstance) brawlerChartInstance.destroy();
-
-    // FIX BUG-JS-2: Passe currentBrawlerChartOffset au lieu de currentChartOffset
+    // OPT-8 : Le destroy() est maintenant géré dans renderGenericChart.
+    // Il n'est déclenché que si le time unit change (changement de mode).
+    // Pour la navigation (prev/next), le graphique est mis à jour en place.
     brawlerChartInstance = renderGenericChart({
         canvasId: 'brawlerChartCanvas',
         rawData: currentBrawlerHistory,
@@ -842,8 +848,7 @@ function renderMainChart() {
     const activeBtn = document.getElementById(btnId);
     if (activeBtn) activeBtn.classList.add('active');
 
-    if (window.myChart) window.myChart.destroy();
-
+    // OPT-8 : Le destroy() est maintenant géré dans renderGenericChart.
     window.myChart = renderGenericChart({
         canvasId: 'trophyChart',
         rawData: fullHistoryData,
@@ -862,7 +867,6 @@ function renderMainChart() {
 function manageGenericFilters(data, idPrefix) {
     let diffDays = 0;
     if (data && data.length > 0) {
-        // Trouver la vraie date la plus ancienne
         const minTime = Math.min(...data.map(item => new Date((item.date || item.recorded_at).replace(' ', 'T') + 'Z').getTime()));
         const oldest = new Date(minTime);
         const now = new Date();
@@ -1013,7 +1017,6 @@ function syncPickerWithMode(isBrawler, mode, historyData) {
     let daysOfHistory = 0;
 
     if (historyData && historyData.length > 0) {
-        // Calcul propre de la date minimale garantie
         const minTime = Math.min(...historyData.map(item => new Date((item.date || item.recorded_at).replace(' ', 'T') + 'Z').getTime()));
         minDate = new Date(minTime);
         const now = new Date();
@@ -1146,8 +1149,6 @@ function renderClubCard(club) {
 function preprocessData(rawData, isBrawler) {
     let processed = [];
 
-    // FIX : On s'assure que les données sont TOUJOURS triées du plus ancien au plus récent.
-    // L'API les renvoie souvent en DESC, ce qui cassait l'interpolation et les limites de temps !
     let sortedRaw = [...rawData].sort((a, b) => {
         const dateA = new Date((a.date || a.recorded_at).replace(' ', 'T') + 'Z').getTime();
         const dateB = new Date((b.date || b.recorded_at).replace(' ', 'T') + 'Z').getTime();
@@ -1239,7 +1240,6 @@ function renderGenericChart(config) {
 
     if (mode > 0) {
         if (startDate > firstDataPointDate) {
-            // FIX : Ne créer un fantôme que s'il n'y a pas déjà un vrai point EXACTEMENT à cette date
             const hasExactStart = finalDataPoints.some(pt => pt.x.getTime() === startDate.getTime());
             if (!hasExactStart) {
                 const valLeft = getInterpolatedValue(startDate, processedData);
@@ -1255,7 +1255,6 @@ function renderGenericChart(config) {
             }
         } else {
             if (endDate < now) {
-                // FIX : Éviter le doublon à droite
                 const hasExactEnd = finalDataPoints.some(pt => pt.x.getTime() === endDate.getTime());
                 if (!hasExactEnd) {
                     const valRight = getInterpolatedValue(endDate, processedData);
@@ -1297,7 +1296,6 @@ function renderGenericChart(config) {
 
     const pointColors = finalDataPoints.map(p => getPointColor(p));
 
-    const canvasCtx = document.getElementById(canvasId).getContext('2d');
     let timeUnit = 'day';
     if (isHourMode(mode))                 timeUnit = 'minute';
     else if (mode === 1)                   timeUnit = 'hour';
@@ -1310,7 +1308,44 @@ function renderGenericChart(config) {
         scaleMax = endDate;
     }
 
-    return new Chart(canvasCtx, {
+    // BUG-E FIX : paramètre renommé segCtx pour éviter le shadow de la variable
+    // canvasCtx (Canvas 2D context) déclarée dans le scope externe.
+    // L'ancien nom 'canvasCtx' dans le callback Chart.js prêtait à confusion :
+    // ce paramètre est le contexte scripté Chart.js, pas le contexte Canvas 2D.
+    const segmentCallback = {
+        borderColor: segCtx => {
+            const p1 = finalDataPoints[segCtx.p1DataIndex];
+            if (p1 && (p1.cType === 'locked' || p1.cType === 'unlocked')) return '#ffffff';
+            return color;
+        }
+    };
+
+    // OPT-8 : Mise à jour en place du graphique existant si le time unit est inchangé.
+    // Cas typique : navigation prev/next dans le même mode (Jour, Semaine, Mois...).
+    // Évite destroy() + new Chart() → pas de garbage collection ni de full reflow.
+    // Si le time unit change (ex: passage mode "Jour" → "Heure"), on recrée le graphique
+    // car Chart.js nécessite une réinitialisation de l'adaptateur de temps.
+    const existingChart = canvasId === 'trophyChart' ? window.myChart : brawlerChartInstance;
+
+    if (existingChart && existingChart._btTimeUnit === timeUnit) {
+        const ds = existingChart.data.datasets[0];
+        ds.data = finalDataPoints;
+        ds.pointBackgroundColor = pointColors;
+        ds.pointBorderColor = pointColors;
+        ds.tension = (mode === 1 || isHourMode(mode)) ? 0 : 0.2;
+        ds.segment = segmentCallback;
+        existingChart.options.scales.x.min = scaleMin;
+        existingChart.options.scales.x.max = scaleMax;
+        existingChart.update('none'); // Mise à jour instantanée, sans animation
+        return existingChart;
+    }
+
+    // Time unit différent ou première création : destroy + recreate
+    if (existingChart) existingChart.destroy();
+
+    const canvasCtx = document.getElementById(canvasId).getContext('2d');
+
+    const newChart = new Chart(canvasCtx, {
         type: 'line',
         data: {
             datasets: [{
@@ -1330,13 +1365,7 @@ function renderGenericChart(config) {
                     return 0;
                 },
                 pointHoverRadius: p => (p.raw && p.raw.type === 'ghost' ? 0 : 6),
-                segment: {
-                    borderColor: canvasCtx => {
-                        const p1 = finalDataPoints[canvasCtx.p1DataIndex];
-                        if (p1 && (p1.cType === 'locked' || p1.cType === 'unlocked')) return '#ffffff';
-                        return color;
-                    }
-                }
+                segment: segmentCallback
             }]
         },
         options: {
@@ -1373,4 +1402,8 @@ function renderGenericChart(config) {
             }
         }
     });
+
+    // Mémorise le time unit courant pour les futures décisions update vs recreate
+    newChart._btTimeUnit = timeUnit;
+    return newChart;
 }
