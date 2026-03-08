@@ -707,20 +707,22 @@ function updateBrawlerNavigationUI(data) {
 function getInterpolatedValue(targetDate, allData) {
     if (!allData || allData.length === 0) return null;
 
+    // Tri défensif : ne modifie pas l'array original
+    const sorted = [...allData].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
     const targetTs = targetDate.getTime();
     let prev = null, next = null;
 
-    for (let pt of allData) {
+    for (let pt of sorted) {
         let ptTs = new Date(pt.date).getTime();
-
         if (ptTs <= targetTs) prev = { ...pt, ts: ptTs };
         if (ptTs >= targetTs && !next) { next = { ...pt, ts: ptTs }; break; }
     }
 
-    if (!prev && next) return next.trophies; 
-    
-    if (prev && !next) return prev.trophies; 
-
+    if (!prev && next) return next.trophies;
+    if (prev && !next) return prev.trophies;
     if (prev && next) {
         if (prev.ts === next.ts) return prev.trophies;
         const factor = (targetTs - prev.ts) / (next.ts - prev.ts);
