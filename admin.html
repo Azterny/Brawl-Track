@@ -465,8 +465,16 @@
         }
         
         function updateTier(uid, tier) { api(`update-tier`, 'POST', {user_id:uid, tier:tier}); }
-        function updFreq(tid, el) { 
-            api(`tag/${tid}/frequency`, 'POST', {minutes: el.value}).then(ok => el.style.borderColor = ok?'green':'red'); 
+        function updFreq(tid, el) {
+            api(`tag/${tid}/frequency`, 'POST', { minutes: parseInt(el.value, 10) })
+                .then(ok => {
+                    el.style.borderColor = ok ? '#28a745' : '#ff5555';
+                    el.title = ok ? 'Fréquence mise à jour' : 'Erreur de mise à jour';
+                })
+                .catch(() => {
+                    el.style.borderColor = '#ff5555';
+                    el.title = 'Erreur réseau';
+                });
         }
 
         // Init view
