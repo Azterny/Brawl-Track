@@ -6,38 +6,66 @@
     <title>Redirection...</title>
     
     <script>
+        // === CONFIGURATION BRAWL-TRACK ===
+        const MAINTENANCE = true;
+        // =================================
+
         const path = window.location.pathname;
         const parts = path.split('/').filter(p => p);
+        const searchParams = new URLSearchParams(window.location.search);
+        
+        // On vérifie si l'URL contient le paramètre de contournement
+        const isBypass = searchParams.get('bypass') === 'true';
 
-        // SÉCURITÉ ANTI-CASSURE : Si le navigateur cherche une image ou un script, on annule le routage SPA !
+        // 0. SÉCURITÉ ANTI-CASSURE : Si le navigateur cherche un fichier statique
         if (path.includes('/assets/') || path.includes('/css/') || path.includes('/js/')) {
-            // On s'arrête ici. Le navigateur affichera une erreur classique dans la console pour l'image manquante.
+            // On s'arrête ici pour ne pas bloquer les ressources
         }
-        // EXCEPTION : Si on cherche explicitement la page d'erreur
+        // 1. SYSTÈME DE CONTOURNEMENT (BYPASS) : /pass/...
+        else if (parts[0] === 'pass' && parts.length > 1) {
+            const targetRoute = parts.slice(1).join('/');
+            let redirectPath = `/${targetRoute}`;
+            
+            // Confort : Si on tape juste /pass/index ou /pass/dashboard, on rajoute .html automatiquement
+            if (parts.length === 2 && !redirectPath.includes('.')) {
+                redirectPath += '.html';
+            }
+            
+            // On redirige vers la vraie page en injectant le paramètre secret ?bypass=true
+            window.location.replace(`${redirectPath}?bypass=true`);
+        }
+        // 2. REDIRECTION MAINTENANCE GLOBALE
+        else if (MAINTENANCE && !path.includes('maintenance.html') && !isBypass) {
+            window.location.replace('/maintenance.html');
+        }
+        // 3. EXCEPTION : Si on cherche explicitement la page d'erreur
         else if (parts.length > 0 && (parts[0].includes('404') || parts[0].includes('error'))) {
             // Laisse la page 404 s'afficher
         }
-        // 1. Route Dashboard Joueur : /player/TAG/BRAWLER
+        // 4. Route Dashboard Joueur : /player/TAG/BRAWLER
         else if (parts[0] === 'player' && parts[1]) {
             const tag = parts[1];
             let redirect = `/dashboard.html?tag=${tag}`;
             if (parts[2]) redirect += `&brawler=${parts[2]}`;
+            // On transmet le bypass si on l'a
+            if (isBypass) redirect += `&bypass=true`; 
             window.location.replace(redirect);
         }
-        // 2. Route Club : /club/TAG
+        // 5. Route Club : /club/TAG
         else if (parts[0] === 'club' && parts[1]) {
-            window.location.replace(`/club.html?tag=${parts[1]}`);
+            window.location.replace(`/club.html?tag=${parts[1]}${isBypass ? '&bypass=true' : ''}`);
         }
-        // 3. Route Userhome : /home
+        // 6. Route Userhome : /home
         else if (parts.length === 1 && parts[0] === 'home') {
-            window.location.replace(`/userhome.html`);
+            window.location.replace(`/userhome.html${isBypass ? '?bypass=true' : ''}`);
         }
-        // 4. Route Leaderboard : /leaderboard/...
+        // 7. Route Leaderboard : /leaderboard/...
         else if (parts[0] === 'leaderboard') {
             let redirect = `/leaderboard.html?`;
             if (parts[1]) redirect += `zone=${parts[1]}`;
             if (parts[2]) redirect += `&cat=${parts[2]}`;
             if (parts[3]) redirect += `&id=${parts[3]}`;
+            if (isBypass) redirect += `&bypass=true`;
             window.location.replace(redirect);
         }
     </script>
