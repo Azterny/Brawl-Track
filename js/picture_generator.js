@@ -244,20 +244,30 @@ async function startImageGeneration() {
                 useCORS: true,
                 scale: 2
             }).then(canvas => {
-                const imgDataUrl = canvas.toDataURL("image/png");
-                
-                const previewArea = document.getElementById('export-preview-area');
-                previewArea.innerHTML = `
-                    <img src="${imgDataUrl}" class="export-preview-image">
-                    <button class="btn-3d btn-green w-100" style="padding: 10px;" onclick="downloadImage('${imgDataUrl}', '${fileName}')">
-                        ⬇️ Télécharger
-                    </button>
-                `;
-
-                document.getElementById('modal-step-loading').style.display = 'none';
-                document.getElementById('modal-step-result').style.display = 'block';
-
-            }).catch(err => {
+             const imgDataUrl = canvas.toDataURL("image/png");
+         
+             const previewArea = document.getElementById('export-preview-area');
+         
+             const img = document.createElement('img');
+             img.src = imgDataUrl;
+             img.className = 'export-preview-image';
+         
+             const btn = document.createElement('button');
+             btn.className = 'btn-3d btn-green w-100';
+             btn.style.padding = '10px';
+             btn.textContent = '⬇️ Télécharger';
+         
+             // Closure sur imgDataUrl et fileName — aucun attribut inline
+             btn.addEventListener('click', () => downloadImage(imgDataUrl, fileName));
+         
+             previewArea.innerHTML = '';
+             previewArea.appendChild(img);
+             previewArea.appendChild(btn);
+         
+             document.getElementById('modal-step-loading').style.display = 'none';
+             document.getElementById('modal-step-result').style.display = 'block';
+         
+         }).catch(err => {
                 console.error(err);
                 statusDiv.innerHTML = `<span style='color: #ff5555;'>Erreur de capture. Réessayez.</span>`;
             });
