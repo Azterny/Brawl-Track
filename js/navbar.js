@@ -1,10 +1,23 @@
+// OPT-10 / BUG-A : Utilitaire d'échappement HTML — remplace encodeURIComponent()
+// qui ne protège pas contre XSS dans un contexte innerHTML.
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     const navContainer = document.getElementById('global-navbar');
     if (!navContainer) return;
 
     const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username') || 'Joueur'; 
-    const safeUsername = encodeURIComponent(username);
+    const username = localStorage.getItem('username') || 'Joueur';
+    // BUG-A FIX : safeUsername est maintenant correctement échappé pour HTML
+    // (l'ancien encodeURIComponent() n'empêchait pas les injections HTML)
+    const safeUsername = escapeHtml(username);
     
     let html = `
     <nav class="navbar">
@@ -19,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
 
             <div class="nav-actions desktop-only">
-                ${getRightActions(token, safeUsername, username)}
+                ${getRightActions(token, safeUsername)}
             </div>
 
             <div class="nav-burger" onclick="toggleMobileNav()">
@@ -57,11 +70,12 @@ function getCenterLinks(token) {
     return links;
 }
 
-function getRightActions(token, safeUsername, username) {
+// BUG-A FIX : safeUsername (HTML-escaped) utilisé à la place du username brut
+function getRightActions(token, safeUsername) {
     if (token) {
         return `
             <div class="dropdown">
-                <button class="btn-3d btn-yellow btn-sm">👤 ${username} ▾</button>
+                <button class="btn-3d btn-yellow btn-sm">👤 ${safeUsername} ▾</button>
                 <div class="dropdown-menu right-aligned">
                     <a href="/home"><img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Mes Comptes</a>
                     <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')"><img src="/assets/icons/subscribe.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Abonnement</a>
@@ -79,11 +93,13 @@ function getRightActions(token, safeUsername, username) {
     }
 }
 
+// BUG-A FIX : safeUsername pour l'injection HTML, username brut uniquement
+// pour les contextes texte purs (innerText/textContent implicite via prompt etc.)
 function getMobileLinks(token, safeUsername, username) {
     let html = "";
     if (token) {
         html += `
-            <div class="mobile-user-info">Connecté en tant que <strong>${username}</strong></div>
+            <div class="mobile-user-info">Connecté en tant que <strong>${safeUsername}</strong></div>
             <a href="/" class="mobile-link"><img src="/assets/icons/mastery_point.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Accueil</a>
             <a href="/home" class="mobile-link"><img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Mes Comptes</a>
             <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link"><img src="/assets/icons/subscribe.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Abonnement</a>
@@ -130,15 +146,13 @@ function initSmartNavbar() {
     const navbar = document.querySelector('.navbar');
     if (!navbar) return;
 
-    // Force les styles pour rendre la navbar fixe et animable
     navbar.style.position = 'fixed';
     navbar.style.top = '0';
     navbar.style.left = '0';
-    navbar.style.right = '0'; /* Plus sûr que width: 100% */
+    navbar.style.right = '0';
     navbar.style.zIndex = '9999';
     navbar.style.transition = 'transform 0.3s ease-in-out';
 
-    // Compense la hauteur de la navbar sur le body pour éviter que le contenu passe en dessous
     const navHeight = navbar.offsetHeight;
     document.body.style.paddingTop = navHeight + 'px';
 
@@ -147,18 +161,13 @@ function initSmartNavbar() {
     window.addEventListener('scroll', () => {
         let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         
-        // Sécurité anti-rebond (bounce iOS)
         if (scrollTop < 0) return;
-        
-        // Tolérance de 5px pour éviter les clignotements au moindre tremblement
         if (Math.abs(scrollTop - lastScrollTop) < 5) return;
 
-        // Si on scroll vers le bas et qu'on a dépassé la hauteur de la navbar
         if (scrollTop > lastScrollTop && scrollTop > navHeight) {
-            navbar.style.transform = 'translateY(-100%)'; // Cache la navbar vers le haut
+            navbar.style.transform = 'translateY(-100%)';
         } else {
-            // Si on scroll vers le haut
-            navbar.style.transform = 'translateY(0)'; // Fait réapparaître la navbar
+            navbar.style.transform = 'translateY(0)';
         }
         
         lastScrollTop = scrollTop; 
