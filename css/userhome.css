@@ -139,12 +139,14 @@
     position: relative;
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    transition: transform 0.2s, border-color 0.2s;
+    /* AJOUT : box-shadow dans la transition pour la fluidité */
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; 
 }
 
 .linked-card.clickable:hover, .club-card.clickable:hover {
     transform: translateY(-3px);
     border-color: #ffce00;
+    box-shadow: 0 8px 20px rgba(255, 206, 0, 0.1);
     cursor: pointer;
 }
 
@@ -173,10 +175,15 @@
     margin-bottom: 10px;
 }
 
+/* Correction pour l'icône de profil dans les grandes cartes */
+.linked-card .profile-icon, .club-card .profile-icon {
+    margin-right: 0; /* On gère l'espacement via big-profile-info */
+}
+
 /* Infos dans les grandes cartes */
 .big-profile-info {
     flex-grow: 1;
-    margin-left: 20px;
+    margin-left: 20px; /* Espacement fixe entre icône et texte */
     min-width: 0;
 }
 .big-profile-name {
