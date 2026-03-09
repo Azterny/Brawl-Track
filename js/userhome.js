@@ -99,7 +99,7 @@ async function fetchAndRenderLinkedAccount(tag, container) {
                 const cData = await cRes.json();
                 clubHtml = `
                     <div class="club-card clickable" onclick="window.location.href='/club/${cData.tag.replace('#','')}'">
-                        <img src="https://cdn.brawlify.com/club/${cData.badgeId}.png" class="profile-icon" style="width: 75px; height: 75px; border-radius: 15px;" onerror="this.src='/assets/default_icon.png'">
+                        <img src="https://cdn.brawlify.com/club/${cData.badgeId}.png" class="profile-icon" style="width: 75px; height: 75px; border-radius: 15px; flex-shrink: 0;" onerror="this.src='/assets/default_icon.png'">
                         <div class="big-profile-info">
                             <div class="big-profile-name" style="color: #ffce00;">${cData.name}</div>
                             <div style="color: #888; font-family: monospace; margin-bottom: 8px;">${cData.tag}</div>
@@ -127,26 +127,31 @@ async function fetchAndRenderLinkedAccount(tag, container) {
         let nameColor = pData.nameColor || '#ffffff';
         if (nameColor.startsWith('0x')) nameColor = '#' + (nameColor.length >= 10 ? nameColor.slice(4) : nameColor.slice(2));
 
-        // NOUVEAUTÉ : Affichage du Prestige avec la bonne icône
-        // (Note: S'il y a un espace dans le nom de ton fichier, utilise "total%20prestige.png")
+        // NOUVEAUTÉ : Affichage du Prestige (L'attribut onerror est retiré pour être sûr que l'image tente de s'afficher)
+        // INFO : D'après les fichiers de ton projet, l'image s'appelle peut-être "total prestige.png" (avec un espace). 
+        // Si ça affiche une image cassée, renomme ton fichier sur ton Raspberry Pi en "total_prestige.png".
         let prestigeValue = pData.totalPrestigeLevel || 0;
-        const prestigeIcon = prestigeValue > 0 ? `<img src="/assets/total_prestige.png" style="width:16px; vertical-align:middle;" onerror="this.style.display='none'"> ${prestigeValue}` : '';
+        let prestigeHtml = '';
+        if (prestigeValue > 0) {
+            prestigeHtml = `<div class="stat-badge" style="color: #00d2ff; border-color: #00d2ff;"><img src="/assets/total_prestige.png" style="width:16px; vertical-align:middle;"> ${prestigeValue}</div>`;
+        }
 
+        // Assemblage Joueur (Mise en page identique au club, avec la couleur du pseudo en bordure globale)
         const playerHtml = `
-            <div class="linked-card clickable" style="border-left: 5px solid ${nameColor};" onclick="window.location.href='/player/${pData.tag.replace('#','')}'">
-                <img src="https://cdn.brawlify.com/profile-icons/regular/${pData.icon.id}.png" class="profile-icon" style="width: 75px; height: 75px; border-radius: 15px;" onerror="this.src='/assets/default_icon.png'">
+            <div class="linked-card clickable" style="border-color: ${nameColor};" onclick="window.location.href='/player/${pData.tag.replace('#','')}'">
+                <img src="https://cdn.brawlify.com/profile-icons/regular/${pData.icon.id}.png" class="profile-icon" style="width: 75px; height: 75px; border-radius: 15px; flex-shrink: 0;" onerror="this.src='/assets/default_icon.png'">
                 <div class="big-profile-info">
                     <div class="big-profile-name" style="color: ${nameColor}; text-shadow: 0 0 10px ${nameColor}44;">${pData.name}</div>
                     <div style="color: #888; font-family: monospace; margin-bottom: 8px;">${pData.tag}</div>
                     <div class="big-stats-row">
                         <div class="stat-badge" style="color: #ffce00;"><img src="/assets/trophy_normal.png" style="width:16px; vertical-align:middle;"> ${pData.trophies.toLocaleString()}</div>
-                        ${prestigeIcon ? `<div class="stat-badge" style="color: #00d2ff; border-color: #00d2ff;">${prestigeIcon}</div>` : ''}
+                        ${prestigeHtml}
                     </div>
                 </div>
             </div>
         `;
         
-        // Assemblage
+        // Assemblage final
         container.innerHTML = playerHtml + clubHtml;
 
     } catch(e) {
