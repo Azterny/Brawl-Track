@@ -68,6 +68,10 @@
             if (isBypass) redirect += `&bypass=true`;
             window.location.replace(redirect);
         }
+        // 8. Route Liaison de compte : /link/brawl-stars
+        else if (parts[0] === 'link' && parts[1] === 'brawl-stars') {
+            window.location.replace(`/link_account.html${isBypass ? '?bypass=true' : ''}`);
+        }
     </script>
     <link rel="icon" type="image/png" href="/assets/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
