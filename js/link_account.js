@@ -1,6 +1,6 @@
 // js/link_account.js
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('bt_token');
+    const token = localStorage.getItem('token');
     if (!token) {
         window.location.href = '/pass/index'; // Redirection vers l'accueil/login
         return;
