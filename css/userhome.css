@@ -159,8 +159,13 @@
     height: 75px;
     object-fit: cover;
     border-radius: 15px;
-    flex-shrink: 0; /* INTERDIT AU LOGO DE RÉTRÉCIR */
-    margin: 0; /* Géré par le 'gap' du parent */
+    flex-shrink: 0; 
+    margin: 0; 
+    box-sizing: border-box;
+}
+
+.club-card .profile-icon {
+    border: 2px solid transparent; 
 }
 
 /* --- BLOC TEXTE TOUJOURS À DROITE --- */
