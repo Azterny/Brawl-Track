@@ -75,9 +75,10 @@
 .player-preview img, .challenge-box img {
     width: 90px;
     height: 90px;
-    border-radius: 50%;
+    border-radius: 15px;
     border: 3px solid #fbdc10;
-    box-shadow: 0 0 15px rgba(251, 220, 16, 0.3);
+    box-shadow: 0 0 15px rgba(251, 220, 16, 0.2);
+    background-color: #000;
 }
 
 .trophy-text {
@@ -87,12 +88,12 @@
 }
 
 .timer-box {
-    font-size: 1.8em;
+    font-size: 1.6em;
     font-weight: bold;
-    color: #ff4757;
+    color: #ff9f43;
     margin: 20px 0;
-    font-family: monospace;
-    text-shadow: 0 0 10px rgba(255, 71, 87, 0.4);
+    font-family: 'Roboto', sans-serif;
+    text-shadow: none;
 }
 
 .action-buttons {
