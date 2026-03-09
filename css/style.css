@@ -545,3 +545,20 @@ input:focus, select:focus {
     color: #aaa;
     font-size: 0.9em;
 }
+
+/* Pastille de notification (Point rouge sur la Navbar) */
+.nav-notif-dot {
+    position: absolute;
+    top: -2px;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #ff4757;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+}
+
+/* Ajustement pour le burger s'il n'est pas en position relative */
+.nav-burger {
+    position: relative;
+}
