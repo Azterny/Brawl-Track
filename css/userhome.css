@@ -124,7 +124,6 @@
    ========================================= */
 .linked-container {
     display: grid;
-    /* Aligne les 2 cartes côte à côte si > 700px, sinon l'une sous l'autre */
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
     gap: 20px;
     margin-bottom: 40px;
@@ -137,9 +136,9 @@
     border-radius: 15px;
     padding: 20px;
     display: flex;
-    flex-direction: row; /* FORCE L'ALIGNEMENT HORIZONTAL */
-    align-items: center; /* Centre verticalement le logo et le bloc texte */
-    gap: 20px; /* Espace strict entre le logo et le texte */
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
     position: relative;
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
@@ -159,19 +158,15 @@
     height: 75px;
     object-fit: cover;
     border-radius: 15px;
-    flex-shrink: 0; 
-    margin: 0; 
+    flex-shrink: 0;
+    margin: 0;
     box-sizing: border-box;
-}
-
-.club-card .profile-icon {
-    border: 2px solid transparent; 
 }
 
 /* --- BLOC TEXTE TOUJOURS À DROITE --- */
 .big-profile-info {
     flex: 1;
-    min-width: 0; /* CRUCIAL : Empêche un nom trop long de pousser le logo hors de la carte */
+    min-width: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -183,9 +178,9 @@
     line-height: 1.2;
     color: #fff;
     margin-bottom: 2px;
-    white-space: nowrap; /* Force sur une seule ligne */
+    white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; /* Ajoute "..." si le pseudo est trop long */
+    text-overflow: ellipsis;
 }
 
 .big-profile-tag {
@@ -198,10 +193,10 @@
 .big-stats-row {
     display: flex;
     gap: 10px;
-    flex-wrap: nowrap; /* Les badges restent sur la même ligne */
+    flex-wrap: nowrap;
     align-items: center;
-    overflow-x: auto; /* Scroll invisible si trop de badges sur un iPhone SE par exemple */
-    scrollbar-width: none; /* Cache la barre de défilement */
+    overflow-x: auto;
+    scrollbar-width: none;
 }
 .big-stats-row::-webkit-scrollbar {
     display: none;
@@ -218,7 +213,7 @@
     font-weight: bold;
     color: #fff;
     font-size: 1rem;
-    white-space: nowrap; /* Le texte du badge ne se coupe jamais */
+    white-space: nowrap;
 }
 
 /* --- CARTE VIDE --- */
@@ -234,7 +229,10 @@
     text-align: center;
     color: #888;
     transition: all 0.2s ease;
-    height: 100%;
+    /* FIX : hauteur fixe pour éviter le débordement */
+    min-height: 120px;
+    max-height: 160px;
+    height: auto;
 }
 .empty-link-card.clickable:hover {
     border-color: #ffce00;
