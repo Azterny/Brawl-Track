@@ -586,16 +586,20 @@
             const uid = document.getElementById('msg-uid').value;
             const obj = document.getElementById('msg-obj').value;
             const content = document.getElementById('msg-content').value;
-            let date = document.getElementById('msg-date').value;
+            const inputDate = document.getElementById('msg-date').value;
 
             if(!obj || !content) { alert("Objet et contenu requis !"); return; }
             
-            // Si une date est fournie, on la convertit en format SQL
-            if(date) {
-                date = date.replace('T', ' ') + ':00';
+            let dateEnvoiUtc = null;
+            
+            // Si l'admin a entré une date, on la convertit en UTC avant de l'envoyer au serveur
+            if(inputDate) {
+                const localDate = new Date(inputDate);
+                // toISOString() renvoie "YYYY-MM-DDTHH:mm:ss.sssZ" qui est toujours en UTC
+                dateEnvoiUtc = localDate.toISOString().slice(0, 19).replace('T', ' ');
             }
 
-            api(`messages/send`, 'POST', {user_id: uid, objet: obj, contenu: content, date_envoi: date}).then(ok => {
+            api(`messages/send`, 'POST', {user_id: uid, objet: obj, contenu: content, date_envoi: dateEnvoiUtc}).then(ok => {
                 if(ok) {
                     alert("Message programmé / envoyé avec succès !");
                     closeMsgModal();
