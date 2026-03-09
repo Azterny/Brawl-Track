@@ -122,24 +122,22 @@ async function fetchAndRenderLinkedAccount(tag, container) {
                 </div>
             `;
         }
-        
+                
         // 3. Rendu Joueur
         let nameColor = pData.nameColor || '#ffffff';
         if (nameColor.startsWith('0x')) nameColor = '#' + (nameColor.length >= 10 ? nameColor.slice(4) : nameColor.slice(2));
-
-        // NOUVEAUTÉ : Affichage du Prestige (L'attribut onerror est retiré pour être sûr que l'image tente de s'afficher)
-        // INFO : D'après les fichiers de ton projet, l'image s'appelle peut-être "total prestige.png" (avec un espace). 
-        // Si ça affiche une image cassée, renomme ton fichier sur ton Raspberry Pi en "total_prestige.png".
+        
+        // Gestion du Prestige
         let prestigeValue = pData.totalPrestigeLevel || 0;
         let prestigeHtml = '';
         if (prestigeValue > 0) {
             prestigeHtml = `<div class="stat-badge" style="color: #00d2ff; border-color: #00d2ff;"><img src="/assets/total_prestige.png" style="width:16px; vertical-align:middle;"> ${prestigeValue}</div>`;
         }
-
-        // Assemblage Joueur (Mise en page identique au club, avec la couleur du pseudo en bordure globale)
+        
+        // Assemblage Joueur (Structure identique au Club pour une symétrie parfaite) [cite: 58]
         const playerHtml = `
-            <div class="linked-card clickable" style="border-color: ${nameColor};" onclick="window.location.href='/player/${pData.tag.replace('#','')}'">
-                <img src="https://cdn.brawlify.com/profile-icons/regular/${pData.icon.id}.png" class="profile-icon" style="width: 75px; height: 75px; border-radius: 15px; flex-shrink: 0;" onerror="this.src='/assets/default_icon.png'">
+            <div class="linked-card clickable" onclick="window.location.href='/player/${pData.tag.replace('#','')}'">
+                <img src="https://cdn.brawlify.com/profile-icons/regular/${pData.icon.id}.png" class="profile-icon" style="width: 75px; height: 75px; border-radius: 15px; flex-shrink: 0; border: 2px solid ${nameColor};" onerror="this.src='/assets/default_icon.png'">
                 <div class="big-profile-info">
                     <div class="big-profile-name" style="color: ${nameColor}; text-shadow: 0 0 10px ${nameColor}44;">${pData.name}</div>
                     <div style="color: #888; font-family: monospace; margin-bottom: 8px;">${pData.tag}</div>
@@ -150,7 +148,6 @@ async function fetchAndRenderLinkedAccount(tag, container) {
                 </div>
             </div>
         `;
-        
         // Assemblage final
         container.innerHTML = playerHtml + clubHtml;
 
