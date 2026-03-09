@@ -84,71 +84,88 @@ async function initUserHome() {
 async function fetchAndRenderLinkedAccount(tag, container) {
     try {
         const cleanTag = tag.replace('#', '');
-        
+
         // 1. Fetch Joueur
         const pRes = await fetch(`${API_URL}/api/public/player/${cleanTag}`);
         if (!pRes.ok) throw new Error("Erreur joueur");
         const pData = await pRes.json();
-        
-        // 2. Fetch Club (Si le joueur en a un)
+
+        // 2. Couleur du nom joueur
+        let nameColor = pData.nameColor || '#ffffff';
+        if (nameColor.startsWith('0x')) nameColor = '#' + (nameColor.length >= 10 ? nameColor.slice(4) : nameColor.slice(2));
+
+        // 3. Calcul du prestige total depuis les brawlers
+        const prestigeValue = pData.brawlers
+            ? pData.brawlers.reduce((sum, b) => sum + Math.floor((b.trophies || 0) / 1000), 0)
+            : 0;
+
+        // 4. HTML JOUEUR
+        const playerHtml = `
+            <div class="linked-card clickable" onclick="window.location.href='/player/${pData.tag.replace('#', '')}'">
+                <img src="https://cdn.brawlify.com/profile-icons/regular/${pData.icon.id}.png"
+                     class="profile-icon"
+                     style="border: 2px solid ${nameColor};"
+                     onerror="this.src='/assets/default_icon.png'">
+                <div class="big-profile-info">
+                    <div class="big-profile-name" style="color: ${nameColor}; text-shadow: 0 0 10px ${nameColor}44;">${pData.name}</div>
+                    <div class="big-profile-tag">${pData.tag}</div>
+                    <div class="big-stats-row">
+                        <div class="stat-badge" style="color: #ffce00;">
+                            <img src="/assets/trophy_normal.png" style="width:16px; vertical-align:middle;">
+                            ${pData.trophies.toLocaleString('fr-FR')}
+                        </div>
+                        <div class="stat-badge" style="color: #8A4FE8;">
+                            <img src="/assets/total prestige.png" style="width:16px; vertical-align:middle;">
+                            ${prestigeValue}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // 5. HTML CLUB
         let clubHtml = '';
         if (pData.club && pData.club.tag) {
-            const cRes = await fetch(`${API_URL}/api/public/club/${pData.club.tag.replace('#','')}`);
+            const cRes = await fetch(`${API_URL}/api/public/club/${pData.club.tag.replace('#', '')}`);
             if (cRes.ok) {
                 const cData = await cRes.json();
-                
+                const badgeId = cData.badgeId || 8000000;
+                const membersCount = cData.members ? cData.members.length : 0;
+
                 clubHtml = `
-                    <div class="club-card clickable" onclick="window.location.href='/club/${cData.tag.replace('#','')}'">
-                        <img src="https://cdn.brawlify.com/club/${cData.badgeId}.png" class="profile-icon" onerror="this.src='/assets/default_icon.png'">
+                    <div class="linked-card clickable" onclick="window.location.href='/club/${cData.tag.replace('#', '')}'">
+                        <img src="https://brawlify.com/images/club-badges/96/${badgeId}.webp"
+                             class="profile-icon"
+                             style="border: 2px solid rgba(255,206,0,0.4); background: #000; object-fit: contain; padding: 4px;"
+                             onerror="this.src='/assets/default_icon.png'">
                         <div class="big-profile-info">
                             <div class="big-profile-name" style="color: #ffce00; text-shadow: 0 0 10px #ffce0044;">${cData.name}</div>
                             <div class="big-profile-tag">${cData.tag}</div>
                             <div class="big-stats-row">
-                                <div class="stat-badge" style="color: #ffce00;"><img src="/assets/trophy_normal.png" style="width:16px;"> ${cData.trophies.toLocaleString()}</div>
-                                <div class="stat-badge" style="color: #aaa;">👤 ${cData.members.length} / 30</div>
+                                <div class="stat-badge" style="color: #ffce00;">
+                                    <img src="/assets/trophy_normal.png" style="width:16px; vertical-align:middle;">
+                                    ${cData.trophies.toLocaleString('fr-FR')}
+                                </div>
+                                <div class="stat-badge" style="color: #fff;">
+                                    ${membersCount} membres
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
             }
         }
-        
-        // Si pas de club ou erreur
+
+        // Carte vide si pas de club
         if (!clubHtml) {
             clubHtml = `
                 <div class="empty-link-card">
-                    <img src="/assets/icons/wipeout.png" style="height: 40px; margin-bottom: 10px; opacity: 0.5;" onerror="this.style.display='none'">
-                    <div style="font-size: 1.2em; color: #555;">Pas de club</div>
+                    <div class="plus-btn" style="font-size: 2em; opacity: 0.3;">🏆</div>
+                    <div style="font-size: 1.1em; color: #555;">Pas de club</div>
                 </div>
             `;
         }
-        
-        // 3. Rendu Joueur
-        let nameColor = pData.nameColor || '#ffffff';
-        if (nameColor.startsWith('0x')) nameColor = '#' + (nameColor.length >= 10 ? nameColor.slice(4) : nameColor.slice(2));
 
-        let prestigeValue = pData.totalPrestigeLevel || 0;
-        let prestigeHtml = '';
-        if (prestigeValue > 0) {
-            prestigeHtml = `<div class="stat-badge" style="color: #00d2ff; border-color: #00d2ff;"><img src="/assets/total_prestige.png" style="width:16px;"> ${prestigeValue}</div>`;
-        }
-
-        // --- HTML DU JOUEUR (Exactement symétrique au club) ---
-        const playerHtml = `
-            <div class="linked-card clickable" onclick="window.location.href='/player/${pData.tag.replace('#','')}'">
-                <img src="https://cdn.brawlify.com/profile-icons/regular/${pData.icon.id}.png" class="profile-icon" style="border: 2px solid ${nameColor};" onerror="this.src='/assets/default_icon.png'">
-                <div class="big-profile-info">
-                    <div class="big-profile-name" style="color: ${nameColor}; text-shadow: 0 0 10px ${nameColor}44;">${pData.name}</div>
-                    <div class="big-profile-tag">${pData.tag}</div>
-                    <div class="big-stats-row">
-                        <div class="stat-badge" style="color: #ffce00;"><img src="/assets/trophy_normal.png" style="width:16px;"> ${pData.trophies.toLocaleString()}</div>
-                        ${prestigeHtml}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Assemblage final
         container.innerHTML = playerHtml + clubHtml;
 
     } catch(e) {
