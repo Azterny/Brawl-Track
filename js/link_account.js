@@ -1,12 +1,36 @@
-// js/link_account.js
+window.openLinkModal = function() {
+    const modal = document.getElementById('link-account-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        window.checkCurrentStatus(false);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = '/pass/index'; // Redirection vers l'accueil/login
-        return;
-    }
+    if (!token) return;
 
-    // Elements
+    const modal = document.getElementById('link-account-modal');
+    const btnClose = document.getElementById('close-link-modal');
+    const btnCloseSuccess = document.getElementById('btn-close-success');
+
+    // --- FERMETURE DE LA POPUP ---
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        // Si on ferme sur l'étape de succès, on rafraîchit la page pour voir le compte lié
+        if (!document.getElementById('step-4-success').classList.contains('hidden')) {
+            window.location.reload();
+        }
+    };
+
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCloseSuccess) btnCloseSuccess.addEventListener('click', closeModal);
+    
+    // Fermer si on clique sur le fond noir
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
     const step1 = document.getElementById('step-1-form');
     const step2 = document.getElementById('step-2-preview');
     const step3 = document.getElementById('step-3-challenge');
@@ -16,10 +40,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let mainTimerInterval = null;
     let verifyInterval = null;
 
-    // --- INITIALISATION ---
-    checkCurrentStatus();
+    function showStep(stepElement) {
+        [step1, step2, step3, step4].forEach(el => el.classList.add('hidden'));
+        stepElement.classList.remove('hidden');
+    }
 
-    async function checkCurrentStatus() {
+    // --- VERIFICATION DU STATUT ---
+    window.checkCurrentStatus = async function(isInitialLoad = false) {
         try {
             const res = await fetch(`${API_URL}/api/link/status`, {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -30,8 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 showStep(step4);
                 document.getElementById('linked-tag-display').innerText = data.tag;
             } else if (data.status === 'pending') {
+                modal.classList.remove('hidden'); // Force l'ouverture si défi en cours
                 currentTag = data.tag;
-                startChallenge(data.icon_id, 'un Brawler...', data.remaining_seconds);
+                startChallenge(data.icon_id, data.brawler_name || 'un Brawler...', data.remaining_seconds);
             } else {
                 showStep(step1);
             }
@@ -39,7 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(e);
             showStep(step1);
         }
-    }
+    };
+
+    // Auto-check silencieux au chargement de userhome
+    window.checkCurrentStatus(true);
 
     // --- ETAPE 1 : Chercher le joueur ---
     document.getElementById('btn-search-tag').addEventListener('click', async () => {
@@ -52,16 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('step-1-error').innerText = "";
 
         try {
-            // Utilise la route publique pour l'aperçu
             const cleanTag = input.replace('#', '').toUpperCase();
             const res = await fetch(`${API_URL}/api/public/player/${cleanTag}`);
             
             if (!res.ok) throw new Error("Joueur introuvable sur Brawl Stars.");
             
             const playerData = await res.json();
-            currentTag = playerData.tag; // Garde le #
+            currentTag = playerData.tag; 
             
-            // Mise à jour de l'UI Preview
             document.getElementById('preview-name').innerText = playerData.name;
             document.getElementById('preview-name').style.color = `#${playerData.nameColor.replace('0xff', '')}`;
             document.getElementById('preview-trophies').innerText = `🏆 ${playerData.trophies}`;
@@ -85,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-confirm-yes').addEventListener('click', async () => {
         const btn = document.getElementById('btn-confirm-yes');
         btn.disabled = true;
-        btn.innerText = "Génération du défi...";
+        btn.innerText = "Génération...";
 
         try {
             const res = await fetch(`${API_URL}/api/link/init`, {
@@ -112,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- GESTION DU DEFI (Chrono 10min) ---
+    // --- GESTION DU DEFI ---
     function startChallenge(iconId, brawlerName, secondsLeft) {
         showStep(step3);
         document.getElementById('challenge-icon').src = `https://cdn.brawlify.com/profile-icons/regular/${iconId}.png`;
@@ -135,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    // --- BOUCLE DE VERIFICATION API ---
+    // --- BOUCLE DE VERIFICATION ---
     document.getElementById('btn-start-verify').addEventListener('click', () => {
         const btn = document.getElementById('btn-start-verify');
         const msgBox = document.getElementById('verify-status-msg');
@@ -148,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let attempts = 0;
         const maxAttempts = 9;
 
-        checkIconAPI(); // Premier check immédiat
+        checkIconAPI();
 
         verifyInterval = setInterval(() => {
             attempts++;
@@ -156,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(verifyInterval);
                 btn.disabled = false;
                 btn.innerText = "J'ai changé mon icône ! Vérifier";
-                msgBox.innerText = "Délai de cache dépassé. Assurez-vous d'avoir équipé la bonne icône et réessayez.";
+                msgBox.innerText = "Délai dépassé. Assurez-vous d'avoir équipé l'icône et réessayez.";
                 msgBox.style.color = "#ff4757";
                 return;
             }
@@ -181,9 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert("Le temps est écoulé !");
                     window.location.reload();
                 }
-            } catch (e) {
-                console.log("Erreur silencieuse pendant le ping API :", e);
-            }
+            } catch (e) {}
         }
     });
 
@@ -210,13 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (res.ok) {
                 alert("Compte délié avec succès.");
-                window.location.href = '/home';
+                window.location.reload(); // Au lieu de renvoyer sur /home, on actualise la popup
             }
         }
     });
-
-    function showStep(stepElement) {
-        [step1, step2, step3, step4].forEach(el => el.classList.add('hidden'));
-        stepElement.classList.remove('hidden');
-    }
 });
