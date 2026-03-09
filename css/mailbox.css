@@ -1,0 +1,163 @@
+/* css/mailbox.css */
+
+.inbox-header {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.inbox-layout {
+    display: flex;
+    gap: 20px;
+    height: 70vh; /* Hauteur fixe pour scroller à l'intérieur */
+    min-height: 500px;
+}
+
+/* --- PANNEAU DE LISTE --- */
+.inbox-list {
+    flex: 0 0 350px;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important; /* On retire le padding du glass-panel pour coller les items aux bords */
+    overflow-y: auto;
+}
+
+.message-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.message-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.message-item.active {
+    background: rgba(251, 220, 16, 0.1); /* Fond légèrement jaune si sélectionné */
+    border-left: 4px solid #fbdc10;
+}
+
+/* État NON LU (Brillant) */
+.message-item.unread .msg-item-subject {
+    font-weight: bold;
+    color: #fff;
+}
+.message-item.unread::before {
+    content: "•";
+    color: #ff4757;
+    font-size: 1.5em;
+    position: absolute;
+    margin-left: -15px;
+    margin-top: -5px;
+}
+
+/* État LU (Assombri) */
+.message-item.read {
+    opacity: 0.6;
+}
+.message-item.read .msg-item-subject {
+    font-weight: normal;
+    color: #ccc;
+}
+
+.msg-item-subject {
+    font-size: 1.1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.msg-item-date {
+    font-size: 0.8em;
+    color: #888;
+}
+
+.msg-item-preview {
+    font-size: 0.9em;
+    color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- PANNEAU DE LECTURE --- */
+.inbox-content {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+}
+
+.empty-message-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+}
+
+.mobile-only-btn {
+    display: none;
+}
+
+/* --- STYLE DU MARKDOWN RENDER --- */
+.markdown-body {
+    line-height: 1.6;
+    color: #e0e0e0;
+    font-size: 1.05rem;
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+    color: #fff;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-family: 'Lilita One', cursive;
+    font-weight: normal;
+}
+.markdown-body p { margin-bottom: 1em; }
+.markdown-body a { color: #00d2ff; text-decoration: none; }
+.markdown-body a:hover { text-decoration: underline; }
+.markdown-body strong { color: #fbdc10; }
+.markdown-body ul, .markdown-body ol { margin-bottom: 1em; padding-left: 20px; }
+.markdown-body blockquote {
+    border-left: 4px solid #fbdc10;
+    padding-left: 15px;
+    color: #aaa;
+    font-style: italic;
+    background: rgba(255,255,255,0.05);
+    padding: 10px 15px;
+    border-radius: 0 5px 5px 0;
+}
+.markdown-body code {
+    background: rgba(0,0,0,0.5);
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: #ff9f43;
+}
+
+/* --- RESPONSIVE MOBILE --- */
+@media (max-width: 768px) {
+    .inbox-layout {
+        flex-direction: column;
+        height: auto;
+        min-height: 70vh;
+    }
+    
+    .inbox-list {
+        flex: none;
+        width: 100%;
+        max-height: 70vh; /* Garde le scroll sur mobile si trop long */
+    }
+
+    .mobile-hidden {
+        display: none !important;
+    }
+    
+    .mobile-only-btn {
+        display: inline-block;
+    }
+}
