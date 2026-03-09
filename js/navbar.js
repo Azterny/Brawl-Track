@@ -1,5 +1,4 @@
 // OPT-10 / BUG-A : Utilitaire d'échappement HTML — remplace encodeURIComponent()
-// qui ne protège pas contre XSS dans un contexte innerHTML.
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -9,16 +8,36 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+const API_BASE_NAV = (typeof API_URL !== 'undefined') ? API_URL : '';
+
+document.addEventListener("DOMContentLoaded", async function() {
     const navContainer = document.getElementById('global-navbar');
     if (!navContainer) return;
 
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username') || 'Joueur';
-    // BUG-A FIX : safeUsername est maintenant correctement échappé pour HTML
-    // (l'ancien encodeURIComponent() n'empêchait pas les injections HTML)
     const safeUsername = escapeHtml(username);
     
+    // Vérification des notifications non lues avant de construire la NavBar
+    let unreadCount = 0;
+    if (token) {
+        try {
+            const res = await fetch(`${API_BASE_NAV}/api/messages`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const messages = await res.json();
+                unreadCount = messages.filter(m => m.is_read === 0).length;
+            }
+        } catch (e) {
+            console.warn("Erreur chargement notifications NavBar :", e);
+        }
+    }
+    
+    // Indicateurs visuels
+    const notifBadge = unreadCount > 0 ? `<span class="nav-notif-dot"></span>` : "";
+    const notifCountText = unreadCount > 0 ? `<span style="background: #ff4757; color: white; border-radius: 10px; padding: 2px 6px; font-size: 0.8em; margin-left: 5px; font-weight: bold;">${unreadCount}</span>` : "";
+
     let html = `
     <nav class="navbar">
         <div class="nav-content">
@@ -32,11 +51,11 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
 
             <div class="nav-actions desktop-only">
-                ${getRightActions(token, safeUsername)}
+                ${getRightActions(token, safeUsername, notifBadge, notifCountText)}
             </div>
 
             <div class="nav-burger" onclick="toggleMobileNav()">
-                ☰
+                ☰ ${notifBadge}
             </div>
         </div>
 
@@ -46,7 +65,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 <span style="font-family:'Lilita One'; color:#ffce00; font-size:1.5em;">MENU</span>
                 <button onclick="toggleMobileNav()" style="background:none; border:none; color:white; font-size:1.5em; width:auto; margin:0;">✕</button>
             </div>
-            ${getMobileLinks(token, safeUsername, username)}
+            ${getMobileLinks(token, safeUsername, username, notifCountText)}
         </div>
     </div>
     `;
@@ -70,16 +89,21 @@ function getCenterLinks(token) {
     return links;
 }
 
-// BUG-A FIX : safeUsername (HTML-escaped) utilisé à la place du username brut
-function getRightActions(token, safeUsername) {
+function getRightActions(token, safeUsername, notifBadge, notifCountText) {
     if (token) {
         return `
             <div class="dropdown">
-                <button class="btn-3d btn-yellow btn-sm">👤 ${safeUsername} ▾</button>
+                <button class="btn-3d btn-yellow btn-sm" style="position: relative;">
+                    👤 ${safeUsername} ▾
+                    ${notifBadge}
+                </button>
                 <div class="dropdown-menu right-aligned">
                     <a href="/home"><img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Mes Comptes</a>
                     <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')"><img src="/assets/icons/subscribe.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Abonnement</a>
+                    
+                    <a href="/mailbox"><img src="/assets/icons/mailbox.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Messages ${notifCountText}</a>
                     <a href="#" onclick="alert('Paramètres : Bientôt Disponible !')"><img src="/assets/icons/settings.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Paramètres</a>
+                    
                     <div class="dropdown-divider"></div>
                     <a href="#" onclick="logoutNav()" style="color: #ff5555;">Déconnexion</a>
                 </div>
@@ -93,9 +117,7 @@ function getRightActions(token, safeUsername) {
     }
 }
 
-// BUG-A FIX : safeUsername pour l'injection HTML, username brut uniquement
-// pour les contextes texte purs (innerText/textContent implicite via prompt etc.)
-function getMobileLinks(token, safeUsername, username) {
+function getMobileLinks(token, safeUsername, username, notifCountText) {
     let html = "";
     if (token) {
         html += `
@@ -104,7 +126,10 @@ function getMobileLinks(token, safeUsername, username) {
             <a href="/home" class="mobile-link"><img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Mes Comptes</a>
             <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link"><img src="/assets/icons/subscribe.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Abonnement</a>
             <a href="/leaderboard" class="mobile-link"><img src="/assets/icons/leaderboard.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Classements</a>
+            
+            <a href="/mailbox" class="mobile-link"><img src="/assets/icons/mailbox.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Messages ${notifCountText}</a>
             <a href="#" class="mobile-link"><img src="/assets/icons/settings.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Paramètres</a>
+            
             <hr style="border-color:#333; width:100%; opacity:0.3;">
             <button onclick="logoutNav()" class="btn-danger" style="margin-top:20px; color: #ff5555;">Déconnexion</button>
         `;
