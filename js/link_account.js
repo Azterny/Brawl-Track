@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkCurrentStatus() {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/link/status`, {
+            const res = await fetch(`${API_URL}/api/link/status`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Utilise la route publique pour l'aperçu
             const cleanTag = input.replace('#', '').toUpperCase();
-            const res = await fetch(`${API_BASE_URL}/api/public/player/${cleanTag}`);
+            const res = await fetch(`${API_URL}/api/public/player/${cleanTag}`);
             
             if (!res.ok) throw new Error("Joueur introuvable sur Brawl Stars.");
             
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.innerText = "Génération du défi...";
 
         try {
-            const res = await fetch(`${API_BASE_URL}/api/link/init`, {
+            const res = await fetch(`${API_URL}/api/link/init`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async function checkIconAPI() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/link/verify`, {
+                const res = await fetch(`${API_URL}/api/link/verify`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ANNULER OU DELIER ---
     document.getElementById('btn-cancel-challenge').addEventListener('click', async () => {
         if(confirm("Êtes-vous sûr de vouloir annuler la procédure ?")) {
-            await fetch(`${API_BASE_URL}/api/link/cancel`, {
+            await fetch(`${API_URL}/api/link/cancel`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-unclaim-account').addEventListener('click', async () => {
         if(confirm("Attention : Délier ce compte arrêtera la collecte de vos statistiques. Continuer ?")) {
-            const res = await fetch(`${API_BASE_URL}/api/unclaim-tag`, {
+            const res = await fetch(`${API_URL}/api/unclaim-tag`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
