@@ -1,0 +1,135 @@
+/* css/link_account.css */
+.link-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 30px;
+    text-align: center;
+}
+
+.step-section {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    margin-top: 20px;
+}
+
+.step-section.hidden {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.page-title {
+    font-size: 2.2em;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+.step-subtitle {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.desc-text {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.glass-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.input-group input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+    border-color: #fbdc10;
+}
+
+.player-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 25px;
+}
+
+.player-preview img, .challenge-box img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 3px solid #fbdc10;
+    box-shadow: 0 0 15px rgba(251, 220, 16, 0.3);
+}
+
+.trophy-text {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.timer-box {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #ff4757;
+    margin: 20px 0;
+    font-family: monospace;
+    text-shadow: 0 0 10px rgba(255, 71, 87, 0.4);
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* Boutons adaptés au style BT */
+.btn-success { background-color: #2ed573; color: #1e272e; }
+.btn-success:hover { background-color: #26b962; }
+
+.btn-danger { background-color: #ff4757; color: white; }
+.btn-danger:hover { background-color: #ff3344; }
+
+.btn-large { padding: 15px 30px; font-size: 1.2em; }
+.btn-small { padding: 8px 15px; font-size: 0.9em; }
+
+.text-button {
+    background: none;
+    border: none;
+    color: #a4b0be;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.text-button:hover { color: white; }
+
+.error-msg { color: #ff4757; font-size: 0.9em; margin-top: 10px; }
+.info-msg { color: #7bed9f; margin-top: 10px; font-weight: bold; }
+.success-text { color: #2ed573; font-size: 2em; margin-bottom: 10px; }
+.text-highlight { color: #fbdc10; }
+
+.separator {
+    margin: 30px 0;
+    border: none;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+}
