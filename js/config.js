@@ -4,7 +4,7 @@ const isBypassMode = new URLSearchParams(window.location.search).get('bypass') =
 if (GLOBAL_MAINTENANCE && !window.location.pathname.includes('maintenance.html') && !isBypassMode) {
     window.location.replace('/maintenance.html');
 }
-// Configuration Globale
+// Configuration Globale 
 const API_URL = "https://api.brawl-track.com"; 
 
 // Variables d'état partagées
