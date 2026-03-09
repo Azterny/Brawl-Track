@@ -35,7 +35,7 @@ async function initUserHome() {
         if (claimedList.length === 0) {
             // Aucun compte lié : Affichage de la case "+"
             linkedContainer.innerHTML = `
-                <div class="empty-link-card clickable" onclick="promptLinkAccount()">
+                <div class="empty-link-card clickable" onclick="promptLinkAccount()" style="min-height: 120px; max-height: 160px; height: auto;">
                     <div class="plus-btn">+</div>
                     <div style="font-size: 1.2em; font-weight: bold; text-align: center;">Lier mon compte Brawl Stars</div>
                 </div>
@@ -104,7 +104,6 @@ async function fetchAndRenderLinkedAccount(tag, container) {
             <div class="linked-card clickable" onclick="window.location.href='/player/${pData.tag.replace('#', '')}'">
                 <img src="https://cdn.brawlify.com/profile-icons/regular/${pData.icon.id}.png"
                      class="profile-icon"
-                     style="border: 2px solid ${nameColor};"
                      onerror="this.src='/assets/default_icon.png'">
                 <div class="big-profile-info">
                     <div class="big-profile-name" style="color: ${nameColor}; text-shadow: 0 0 10px ${nameColor}44;">${pData.name}</div>
@@ -136,7 +135,7 @@ async function fetchAndRenderLinkedAccount(tag, container) {
                     <div class="linked-card clickable" onclick="window.location.href='/club/${cData.tag.replace('#', '')}'">
                         <img src="https://brawlify.com/images/club-badges/96/${badgeId}.webp"
                              class="profile-icon"
-                             style="background: #000; object-fit: contain; padding: 4px; border: none;"
+                             style="object-fit: contain; border: none; background: none;"
                              onerror="this.src='/assets/default_icon.png'">
                         <div class="big-profile-info">
                             <div class="big-profile-name" style="color: #ffce00; text-shadow: 0 0 10px #ffce0044;">${cData.name}</div>
