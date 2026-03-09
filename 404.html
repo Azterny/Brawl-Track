@@ -35,7 +35,7 @@
             window.location.replace(`${redirectPath}?bypass=true`);
         }
         // 2. REDIRECTION MAINTENANCE GLOBALE
-        else if (MAINTENANCE && !path.includes('maintenance.html') && !isBypass) {
+        else if (MAINTENANCE && !path.includes('maintenance.html') && !isBypass && !(parts[0] === 'link')) {
             window.location.replace('/maintenance.html');
         }
         // 3. EXCEPTION : Si on cherche explicitement la page d'erreur
