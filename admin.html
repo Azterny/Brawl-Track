@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>Admin Brut - Brawl Track</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* --- STYLE PRIMAIRE & FONCTIONNEL --- */
         body {
             background-color: #000;
             color: #ccc;
@@ -12,6 +14,8 @@
             margin: 0; padding: 20px;
             font-size: 14px;
         }
+
+        /* Cadre Principal */
         #main-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -19,17 +23,23 @@
             background: #111;
             padding: 10px;
         }
+
+        /* Login Overlay Simple */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
         .login-box { border: 2px solid #ffce00; padding: 20px; text-align: center; background: #111; }
+
+        /* Header */
         header {
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 2px solid #ffce00; padding-bottom: 10px; margin-bottom: 15px;
         }
         h1 { margin: 0; color: #ffce00; font-size: 1.5em; text-transform: uppercase; }
+
+        /* Stats Grid (Simple) */
         .stats-grid {
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;
         }
@@ -38,35 +48,56 @@
         }
         .stat-box h3 { margin: 0 0 5px 0; font-size: 0.8em; color: #888; text-transform: uppercase; }
         .stat-box p { margin: 0; font-size: 1.2em; color: #fff; font-weight: bold; }
+
+        /* Barre de Contrôle */
         .controls {
             background: #222; border: 1px solid #444; padding: 10px; margin-bottom: 10px;
             display: flex; flex-wrap: wrap; gap: 15px; align-items: center;
         }
+        
+        /* Inputs & Boutons */
         input, select, button {
             background: #000; color: #fff; border: 1px solid #555;
             padding: 5px 10px; font-family: monospace; font-size: 1em; cursor: pointer;
         }
         input:focus, select:focus { border-color: #ffce00; outline: none; }
+        
         button:hover { background: #333; }
         button.active { background: #ffce00; color: #000; font-weight: bold; border-color: #ffce00; }
+        
+        /* COULEURS DES ACTIONS */
         .btn-green { color: #28a745; border-color: #28a745; }
         .btn-green:hover { background: #28a745; color: #000; }
+        
         .btn-red { color: #ff5555; border-color: #ff5555; }
         .btn-red:hover { background: #ff5555; color: #000; }
+
         .btn-blue { color: #007bff; border-color: #007bff; }
         .btn-blue:hover { background: #007bff; color: #fff; }
+
         .btn-orange { color: #fd7e14; border-color: #fd7e14; }
         .btn-orange:hover { background: #fd7e14; color: #fff; }
+
+        /* Tableaux */
         table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
         th { text-align: left; border-bottom: 2px solid #444; padding: 8px; color: #888; text-transform: uppercase; }
         td { border-bottom: 1px solid #222; padding: 6px 8px; vertical-align: middle; }
         tr:hover { background: #1a1a1a; }
+
         .hidden { display: none !important; }
         .badge { display: inline-block; padding: 2px 5px; border: 1px solid #444; color: #ffce00; font-size: 0.9em; }
+        
+        /* Checkboxes Labels */
         .filter-label { display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; color: #aaa; }
         .filter-label input:checked + span { color: #fff; text-decoration: underline; }
+
+        /* Détails */
         .details-row { background: #080808; border-bottom: 1px solid #444; }
         .details-table td { border: none; color: #888; font-size: 0.9em; padding: 3px 10px; }
+        
+        /* Analytics Chart Container */
+        #analytics-container { height: 350px; width: 100%; background: #0a0a0a; border: 1px solid #333; margin-bottom: 20px; padding: 10px; box-sizing: border-box; }
+        .verified-icon { color: #28a745; font-weight: bold; font-size: 1.1em; }
     </style>
 </head>
 <body>
@@ -83,7 +114,7 @@
     <div id="main-container">
         
         <header>
-            <h1>Admin Panel <span style="font-size:0.5em; color:#666;">v3.0 RAW</span></h1>
+            <h1>Admin Panel <span style="font-size:0.5em; color:#666;">v4.0</span></h1>
             <div>
                 <button onclick="loadData()">REFRESH</button>
                 <button onclick="logout()" class="btn-red">LOGOUT</button>
@@ -94,12 +125,13 @@
 
         <div class="controls">
             <div style="border-right: 1px solid #444; padding-right: 15px;">
+                <button id="btn-analytics" onclick="setView('analytics')">ANALYTICS</button>
                 <button id="btn-users" onclick="setView('users')" class="active">UTILISATEURS</button>
                 <button id="btn-tags" onclick="setView('tags')">TAGS</button>
             </div>
 
-            <div>
-                <input type="text" id="search" placeholder="Recherche..." onkeyup="renderTable()" style="width: 150px;">
+            <div id="search-container">
+                <input type="text" id="search" placeholder="Recherche..." onkeyup="renderView()" style="width: 150px;">
             </div>
 
             <div id="filters-users" style="display:flex; gap:15px; flex-wrap:wrap;">
@@ -112,16 +144,21 @@
             <div id="filters-tags" class="hidden" style="display:flex; gap:15px;">
                 <label class="filter-label"><input type="checkbox" onchange="toggleFilter('claimed')"> <span>Claimed</span></label>
                 <label class="filter-label"><input type="checkbox" onchange="toggleFilter('unclaimed')"> <span>Unclaimed</span></label>
+                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('verified')"> <span>Vérifiés</span></label>
             </div>
 
-            <div style="margin-left:auto; display:flex; gap:5px;">
+            <div id="sort-container" style="margin-left:auto; display:flex; gap:5px;">
                 <span>Tri:</span>
-                <select id="sort-select" onchange="renderTable()"></select>
+                <select id="sort-select" onchange="renderView()"></select>
                 <button onclick="toggleSort()">▼</button>
             </div>
         </div>
 
-        <table>
+        <div id="analytics-container" class="hidden">
+            <canvas id="analyticsChart"></canvas>
+        </div>
+
+        <table id="data-table">
             <thead id="thead"></thead>
             <tbody id="tbody"></tbody>
         </table>
@@ -133,6 +170,7 @@
         // --- AUTH & INIT ---
         const ADMIN_KEY_KEY = 'admin_key_v3';
         let ADMIN_PASS = localStorage.getItem(ADMIN_KEY_KEY);
+        let myChart = null; // Instance Chart.js
 
         if(ADMIN_PASS) {
             document.getElementById('login-overlay').classList.add('hidden');
@@ -160,18 +198,27 @@
         }
 
         // --- DATA ---
-        let rawUsers = [], rawTags = [];
-        let view = 'users';
+        let rawUsers = [], rawTags = [], rawAnalytics = [];
+        let view = 'users'; // 'users', 'tags', 'analytics'
         let filters = new Set();
-        let sortDir = 1;
+        let sortDir = 1; // 1 asc, -1 desc
 
         async function loadData() {
             if(!ADMIN_PASS) return;
-            document.getElementById('tbody').innerHTML = '<tr><td colspan="8" style="text-align:center">Loading data...</td></tr>';
+            if(view !== 'analytics') document.getElementById('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center">Loading data...</td></tr>';
             
+            // Stats
             fetch(`${API_URL}/api/admin/stats`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(renderStats).catch(e=>console.error(e));
             
+            // Analytics
+            fetch(`${API_URL}/api/admin/analytics`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
+                .then(r=>r.json()).then(data => {
+                    rawAnalytics = data.reverse(); // Plus ancien au plus récent pour le graphique
+                    if(view === 'analytics') renderView();
+                });
+
+            // Users
             fetch(`${API_URL}/api/admin/users`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(data => {
                     const map = new Map();
@@ -183,23 +230,33 @@
                         });
                     });
                     rawUsers = Array.from(map.values());
-                    if(view === 'users') renderTable();
+                    if(view === 'users') renderView();
                 });
 
+            // Tags
             fetch(`${API_URL}/api/admin/tags`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(data => {
                     rawTags = data;
-                    if(view === 'tags') renderTable();
+                    if(view === 'tags') renderView();
                 });
         }
 
         // --- LOGIQUE VUE & TRI ---
         function setView(v) {
             view = v;
+            document.getElementById('btn-analytics').className = v==='analytics'?'active':'';
             document.getElementById('btn-users').className = v==='users'?'active':'';
             document.getElementById('btn-tags').className = v==='tags'?'active':'';
+            
+            // Affichage conditionnel des filtres et conteneurs
             document.getElementById('filters-users').className = v==='users'?'':'hidden';
             document.getElementById('filters-tags').className = v==='tags'?'':'hidden';
+            document.getElementById('search-container').className = v==='analytics'?'hidden':'';
+            document.getElementById('sort-container').className = v==='analytics'?'hidden':'';
+            
+            document.getElementById('analytics-container').className = v==='analytics'?'':'hidden';
+            document.getElementById('data-table').className = v==='analytics'?'hidden':'';
+
             filters.clear();
             document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);
             
@@ -209,24 +266,22 @@
                 sel.innerHTML += '<option value="id">ID</option>';
                 sel.innerHTML += '<option value="name">Nom (Alpha)</option>';
                 sel.innerHTML += '<option value="last_login">Dernière Connexion</option>';
-                sel.innerHTML += '<option value="nb_archives">Nombre d\'archives</option>';
-                sel.innerHTML += '<option value="nb_tags">Nombre de Tags</option>';
-            } else {
-                sel.innerHTML += '<option value="id">ID</option>';
+                sel.innerHTML += '<option value="coins">Track-Coins</option>';
+            } else if(v === 'tags') {
+                sel.innerHTML += '<option value="id">ID (Tag)</option>';
                 sel.innerHTML += '<option value="owner">Nom Propriétaire</option>';
                 sel.innerHTML += '<option value="next_archive">Prochaine Archive</option>';
                 sel.innerHTML += '<option value="last_archive">Dernière Archive</option>';
-                sel.innerHTML += '<option value="nb_archives">Nombre d\'archives</option>';
                 sel.innerHTML += '<option value="trophies">Nombre de Trophées</option>';
             }
-            renderTable();
+            renderView();
         }
 
         function toggleFilter(f) {
             if(filters.has(f)) filters.delete(f); else filters.add(f);
-            renderTable();
+            renderView();
         }
-        function toggleSort() { sortDir *= -1; renderTable(); }
+        function toggleSort() { sortDir *= -1; renderView(); }
 
         // --- PROCESSING CORE ---
         function getProcessedData() {
@@ -257,22 +312,19 @@
                     if(crit === 'id') { vA = a.id; vB = b.id; }
                     else if(crit === 'name') { vA = a.username.toLowerCase(); vB = b.username.toLowerCase(); }
                     else if(crit === 'last_login') { vA = a.last_login || ''; vB = b.last_login || ''; }
-                    else if(crit === 'nb_archives') { 
-                        vA = a.tags.reduce((s,t)=>s+t.total,0); 
-                        vB = b.tags.reduce((s,t)=>s+t.total,0); 
-                    }
-                    else if(crit === 'nb_tags') { vA = a.tags.length; vB = b.tags.length; }
+                    else if(crit === 'coins') { vA = a.track_coins || 0; vB = b.track_coins || 0; }
                     
                     if(vA < vB) return -1 * sortDir;
                     if(vA > vB) return 1 * sortDir;
                     return 0;
                 });
 
-            } else {
+            } else if(view === 'tags') {
                 data = rawTags.map(t => ({...t}));
                 if(search) data = data.filter(t => t.tag_str.toLowerCase().includes(search) || (t.owner_name && t.owner_name.toLowerCase().includes(search)));
                 if(filters.has('claimed')) data = data.filter(t => t.claimer_id);
                 if(filters.has('unclaimed')) data = data.filter(t => !t.claimer_id);
+                if(filters.has('verified')) data = data.filter(t => t.is_verified);
 
                 const crit = document.getElementById('sort-select').value;
                 data.sort((a,b) => {
@@ -280,7 +332,6 @@
                     if(crit === 'id') { vA = a.tag_str; vB = b.tag_str; }
                     else if(crit === 'owner') { vA = a.owner_name ? a.owner_name.toLowerCase() : 'zzzz'; vB = b.owner_name ? b.owner_name.toLowerCase() : 'zzzz'; }
                     else if(crit === 'last_archive') { vA = a.last_archive || ''; vB = b.last_archive || ''; }
-                    else if(crit === 'nb_archives') { vA = a.total_archives; vB = b.total_archives; }
                     else if(crit === 'trophies') { vA = a.current_trophies || 0; vB = b.current_trophies || 0; }
                     else if(crit === 'next_archive') {
                         const getNext = (t) => t.last_archive ? new Date(t.last_archive.replace(' ', 'T')).getTime() + (t.rec_temp*60000) : 0;
@@ -295,7 +346,12 @@
         }
 
         // --- RENDER ---
-        function renderTable() {
+        function renderView() {
+            if(view === 'analytics') {
+                renderAnalyticsChart();
+                return;
+            }
+
             const tbody = document.getElementById('tbody');
             const thead = document.getElementById('thead');
             tbody.innerHTML = '';
@@ -303,17 +359,20 @@
             const data = getProcessedData();
 
             if(view === 'users') {
-                thead.innerHTML = `<tr><th>+</th><th>ID</th><th>NOM</th><th>GRADE</th><th>CONNEXION</th><th>TAGS</th><th>TOTAL ARCH.</th><th>ACTIONS</th></tr>`;
+                thead.innerHTML = `<tr><th>+</th><th>ID</th><th>NOM</th><th>GRADE</th><th>COINS</th><th>LIENS</th><th>CONNEXION</th><th>TAG LIÉ</th><th>ACTIONS</th></tr>`;
                 
                 data.forEach(u => {
                     const row = document.createElement('tr');
-                    const totTags = u.tags.length;
-                    const totArch = u.tags.reduce((acc, t) => acc + t.total, 0);
+                    const primaryTag = u.tags.length > 0 ? `<span class="badge">${u.tags[0].str}</span>` : '<span style="color:#555">Aucun</span>';
                     
-                    // BUG-B FIX : JSON.stringify(u.username) au lieu de '${u.username}'.
-                    // Avant : renameUser(5, 'O'Brien') → erreur de syntaxe JS si username
-                    // contient une quote simple (ex: O'Brien, d'Artagnan...).
-                    // JSON.stringify génère toujours une string JS valide et échappée.
+                    // NOUVEAUTÉ: Liens Discord & Email (Grisé si non, Vert si oui)
+                    const discordColor = u.discord_confirmed ? '#7289da' : '#333';
+                    const emailColor = u.email_confirmed ? '#28a745' : '#333';
+                    const linksHTML = `
+                        <span style="color:${discordColor}; font-size:1.2em" title="Discord">💬</span> 
+                        <span style="color:${emailColor}; font-size:1.2em" title="Email">📧</span>
+                    `;
+                    
                     row.innerHTML = `
                         <td><button style="padding:0 5px" onclick="toggleDetails(${u.id})">▼</button></td>
                         <td>${u.id}</td>
@@ -325,22 +384,26 @@
                                 <option value="premium" ${u.tier==='premium'?'selected':''}>Premium</option>
                             </select>
                         </td>
+                        <td style="color:#ffce00; font-weight:bold;">${u.track_coins || 0}</td>
+                        <td>${linksHTML}</td>
                         <td>${u.last_login || '-'}</td>
-                        <td>${totTags}</td>
-                        <td>${totArch}</td>
+                        <td>${primaryTag}</td>
                         <td>
-                            <button onclick="addTag(${u.id})" class="btn-green" title="Force Claim">+</button>
-                            <button onclick="renameUser(${u.id}, ${JSON.stringify(u.username)})" title="Renommer">R</button>
+                            <button onclick="manageCoins(${u.id})" class="btn-blue" title="Gérer Track-Coins">💰</button>
+                            <button onclick="sendMessage(${u.id})" class="btn-orange" title="Envoyer Message">✉️</button>
+                            <button onclick="addTag(${u.id})" class="btn-green" title="Force Claim Tag">+</button>
+                            <button onclick="renameUser(${u.id}, '${u.username}')" title="Renommer">R</button>
                             <button onclick="deleteUser(${u.id})" class="btn-red" title="Supprimer">X</button>
                         </td>
                     `;
                     tbody.appendChild(row);
 
-                    if(totTags > 0) {
+                    // Tags Details (Sous-menu User)
+                    if(u.tags.length > 0) {
                         const dr = document.createElement('tr');
                         dr.id = `d-${u.id}`;
                         dr.className = 'hidden details-row';
-                        let h = '<td colspan="8"><table class="details-table" style="width:90%; margin:auto;">';
+                        let h = '<td colspan="9"><table class="details-table" style="width:90%; margin:auto;">';
                         u.tags.forEach(t => {
                             h += `<tr>
                                 <td style="width:20px;">↳</td>
@@ -357,12 +420,14 @@
                         tbody.appendChild(dr);
                     }
                 });
-            } else {
+            } else if (view === 'tags') {
+                // TAGS VIEW
                 thead.innerHTML = `<tr><th>PROPRIÉTAIRE</th><th>TAG</th><th>FREQ</th><th>LAST ARCH.</th><th>NEXT ARCH.</th><th>TROPHÉES</th><th>ARCHIVES</th><th>ACTIONS</th></tr>`;
                 
                 data.forEach(t => {
                     const row = document.createElement('tr');
                     const owner = t.owner_name ? `<span style="color:#fff; font-weight:bold">${t.owner_name}</span>` : '<span style="color:#555">-- UNCLAIMED --</span>';
+                    const verifiedIcon = t.is_verified ? '<span class="verified-icon" title="Compte Vérifié In-Game">✔️</span>' : '';
                     
                     let nextStr = '-';
                     if(t.last_archive) {
@@ -374,7 +439,7 @@
 
                     row.innerHTML = `
                         <td>${owner}</td>
-                        <td class="badge">${t.tag_str}</td>
+                        <td class="badge">${t.tag_str} ${verifiedIcon}</td>
                         <td><input type="number" value="${t.rec_temp}" style="width:50px" onchange="updFreq(${t.id}, this)"></td>
                         <td>${t.last_archive || '-'}</td>
                         <td>${nextStr}</td>
@@ -391,6 +456,44 @@
             }
         }
 
+        // NOUVEAUTÉ : Fonction de rendu du graphique Chart.js
+        function renderAnalyticsChart() {
+            if(!rawAnalytics || rawAnalytics.length === 0) return;
+            
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            
+            const labels = rawAnalytics.map(d => {
+                const parts = d.date.split('-'); // YYYY-MM-DD
+                return `${parts[2]}/${parts[1]}`;
+            });
+            
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Visites', data: rawAnalytics.map(d => d.visits), borderColor: '#007bff', backgroundColor: 'transparent', tension: 0.3 },
+                        { label: 'Uniques', data: rawAnalytics.map(d => d.unique_visitors), borderColor: '#28a745', backgroundColor: 'transparent', tension: 0.3 },
+                        { label: 'Logins', data: rawAnalytics.map(d => d.logins), borderColor: '#ffce00', backgroundColor: 'transparent', tension: 0.3 },
+                        { label: 'Images Générées', data: rawAnalytics.map(d => d.img_generations), borderColor: '#fd7e14', backgroundColor: 'transparent', tension: 0.3 }
+                    ]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    color: '#ccc',
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#333' } },
+                        x: { grid: { color: '#333' } }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    }
+                }
+            });
+        }
+
         function renderStats(d) {
             const h = document.getElementById('stats-area');
             h.innerHTML = `
@@ -404,7 +507,7 @@
                 <div class="stat-box"><h3>RAM</h3><p>${d.ram}%</p></div>
             `;
         }
-
+        
         // --- ACTIONS ---
         function toggleDetails(id) { const r=document.getElementById('d-'+id); if(r) r.classList.toggle('hidden'); }
         
@@ -419,9 +522,28 @@
         function renameUser(id, old) { const n=prompt("Name:", old); if(n && n!==old) api(`user/${id}/rename`, 'POST', {username:n}); }
         function addTag(id) { const t=prompt("Tag (#...):"); if(t) api(`user/${id}/claim`, 'POST', {tag:t}); }
         
+        // NOUVEAUTÉ : Gestion des Track-Coins
+        function manageCoins(uid) {
+            const val = prompt("Modifier les Track-Coins :\n(+100 pour ajouter, -50 pour retirer)");
+            const amt = parseInt(val, 10);
+            if(!isNaN(amt)) api(`user/${uid}/coins`, 'POST', {amount: amt});
+        }
+
+        // NOUVEAUTÉ : Envoi de message
+        function sendMessage(uid) {
+            const obj = prompt("Objet du message :");
+            if(!obj) return;
+            const content = prompt("Contenu du message :");
+            if(!content) return;
+            api(`messages/send`, 'POST', {user_id: uid, objet: obj, contenu: content}).then(ok => {
+                if(ok) alert("Message envoyé !");
+            });
+        }
+
+        // Suppression User : Action Rouge -> Confirmation
         function deleteUser(id) { 
             if(confirm("⚠ SUPPRIMER DEFINITIVEMENT CET UTILISATEUR ?\n(Ses tags deviendront orphelins)")) {
-                api(`user/${id}/delete`, 'DELETE');
+                api(`user/${id}/delete`, 'DELETE'); 
             }
         } 
         
@@ -429,6 +551,7 @@
             if(confirm("Unclaim Tag ?")) api(`tag/${tid}/unclaim`); 
         }
         
+        // Suppression Tag : Action Rouge -> Confirmation
         function delTag(tid) { 
             if(confirm("⚠ SUPPRIMER CE TAG ET TOUT SON HISTORIQUE ?\nCette action est irréversible.")) {
                 fetch(`${API_URL}/api/admin/tag/${tid}`, {method:'DELETE', headers:{'X-Admin-Pass':ADMIN_PASS}}).then(loadData); 
@@ -448,6 +571,7 @@
                 });
         }
 
+        // Init view
         setView('users');
     </script>
 </body>
