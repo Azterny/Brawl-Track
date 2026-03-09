@@ -120,103 +120,138 @@
 }
 
 /* =========================================
-   5. COMPTE LIÉ & CLUB (GRAND FORMAT)
+   5. COMPTE LIÉ & CLUB (GRAND FORMAT - ULTRA RÉACTIF)
    ========================================= */
+
+/* Conteneur principal en grille intelligente */
 .linked-container {
-    display: flex;
-    gap: 20px;
+    display: grid;
+    /* Crée automatiquement 1 ou 2 colonnes selon la largeur disponible, min 320px par carte */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: clamp(15px, 3vw, 25px); /* Espace dynamique */
     margin-bottom: 40px;
+    align-items: stretch; /* Les cartes ont la même hauteur */
 }
 
+/* Base des grandes cartes */
 .linked-card, .club-card {
     background: #1a1a1a;
     border: 2px solid #333;
     border-radius: 15px;
-    padding: 20px;
-    flex: 1; /* Prend 50% de l'espace sur PC */
+    padding: clamp(15px, 3vw, 25px); /* Padding réactif */
     display: flex;
-    align-items: center;
+    align-items: flex-start; /* Mieux pour les textes multilignes */
+    gap: 15px; /* Remplace le margin-left, plus propre */
     position: relative;
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    /* AJOUT : box-shadow dans la transition pour la fluidité */
-    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; 
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Effets de survol */
 .linked-card.clickable:hover, .club-card.clickable:hover {
     transform: translateY(-3px);
     border-color: #ffce00;
-    box-shadow: 0 8px 20px rgba(255, 206, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(255, 206, 0, 0.15);
     cursor: pointer;
 }
 
+/* Carte Vide (Ajout de compte) */
 .empty-link-card {
-    flex: 1;
     background: #111;
     border: 2px dashed #444;
     border-radius: 15px;
-    padding: 30px;
+    padding: clamp(20px, 5vw, 40px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    text-align: center;
     color: #888;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    min-height: 150px;
+    height: 100%;
 }
 .empty-link-card.clickable:hover {
     border-color: #ffce00;
     color: #ffce00;
     background: #1a1a1a;
     cursor: pointer;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 206, 0, 0.1);
 }
 .empty-link-card .plus-btn {
-    font-size: 3em;
+    font-size: clamp(2.5em, 5vw, 3.5em);
     line-height: 1;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-/* Correction pour l'icône de profil dans les grandes cartes */
+/* Images de profil dans les grandes cartes */
 .linked-card .profile-icon, .club-card .profile-icon {
-    margin-right: 0; /* On gère l'espacement via big-profile-info */
+    width: clamp(60px, 15vw, 75px); /* S'agrandit/rétrécit selon l'écran */
+    height: clamp(60px, 15vw, 75px);
+    object-fit: cover; /* Garde les proportions */
+    border-radius: 15px;
+    flex-shrink: 0; /* Empêche l'image de s'écraser */
+    margin: 0;
 }
 
-/* Infos dans les grandes cartes */
+/* Conteneur des infos texte */
 .big-profile-info {
-    flex-grow: 1;
-    margin-left: 20px; /* Espacement fixe entre icône et texte */
-    min-width: 0;
+    flex: 1; /* Prend tout l'espace restant */
+    min-width: 0; /* OBLIGATOIRE : empêche Flexbox de déborder avec des textes trop longs */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
+
+/* Pseudo ou Nom du Club */
 .big-profile-name {
     font-family: 'Lilita One', cursive;
-    font-size: 1.8rem;
+    font-size: clamp(1.4rem, 4vw, 1.8rem); /* Taille réactive */
+    line-height: 1.2;
     color: #fff;
     margin-bottom: 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word; /* Permet au texte de passer à la ligne s'il est géant */
 }
+
+/* Ligne des statistiques (Trophées, Prestige, Membres...) */
 .big-stats-row {
     display: flex;
-    gap: 15px;
+    gap: 10px;
     margin-top: 10px;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Passe à la ligne automatiquement si on ajoute trop de badges */
+    align-items: center;
 }
+
+/* Badges individuels */
 .stat-badge {
     background: #000;
     border: 1px solid #444;
     padding: 6px 12px;
     border-radius: 8px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
     font-weight: bold;
     color: #fff;
-    font-size: 1.1rem;
+    font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+    white-space: nowrap; /* Empêche le texte à l'intérieur d'un badge de se couper en deux */
 }
 
-/* Passage en colonne sur Mobile */
-@media (max-width: 768px) {
-    .linked-container {
+/* =========================================
+   AJUSTEMENTS POUR TRÈS PETITS ÉCRANS (< 480px)
+   ========================================= */
+@media (max-width: 480px) {
+    /* On empile l'image et le texte verticalement et on centre tout */
+    .linked-card, .club-card {
         flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 20px 15px;
+    }
+    
+    .big-stats-row {
+        justify-content: center; /* Centre les badges */
     }
 }
