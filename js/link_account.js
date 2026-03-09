@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             timeLeft--;
             if (timeLeft <= 0) {
                 clearInterval(mainTimerInterval);
-                alert("Le temps imparti est écoulé ! Veuillez recommencer la procédure.");
+                alert("Le temps est écoulé. Vous pourrez recommencer quand vous serez prêt !");
                 window.location.reload();
             } else {
                 const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ANNULER OU DELIER ---
     document.getElementById('btn-cancel-challenge').addEventListener('click', async () => {
-        if(confirm("Êtes-vous sûr de vouloir annuler la procédure ?")) {
+        if(confirm("Voulez-vous annuler la vérification pour le moment ?")) {
             await fetch(`${API_URL}/api/link/cancel`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
