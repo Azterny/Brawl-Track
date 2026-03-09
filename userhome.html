@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/userhome.css">
+    <link rel="stylesheet" href="/css/link_account.css">
     <link rel="stylesheet" href="/css/responsive.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
@@ -37,6 +38,7 @@
             <h2 class="section-title">
                 <img src="/assets/icons/achievements_feature.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Compte Lié
             </h2>
+            <button onclick="openLinkModal()" class="btn-3d btn-yellow w-auto" style="padding: 5px 15px; font-size: 0.9em; margin: 0;">Gérer</button>
         </div>
         
         <div id="linked-account-container" class="linked-container">
@@ -68,11 +70,65 @@
             </div>
         </div>
     </div>
+    <div id="link-account-modal" class="modal-overlay hidden">
+        <div class="glass-panel link-container modal-content">
+            <button id="close-link-modal" class="close-modal-btn">&times;</button>
+            <h1 class="page-title" style="font-family: 'Lilita One', cursive; font-size: 2em; margin-top: 10px;">Liaison Brawl Stars</h1>
+            
+            <div id="step-1-form" class="step-section">
+                <p class="desc-text">Associez votre compte Brawl Stars pour activer l'archivage automatique.</p>
+                <div class="search-box input-group">
+                    <input type="text" id="brawl-tag-input" placeholder="#TAGJOUEUR" autocomplete="off" style="text-transform: uppercase;">
+                    <button id="btn-search-tag" class="btn-3d btn-yellow w-auto" style="margin: 0;">Chercher</button>
+                </div>
+                <p id="step-1-error" class="error-msg"></p>
+            </div>
 
+            <div id="step-2-preview" class="step-section hidden">
+                <h3 class="step-subtitle">Est-ce bien votre compte ?</h3>
+                <div class="player-preview glass-item">
+                    <img id="preview-icon" src="/assets/default_icon.png" alt="Icône">
+                    <div class="preview-info">
+                        <h2 id="preview-name" style="font-family: 'Lilita One', cursive; margin: 0;">Nom</h2>
+                        <p id="preview-trophies" class="trophy-text">🏆 0</p>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button id="btn-confirm-yes" class="btn-3d btn-yellow w-auto">Oui, c'est moi</button>
+                    <button id="btn-confirm-no" class="btn-3d btn-red w-auto">Non, annuler</button>
+                </div>
+            </div>
+
+            <div id="step-3-challenge" class="step-section hidden">
+                <h3 class="step-subtitle">Vérification d'identité</h3>
+                <p class="desc-text">Veuillez équiper <strong>exactement</strong> cette icône de joueur en jeu :</p>
+                <div class="challenge-box glass-item">
+                    <img id="challenge-icon" src="/assets/default_icon.png" alt="Icône requise">
+                    <p style="margin-top: 10px;">Icône du Brawler : <strong id="challenge-brawler" class="text-highlight" style="font-family: 'Lilita One', cursive; font-size: 1.2em;">...</strong></p>
+                </div>
+                <div class="timer-box" style="margin: 15px 0;">
+                    Temps restant : <span id="challenge-timer">10:00</span>
+                </div>
+                <div class="verify-controls">
+                    <button id="btn-start-verify" class="btn-3d btn-yellow w-auto">J'ai changé mon icône ! Vérifier</button>
+                    <p id="verify-status-msg" class="info-msg"></p>
+                </div>
+                <button id="btn-cancel-challenge" class="text-button" style="margin-top: 15px;">Annuler la procédure</button>
+            </div>
+
+            <div id="step-4-success" class="step-section hidden">
+                <h2 class="success-text" style="font-family: 'Lilita One', cursive; color: #2ed573;">Compte Validé ! ✅</h2>
+                <p class="desc-text">Votre compte <strong id="linked-tag-display" class="text-highlight"></strong> est désormais lié à Brawl-Track.</p>
+                <button id="btn-close-success" class="btn-3d btn-yellow w-auto">Fermer</button>
+                <hr class="separator" style="margin: 20px 0; border-color: #333;">
+                <button id="btn-unclaim-account" class="btn-3d btn-red w-auto" style="padding: 8px 15px; font-size: 0.9em;">Délier ce compte</button>
+            </div>
+        </div>
+    </div>
     <script src="/js/config.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/navbar.js"></script>
-    
     <script src="/js/userhome.js"></script>
+    <script src="/js/link_account.js"></script>
 </body>
 </html>
