@@ -188,7 +188,6 @@ async function loadTagData(tag) {
         renderProfile(data);
         await loadBrawlersGrid(data.brawlers);
         loadHistoryChart(data.history || [], data.trophies);
-        checkClaimStatus(data);
     } catch (e) {
         console.error(e);
         window.location.href = `/404.html?target=${currentTagString}`;
@@ -263,100 +262,6 @@ function renderProfile(data) {
     } else {
         clubCard.classList.add('hidden');
     }
-}
-
-// =========================================================
-// === LOGIQUE CLAIM ===
-// =========================================================
-
-function checkClaimStatus(tagData) {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    const actionsDiv = document.getElementById('header-actions');
-    const existingBtn = document.getElementById('btn-claim-action');
-    if (existingBtn) existingBtn.remove();
-
-    const btn = document.createElement('button');
-    btn.id = 'btn-claim-action';
-    btn.style.width = "auto";
-    btn.style.margin = "0";
-    btn.style.padding = "6px 16px";
-    btn.style.fontWeight = "bold";
-    btn.style.fontSize = "0.9rem";
-    btn.style.borderRadius = "8px";
-    btn.style.border = "none";
-    btn.style.transition = "all 0.2s";
-
-    if (tagData.is_reserved) {
-        btn.innerText = "RESERVED";
-        btn.className = "btn-3d btn-purple";
-        btn.disabled = true;
-        btn.style.cursor = "not-allowed";
-        actionsDiv.prepend(btn);
-        return;
-    }
-
-    if (tagData.claimer_id === currentUserId) {
-        btn.innerText = "UNCLAIM";
-        btn.className = "btn-3d btn-red";
-        btn.onclick = () => unclaimTagAction();
-        actionsDiv.prepend(btn);
-        return;
-    }
-
-    if (tagData.claimer_id && tagData.claimer_id !== currentUserId) {
-        btn.innerText = "CLAIMED";
-        btn.className = "btn-3d btn-grey";
-        btn.disabled = true;
-        btn.style.cursor = "not-allowed";
-        actionsDiv.prepend(btn);
-        return;
-    }
-
-    btn.innerText = "CLAIM";
-    btn.className = "btn-3d btn-yellow";
-    btn.onclick = () => claimTagAction();
-    actionsDiv.prepend(btn);
-}
-
-async function claimTagAction() {
-    if (!confirm("Lier ce tag à votre compte ?")) return;
-    const token = localStorage.getItem('token');
-    try {
-        const res = await fetch(`${API_BASE}/api/claim-tag`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ tag: currentTagString })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            alert("✅ Tag lié avec succès !");
-            checkClaimStatus({ claimer_id: currentUserId, is_reserved: false });
-        } else {
-            alert("⚠️ " + data.message);
-        }
-    } catch(e) { alert("Erreur connexion"); }
-}
-
-async function unclaimTagAction() {
-    if (!confirm("Ne plus suivre ce compte ?\nL'historique automatique sera arrêté.")) return;
-
-    const token = localStorage.getItem('token');
-    try {
-        const res = await fetch(`${API_BASE}/api/unclaim-tag`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ tag: currentTagString })
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-            checkClaimStatus({ claimer_id: null, is_reserved: false });
-        } else {
-            alert("⚠️ " + data.message);
-        }
-    } catch(e) { alert("Erreur connexion"); }
 }
 
 // =========================================================
