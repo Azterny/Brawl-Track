@@ -35,7 +35,7 @@ async function initUserHome() {
         if (claimedList.length === 0) {
             // Aucun compte lié : Affichage de la case "+"
             linkedContainer.innerHTML = `
-                <div class="empty-link-card clickable" onclick="window.location.href='/link/brawl-stars'" style="min-height: 120px; max-height: 160px; height: auto;">
+                <div class="empty-link-card clickable" onclick="openLinkModal()" style="min-height: 120px; max-height: 160px; height: auto;">
                     <div class="plus-btn">+</div>
                     <div style="font-size: 1.2em; font-weight: bold; text-align: center;">Lier mon compte Brawl Stars</div>
                 </div>
