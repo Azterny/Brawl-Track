@@ -15,7 +15,6 @@
             font-size: 14px;
         }
 
-        /* Cadre Principal */
         #main-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -24,7 +23,6 @@
             padding: 10px;
         }
 
-        /* Login Overlay Simple */
         #login-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999;
@@ -32,53 +30,40 @@
         }
         .login-box { border: 2px solid #ffce00; padding: 20px; text-align: center; background: #111; }
 
-        /* Header */
         header {
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 2px solid #ffce00; padding-bottom: 10px; margin-bottom: 15px;
         }
         h1 { margin: 0; color: #ffce00; font-size: 1.5em; text-transform: uppercase; }
 
-        /* Stats Grid (Simple) */
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;
-        }
-        .stat-box {
-            border: 1px solid #333; background: #0a0a0a; padding: 10px;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-box { border: 1px solid #333; background: #0a0a0a; padding: 10px; }
         .stat-box h3 { margin: 0 0 5px 0; font-size: 0.8em; color: #888; text-transform: uppercase; }
         .stat-box p { margin: 0; font-size: 1.2em; color: #fff; font-weight: bold; }
 
-        /* Barre de Contrôle */
         .controls {
             background: #222; border: 1px solid #444; padding: 10px; margin-bottom: 10px;
             display: flex; flex-wrap: wrap; gap: 15px; align-items: center;
         }
         
-        /* Inputs & Boutons */
-        input, select, button {
+        input, select, button, textarea {
             background: #000; color: #fff; border: 1px solid #555;
             padding: 5px 10px; font-family: monospace; font-size: 1em; cursor: pointer;
         }
-        input:focus, select:focus { border-color: #ffce00; outline: none; }
+        input:focus, select:focus, textarea:focus { border-color: #ffce00; outline: none; }
         
         button:hover { background: #333; }
         button.active { background: #ffce00; color: #000; font-weight: bold; border-color: #ffce00; }
         
-        /* COULEURS DES ACTIONS */
         .btn-green { color: #28a745; border-color: #28a745; }
         .btn-green:hover { background: #28a745; color: #000; }
-        
         .btn-red { color: #ff5555; border-color: #ff5555; }
         .btn-red:hover { background: #ff5555; color: #000; }
-
         .btn-blue { color: #007bff; border-color: #007bff; }
         .btn-blue:hover { background: #007bff; color: #fff; }
-
         .btn-orange { color: #fd7e14; border-color: #fd7e14; }
         .btn-orange:hover { background: #fd7e14; color: #fff; }
 
-        /* Tableaux */
         table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
         th { text-align: left; border-bottom: 2px solid #444; padding: 8px; color: #888; text-transform: uppercase; }
         td { border-bottom: 1px solid #222; padding: 6px 8px; vertical-align: middle; }
@@ -87,17 +72,44 @@
         .hidden { display: none !important; }
         .badge { display: inline-block; padding: 2px 5px; border: 1px solid #444; color: #ffce00; font-size: 0.9em; }
         
-        /* Checkboxes Labels */
         .filter-label { display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; color: #aaa; }
         .filter-label input:checked + span { color: #fff; text-decoration: underline; }
 
-        /* Détails */
         .details-row { background: #080808; border-bottom: 1px solid #444; }
         .details-table td { border: none; color: #888; font-size: 0.9em; padding: 3px 10px; }
         
-        /* Analytics Chart Container */
         #analytics-container { height: 350px; width: 100%; background: #0a0a0a; border: 1px solid #333; margin-bottom: 20px; padding: 10px; box-sizing: border-box; }
         .verified-icon { color: #28a745; font-weight: bold; font-size: 1.1em; }
+
+        /* --- MODALE INBOX --- */
+        #msg-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 10000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .msg-box {
+            background: #111; border: 2px solid #fd7e14; padding: 20px; width: 600px;
+            display: flex; flex-direction: column; gap: 15px; box-shadow: 0 0 20px rgba(253, 126, 20, 0.2);
+        }
+        .msg-box h2 { color: #fd7e14; margin: 0; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .msg-box label { color: #888; font-size: 0.9em; font-weight: bold; }
+        .msg-box input, .msg-box textarea { width: 100%; box-sizing: border-box; }
+        .msg-box textarea { height: 200px; resize: vertical; }
+        
+        /* Rendu Markdown Prévisualisation */
+        .msg-preview {
+            background: #000; border: 1px solid #555; height: 200px; padding: 15px;
+            overflow-y: auto; color: #fff; box-sizing: border-box; font-family: sans-serif;
+            border-left: 3px solid #ffce00;
+        }
+        .msg-preview h1 { color: #ffce00; font-size: 1.5em; margin-top: 0; }
+        .msg-preview h2 { color: #ffce00; font-size: 1.3em; }
+        .msg-preview h3 { color: #ffce00; font-size: 1.1em; }
+        .msg-preview a { color: #fd7e14; text-decoration: none; }
+        .msg-preview a:hover { text-decoration: underline; }
+
+        .msg-actions { display: flex; justify-content: space-between; margin-top: 5px; }
+        .msg-actions-right { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
@@ -111,10 +123,41 @@
         </div>
     </div>
 
+    <div id="msg-modal" class="hidden">
+        <div class="msg-box">
+            <h2 id="msg-title">ENVOYER UN MESSAGE</h2>
+            <input type="hidden" id="msg-uid">
+            
+            <div>
+                <label>Objet du message :</label>
+                <input type="text" id="msg-obj" placeholder="Ex: Bienvenue sur Brawl-Track !">
+            </div>
+
+            <div>
+                <label>Date & Heure d'envoi (Optionnel) :</label><br>
+                <input type="datetime-local" id="msg-date">
+            </div>
+            
+            <div>
+                <label>Contenu (Markdown : # Titre, **Gras**, *Italique*, [Texte](Lien)) :</label>
+                <textarea id="msg-content" placeholder="Rédigez le message ici..."></textarea>
+                <div id="msg-preview" class="hidden msg-preview"></div>
+            </div>
+
+            <div class="msg-actions">
+                <button onclick="closeMsgModal()" class="btn-red">ANNULER</button>
+                <div class="msg-actions-right">
+                    <button onclick="togglePreview()" id="btn-preview" class="btn-blue">PRÉVISUALISER</button>
+                    <button onclick="confirmSendMessage()" class="btn-green">ENVOYER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="main-container">
         
         <header>
-            <h1>Admin Panel <span style="font-size:0.5em; color:#666;">v4.0</span></h1>
+            <h1>Admin Panel <span style="font-size:0.5em; color:#666;">v4.1</span></h1>
             <div>
                 <button onclick="loadData()">REFRESH</button>
                 <button onclick="logout()" class="btn-red">LOGOUT</button>
@@ -139,6 +182,7 @@
                 <label class="filter-label"><input type="checkbox" onchange="toggleFilter('subscriber')"> <span>Abonnés</span></label>
                 <label class="filter-label"><input type="checkbox" onchange="toggleFilter('basic')"> <span>Basics</span></label>
                 <label class="filter-label"><input type="checkbox" onchange="toggleFilter('connected_today')"> <span>Connecté Aujourd'hui</span></label>
+                <button id="btn-broadcast" onclick="openMsgModal('all', 'TOUS LES JOUEURS')" class="btn-orange" style="margin-left: 10px;">✉️ ENVOYER À TOUS</button>
             </div>
 
             <div id="filters-tags" class="hidden" style="display:flex; gap:15px;">
@@ -170,7 +214,7 @@
         // --- AUTH & INIT ---
         const ADMIN_KEY_KEY = 'admin_key_v3';
         let ADMIN_PASS = localStorage.getItem(ADMIN_KEY_KEY);
-        let myChart = null; // Instance Chart.js
+        let myChart = null; 
 
         if(ADMIN_PASS) {
             document.getElementById('login-overlay').classList.add('hidden');
@@ -199,26 +243,23 @@
 
         // --- DATA ---
         let rawUsers = [], rawTags = [], rawAnalytics = [];
-        let view = 'users'; // 'users', 'tags', 'analytics'
+        let view = 'users'; 
         let filters = new Set();
-        let sortDir = 1; // 1 asc, -1 desc
+        let sortDir = 1; 
 
         async function loadData() {
             if(!ADMIN_PASS) return;
             if(view !== 'analytics') document.getElementById('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center">Loading data...</td></tr>';
             
-            // Stats
             fetch(`${API_URL}/api/admin/stats`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(renderStats).catch(e=>console.error(e));
             
-            // Analytics
             fetch(`${API_URL}/api/admin/analytics`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(data => {
-                    rawAnalytics = data.reverse(); // Plus ancien au plus récent pour le graphique
+                    rawAnalytics = data.reverse(); 
                     if(view === 'analytics') renderView();
                 });
 
-            // Users
             fetch(`${API_URL}/api/admin/users`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(data => {
                     const map = new Map();
@@ -233,7 +274,6 @@
                     if(view === 'users') renderView();
                 });
 
-            // Tags
             fetch(`${API_URL}/api/admin/tags`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
                 .then(r=>r.json()).then(data => {
                     rawTags = data;
@@ -248,7 +288,6 @@
             document.getElementById('btn-users').className = v==='users'?'active':'';
             document.getElementById('btn-tags').className = v==='tags'?'active':'';
             
-            // Affichage conditionnel des filtres et conteneurs
             document.getElementById('filters-users').className = v==='users'?'':'hidden';
             document.getElementById('filters-tags').className = v==='tags'?'':'hidden';
             document.getElementById('search-container').className = v==='analytics'?'hidden':'';
@@ -295,7 +334,6 @@
                 
                 const typeFilters = ['premium', 'subscriber', 'basic'];
                 const hasTypeFilter = typeFilters.some(f => filters.has(f));
-                
                 if(hasTypeFilter) {
                     data = data.filter(u => {
                         if(filters.has('premium') && u.tier === 'premium') return true;
@@ -318,7 +356,6 @@
                     if(vA > vB) return 1 * sortDir;
                     return 0;
                 });
-
             } else if(view === 'tags') {
                 data = rawTags.map(t => ({...t}));
                 if(search) data = data.filter(t => t.tag_str.toLowerCase().includes(search) || (t.owner_name && t.owner_name.toLowerCase().includes(search)));
@@ -365,13 +402,9 @@
                     const row = document.createElement('tr');
                     const primaryTag = u.tags.length > 0 ? `<span class="badge">${u.tags[0].str}</span>` : '<span style="color:#555">Aucun</span>';
                     
-                    // NOUVEAUTÉ: Liens Discord & Email (Grisé si non, Vert si oui)
                     const discordColor = u.discord_confirmed ? '#7289da' : '#333';
                     const emailColor = u.email_confirmed ? '#28a745' : '#333';
-                    const linksHTML = `
-                        <span style="color:${discordColor}; font-size:1.2em" title="Discord">💬</span> 
-                        <span style="color:${emailColor}; font-size:1.2em" title="Email">📧</span>
-                    `;
+                    const linksHTML = `<span style="color:${discordColor}; font-size:1.2em" title="Discord">💬</span> <span style="color:${emailColor}; font-size:1.2em" title="Email">📧</span>`;
                     
                     row.innerHTML = `
                         <td><button style="padding:0 5px" onclick="toggleDetails(${u.id})">▼</button></td>
@@ -390,7 +423,7 @@
                         <td>${primaryTag}</td>
                         <td>
                             <button onclick="manageCoins(${u.id})" class="btn-blue" title="Gérer Track-Coins">💰</button>
-                            <button onclick="sendMessage(${u.id})" class="btn-orange" title="Envoyer Message">✉️</button>
+                            <button onclick="openMsgModal(${u.id}, '${u.username}')" class="btn-orange" title="Envoyer Message">✉️</button>
                             <button onclick="addTag(${u.id})" class="btn-green" title="Force Claim Tag">+</button>
                             <button onclick="renameUser(${u.id}, '${u.username}')" title="Renommer">R</button>
                             <button onclick="deleteUser(${u.id})" class="btn-red" title="Supprimer">X</button>
@@ -398,7 +431,6 @@
                     `;
                     tbody.appendChild(row);
 
-                    // Tags Details (Sous-menu User)
                     if(u.tags.length > 0) {
                         const dr = document.createElement('tr');
                         dr.id = `d-${u.id}`;
@@ -421,9 +453,7 @@
                     }
                 });
             } else if (view === 'tags') {
-                // TAGS VIEW
                 thead.innerHTML = `<tr><th>PROPRIÉTAIRE</th><th>TAG</th><th>FREQ</th><th>LAST ARCH.</th><th>NEXT ARCH.</th><th>TROPHÉES</th><th>ARCHIVES</th><th>ACTIONS</th></tr>`;
-                
                 data.forEach(t => {
                     const row = document.createElement('tr');
                     const owner = t.owner_name ? `<span style="color:#fff; font-weight:bold">${t.owner_name}</span>` : '<span style="color:#555">-- UNCLAIMED --</span>';
@@ -456,15 +486,13 @@
             }
         }
 
-        // NOUVEAUTÉ : Fonction de rendu du graphique Chart.js
         function renderAnalyticsChart() {
             if(!rawAnalytics || rawAnalytics.length === 0) return;
-            
             const ctx = document.getElementById('analyticsChart').getContext('2d');
             if(myChart) myChart.destroy();
             
             const labels = rawAnalytics.map(d => {
-                const parts = d.date.split('-'); // YYYY-MM-DD
+                const parts = d.date.split('-'); 
                 return `${parts[2]}/${parts[1]}`;
             });
             
@@ -480,16 +508,9 @@
                     ]
                 },
                 options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    color: '#ccc',
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#333' } },
-                        x: { grid: { color: '#333' } }
-                    },
-                    plugins: {
-                        legend: { labels: { color: '#fff' } }
-                    }
+                    responsive: true, maintainAspectRatio: false, color: '#ccc',
+                    scales: { y: { beginAtZero: true, grid: { color: '#333' } }, x: { grid: { color: '#333' } } },
+                    plugins: { legend: { labels: { color: '#fff' } } }
                 }
             });
         }
@@ -508,7 +529,81 @@
             `;
         }
         
-        // --- ACTIONS ---
+        // --- LOGIQUE INBOX & MODALE ---
+        function parseMarkdown(text) {
+            return text
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
+                .replace(/\*(.*)\*/gim, '<i>$1</i>')
+                .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
+                .replace(/\n/gim, '<br>');
+        }
+
+        function openMsgModal(uid, username) {
+            document.getElementById('msg-uid').value = uid;
+            document.getElementById('msg-title').innerText = uid === 'all' ? "MESSAGE À TOUS LES JOUEURS" : `MESSAGE À ${username.toUpperCase()}`;
+            document.getElementById('msg-obj').value = '';
+            document.getElementById('msg-content').value = '';
+            
+            // Format de la date (heure locale actuelle)
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('msg-date').value = now.toISOString().slice(0,16);
+
+            document.getElementById('msg-content').classList.remove('hidden');
+            document.getElementById('msg-preview').classList.add('hidden');
+            document.getElementById('btn-preview').innerText = 'PRÉVISUALISER';
+            
+            document.getElementById('msg-modal').classList.remove('hidden');
+        }
+
+        function closeMsgModal() {
+            document.getElementById('msg-modal').classList.add('hidden');
+        }
+
+        function togglePreview() {
+            const content = document.getElementById('msg-content');
+            const preview = document.getElementById('msg-preview');
+            const btn = document.getElementById('btn-preview');
+
+            if(content.classList.contains('hidden')) {
+                // Retour au mode Édition
+                content.classList.remove('hidden');
+                preview.classList.add('hidden');
+                btn.innerText = 'PRÉVISUALISER';
+            } else {
+                // Mode Prévisualisation Markdown
+                preview.innerHTML = parseMarkdown(content.value);
+                content.classList.add('hidden');
+                preview.classList.remove('hidden');
+                btn.innerText = 'ÉDITER';
+            }
+        }
+
+        function confirmSendMessage() {
+            const uid = document.getElementById('msg-uid').value;
+            const obj = document.getElementById('msg-obj').value;
+            const content = document.getElementById('msg-content').value;
+            let date = document.getElementById('msg-date').value;
+
+            if(!obj || !content) { alert("Objet et contenu requis !"); return; }
+            
+            // Si une date est fournie, on la convertit en format SQL
+            if(date) {
+                date = date.replace('T', ' ') + ':00';
+            }
+
+            api(`messages/send`, 'POST', {user_id: uid, objet: obj, contenu: content, date_envoi: date}).then(ok => {
+                if(ok) {
+                    alert("Message programmé / envoyé avec succès !");
+                    closeMsgModal();
+                }
+            });
+        }
+
+        // --- AUTRES ACTIONS ---
         function toggleDetails(id) { const r=document.getElementById('d-'+id); if(r) r.classList.toggle('hidden'); }
         
         async function api(url, method='POST', body={}) {
@@ -522,25 +617,12 @@
         function renameUser(id, old) { const n=prompt("Name:", old); if(n && n!==old) api(`user/${id}/rename`, 'POST', {username:n}); }
         function addTag(id) { const t=prompt("Tag (#...):"); if(t) api(`user/${id}/claim`, 'POST', {tag:t}); }
         
-        // NOUVEAUTÉ : Gestion des Track-Coins
         function manageCoins(uid) {
             const val = prompt("Modifier les Track-Coins :\n(+100 pour ajouter, -50 pour retirer)");
             const amt = parseInt(val, 10);
             if(!isNaN(amt)) api(`user/${uid}/coins`, 'POST', {amount: amt});
         }
 
-        // NOUVEAUTÉ : Envoi de message
-        function sendMessage(uid) {
-            const obj = prompt("Objet du message :");
-            if(!obj) return;
-            const content = prompt("Contenu du message :");
-            if(!content) return;
-            api(`messages/send`, 'POST', {user_id: uid, objet: obj, contenu: content}).then(ok => {
-                if(ok) alert("Message envoyé !");
-            });
-        }
-
-        // Suppression User : Action Rouge -> Confirmation
         function deleteUser(id) { 
             if(confirm("⚠ SUPPRIMER DEFINITIVEMENT CET UTILISATEUR ?\n(Ses tags deviendront orphelins)")) {
                 api(`user/${id}/delete`, 'DELETE'); 
@@ -551,7 +633,6 @@
             if(confirm("Unclaim Tag ?")) api(`tag/${tid}/unclaim`); 
         }
         
-        // Suppression Tag : Action Rouge -> Confirmation
         function delTag(tid) { 
             if(confirm("⚠ SUPPRIMER CE TAG ET TOUT SON HISTORIQUE ?\nCette action est irréversible.")) {
                 fetch(`${API_URL}/api/admin/tag/${tid}`, {method:'DELETE', headers:{'X-Admin-Pass':ADMIN_PASS}}).then(loadData); 
