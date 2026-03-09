@@ -97,12 +97,11 @@ async function fetchAndRenderLinkedAccount(tag, container) {
             if (cRes.ok) {
                 const cData = await cRes.json();
                 
-                // --- HTML DU CLUB ---
                 clubHtml = `
                     <div class="club-card clickable" onclick="window.location.href='/club/${cData.tag.replace('#','')}'">
                         <img src="https://cdn.brawlify.com/club/${cData.badgeId}.png" class="profile-icon" onerror="this.src='/assets/default_icon.png'">
                         <div class="big-profile-info">
-                            <div class="big-profile-name" style="color: #ffce00;">${cData.name}</div>
+                            <div class="big-profile-name" style="color: #ffce00; text-shadow: 0 0 10px #ffce0044;">${cData.name}</div>
                             <div class="big-profile-tag">${cData.tag}</div>
                             <div class="big-stats-row">
                                 <div class="stat-badge" style="color: #ffce00;"><img src="/assets/trophy_normal.png" style="width:16px;"> ${cData.trophies.toLocaleString()}</div>
