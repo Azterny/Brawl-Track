@@ -136,7 +136,7 @@ async function fetchAndRenderLinkedAccount(tag, container) {
                     <div class="linked-card clickable" onclick="window.location.href='/club/${cData.tag.replace('#', '')}'">
                         <img src="https://brawlify.com/images/club-badges/96/${badgeId}.webp"
                              class="profile-icon"
-                             style="border: 2px solid rgba(255,206,0,0.4); background: #000; object-fit: contain; padding: 4px;"
+                             style="background: #000; object-fit: contain; padding: 4px; border: none;"
                              onerror="this.src='/assets/default_icon.png'">
                         <div class="big-profile-info">
                             <div class="big-profile-name" style="color: #ffce00; text-shadow: 0 0 10px #ffce0044;">${cData.name}</div>
@@ -147,7 +147,8 @@ async function fetchAndRenderLinkedAccount(tag, container) {
                                     ${cData.trophies.toLocaleString('fr-FR')}
                                 </div>
                                 <div class="stat-badge" style="color: #fff;">
-                                    ${membersCount} membres
+                                    <img src="/assets/icons/wipeout.png" style="width:16px; vertical-align:middle; filter: grayscale(100%) brightness(1.5);">
+                                    ${membersCount}
                                 </div>
                             </div>
                         </div>
