@@ -255,7 +255,7 @@ async function startImageGeneration() {
              const btn = document.createElement('button');
              btn.className = 'btn-3d btn-green w-100';
              btn.style.padding = '10px';
-             btn.textContent = '⬇️ Télécharger';
+             btn.textContent = 'Télécharger';
          
              // Closure sur imgDataUrl et fileName — aucun attribut inline
              btn.addEventListener('click', () => downloadImage(imgDataUrl, fileName));
@@ -267,6 +267,13 @@ async function startImageGeneration() {
              document.getElementById('modal-step-loading').style.display = 'none';
              document.getElementById('modal-step-result').style.display = 'block';
          
+             // --- TRACKING ANALYTICS : Génération d'image ---
+             const apiBaseUrl = (typeof API_URL !== 'undefined') ? API_URL : '';
+             fetch(`${apiBaseUrl}/api/analytics/track-image`, {
+                 method: 'POST'
+             }).catch(e => console.log("Erreur silencieuse tracking image:", e));
+             // -----------------------------------------------
+             
          }).catch(err => {
                 console.error(err);
                 statusDiv.innerHTML = `<span style='color: #ff5555;'>Erreur de capture. Réessayez.</span>`;
