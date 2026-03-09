@@ -1,4 +1,4 @@
-const GLOBAL_MAINTENANCE = false;
+const GLOBAL_MAINTENANCE = true;
 const isBypassMode = new URLSearchParams(window.location.search).get('bypass') === 'true';
 
 if (GLOBAL_MAINTENANCE && !window.location.pathname.includes('maintenance.html') && !isBypassMode) {
