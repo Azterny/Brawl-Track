@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boîte de réception - Brawl-Track</title>
+    <link rel="icon" type="image/png" href="/assets/logo.png">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/mailbox.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div id="global-navbar"></div>
+
+    <main class="main-content container wide" style="margin-top: 20px;">
+        <div class="inbox-header">
+            <h1 style="font-family: 'Lilita One', cursive; margin: 0; display: flex; align-items: center; gap: 10px;">
+                <img src="/assets/icons/map_info.png" alt="" style="height: 1.2em;"> Boîte de réception
+            </h1>
+        </div>
+
+        <div class="inbox-layout">
+            <div id="inbox-list-panel" class="glass-panel inbox-list">
+                <div id="messages-container">
+                    <div style="padding: 20px; text-align: center; color: #888;">Chargement...</div>
+                </div>
+            </div>
+
+            <div id="inbox-read-panel" class="glass-panel inbox-content mobile-hidden">
+                <div id="empty-state" class="empty-message-state">
+                    <img src="/assets/icons/emoji_moba_right.png" alt="" style="width: 80px; opacity: 0.5; margin-bottom: 15px;">
+                    <h2>Sélectionnez un message</h2>
+                    <p style="color: #888;">Cliquez sur un message dans la liste pour le lire.</p>
+                </div>
+
+                <div id="active-message-state" class="hidden">
+                    <button class="btn-3d btn-yellow w-auto mobile-only-btn" onclick="closeMessageMobile()" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.9em;">
+                        ⬅ Retour à la liste
+                    </button>
+                    
+                    <div class="message-header">
+                        <h2 id="msg-subject" style="font-family: 'Lilita One', cursive; color: #ffce00; margin: 0 0 5px 0;">Sujet</h2>
+                        <div id="msg-date" style="color: #aaa; font-size: 0.9em;">Date</div>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0;">
+                    
+                    <div id="msg-body" class="markdown-body"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/mailbox.js"></script>
+</body>
+</html>
