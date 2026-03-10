@@ -42,3 +42,24 @@ function toggleForms() {
     const msg = document.getElementById('message');
     if(msg) msg.innerText = "";
 }
+
+// --- RANG BRAWLERS ---
+const RANK_CONFIG = {
+    wood:      { label: 'Wood',        icon: '/assets/ranks/wood.webp',      trophyIcon: '/assets/trophy_normal.png' },
+    bronze:    { label: 'Bronze',      icon: '/assets/ranks/bronze.webp',    trophyIcon: '/assets/trophy_normal.png' },
+    silver:    { label: 'Silver',      icon: '/assets/ranks/silver.webp',    trophyIcon: '/assets/trophy_normal.png' },
+    gold:      { label: 'Gold',        icon: '/assets/ranks/gold.webp',      trophyIcon: '/assets/trophy_normal.png' },
+    prestige1: { label: 'Prestige 1',  icon: '/assets/ranks/prestige1.webp', trophyIcon: '/assets/trophy_prestige.png' },
+    prestige2: { label: 'Prestige 2',  icon: '/assets/ranks/prestige2.webp', trophyIcon: '/assets/trophy_prestige.png' },
+    prestige3: { label: 'Prestige 3+', icon: '/assets/ranks/prestige3.webp', trophyIcon: '/assets/trophy_prestige.png' },
+};
+
+function getBrawlerRank(trophies) {
+    if (trophies >= 3000) return 'prestige3';
+    if (trophies >= 2000) return 'prestige2';
+    if (trophies >= 1000) return 'prestige1';
+    if (trophies >= 750)  return 'gold';
+    if (trophies >= 500)  return 'silver';
+    if (trophies >= 250)  return 'bronze';
+    return 'wood';
+}
