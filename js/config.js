@@ -7,7 +7,7 @@ if (GLOBAL_MAINTENANCE && !window.location.pathname.includes('maintenance.html')
 // Configuration Globale
 const API_URL = "https://api.brawl-track.com"; 
 
-// Variables d'état partagées
+// Variables d'état partagées !
 let currentUserTier = 'basic'; 
 let globalBrawlersList = [];
 let fullHistoryData = [];
