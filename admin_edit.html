@@ -4,32 +4,23 @@
     <meta charset="UTF-8">
     <title>Edit Tag - Brawl Track</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
         body { background-color: #000; color: #ccc; font-family: monospace; margin: 0; padding: 20px; font-size: 14px; }
-        
         #container { max-width: 1000px; margin: 0 auto; border: 1px solid #444; background: #111; padding: 15px; }
-
-        /* HEADER */
         header { display: flex; justify-content: space-between; border-bottom: 2px solid #ffce00; padding-bottom: 15px; margin-bottom: 20px; }
         .title-block h1 { margin: 0; color: #fff; font-size: 1.5em; }
         .title-block h2 { margin: 5px 0 0 0; color: #ffce00; font-size: 1.1em; }
-        
-        /* CONTROLS */
         .controls { background: #222; padding: 10px; display: flex; gap: 10px; margin-bottom: 15px; border: 1px solid #333; }
         select, button, input { background: #000; color: #fff; border: 1px solid #555; padding: 5px 10px; cursor: pointer; font-family: monospace; }
         button:hover { background: #333; }
         .btn-green { color: #28a745; border-color: #28a745; }
         .btn-red { color: #ff5555; border-color: #ff5555; }
-
-        /* CHART */
         #chart-container { background: #080808; border: 1px solid #333; padding: 10px; height: 300px; margin-bottom: 20px; }
-
-        /* TABLE */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; border-bottom: 2px solid #444; padding: 5px; color: #888; }
         td { border-bottom: 1px solid #222; padding: 5px; }
         tr:hover { background: #1a1a1a; }
-        
         .loading { text-align: center; padding: 20px; color: #888; }
     </style>
 </head>
@@ -53,7 +44,7 @@
         <select id="view-select" onchange="loadHistory()">
             <option value="global">GLOBAL (Utilisateur)</option>
             <option disabled>--- BRAWLERS ---</option>
-            </select>
+        </select>
         <button onclick="addPoint()" class="btn-green">+ AJOUTER POINT</button>
         <button onclick="loadHistory()">ACTUALISER</button>
     </div>
@@ -72,30 +63,22 @@
 
 <script src="js/config.js"></script>
 <script>
-    // Récupération ID URL
     const params = new URLSearchParams(window.location.search);
     const TAG_ID = params.get('tag_id');
-    const ADMIN_KEY = localStorage.getItem('admin_key_v3');
+    const ADMIN_KEY = sessionStorage.getItem('admin_key_v3');
 
     if (!TAG_ID || !ADMIN_KEY) {
         alert("Accès non autorisé ou session expirée. Veuillez vous reconnecter.");
-        localStorage.removeItem('admin_key'); // nettoyage clé v2 résiduelle
         window.location.href = 'admin.html';
     }
 
     let chartInstance = null;
-    let brawlersList = []; // {id, name} - Pour l'instant ID
-    
-    // Noms des Brawlers (Optionnel : Idéalement chargé depuis API, ici liste partielle ou IDs)
-    // On utilisera les ID bruts si pas de mapping.
 
-    // --- INIT ---
     async function init() {
         await loadTagDetails();
-        loadHistory(); // Charge Global par défaut
+        loadHistory();
     }
 
-    // --- 1. DETAILS TAG & LISTE BRAWLERS ---
     async function loadTagDetails() {
         try {
             const res = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/details`, {
@@ -107,19 +90,17 @@
             document.getElementById('owner-name').innerText = data.owner;
             document.getElementById('tag-str').innerText = data.tag;
 
-            // Remplir Select
             const sel = document.getElementById('view-select');
             data.brawlers.forEach(bid => {
                 const opt = document.createElement('option');
                 opt.value = bid;
-                opt.innerText = `Brawler ID: ${bid}`; // Amélioration: Mapper ID -> Nom si possible
+                opt.innerText = `Brawler ID: ${bid}`;
                 sel.appendChild(opt);
             });
 
         } catch(e) { console.error(e); alert("Impossible de charger le tag"); }
     }
 
-    // --- 2. HISTORIQUE & CHART ---
     async function loadHistory() {
         const view = document.getElementById('view-select').value;
         const tbody = document.getElementById('tbody');
@@ -131,15 +112,9 @@
         try {
             const res = await fetch(url, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
             const data = await res.json();
-            
-            // Inverser pour l'affichage tableau (Plus récent en haut)
-            // L'API renvoie DESC, donc c'est bon pour le tableau.
-            // Pour le Chart, il faut ASC.
             renderTable(data);
-            
-            const chartData = [...data].reverse(); // Copie ASC pour graph
+            const chartData = [...data].reverse();
             renderChart(chartData);
-
         } catch(e) { tbody.innerHTML = '<tr><td colspan="3">Erreur</td></tr>'; }
     }
 
@@ -170,7 +145,7 @@
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.map(d => d.recorded_at.split(' ')[0]), // Juste la date pour lisibilité
+                labels: data.map(d => d.recorded_at.split(' ')[0]),
                 datasets: [{
                     label: 'Trophées',
                     data: data.map(d => d.trophies),
@@ -193,14 +168,11 @@
         });
     }
 
-    // --- 3. ACTIONS ---
-
     async function addPoint() {
         const view = document.getElementById('view-select').value;
         const val = prompt("Nombre de Trophées :");
         if(!val) return;
         
-        // Date par défaut : Maintenant (Format SQL simple)
         const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
         const date = prompt("Date (YYYY-MM-DD HH:MM:SS) :", now);
         if(!date) return;
@@ -219,11 +191,7 @@
         const newVal = prompt("Nouveaux Trophées :", oldVal);
         if(!newVal || newVal == oldVal) return;
 
-        const payload = {
-            id: id,
-            trophies: parseInt(newVal),
-            is_brawler: isBrawler
-        };
+        const payload = { id: id, trophies: parseInt(newVal), is_brawler: isBrawler };
         await sendAction('PUT', payload);
     }
 
@@ -242,7 +210,6 @@
             });
             const d = await res.json();
             if(res.ok) {
-                // alert(d.message); // Optionnel, peut être gênant
                 loadHistory();
             } else {
                 alert("Erreur: " + d.message);
@@ -250,7 +217,6 @@
         } catch(e) { alert("Erreur Réseau"); }
     }
 
-    // Start
     init();
 </script>
 </body>
