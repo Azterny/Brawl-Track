@@ -187,7 +187,7 @@ function renderMembers(members) {
 
         row.innerHTML = `
             <div class="member-rank">${index + 1}</div>
-            <img src="https://cdn.brawlify.com/profile-icons/regular/${m.icon.id}.png" class="member-icon ${roleClass ? roleClass + '-border' : ''}" onerror="this.src='/assets/default_icon.png'">
+            <img src="https://cdn.brawlify.com/profile-icons/regular/${(m.icon && m.icon.id) ? m.icon.id : null}.png" class="member-icon ${roleClass ? roleClass + '-border' : ''}" onerror="this.src='/assets/default_icon.png'">
             <div class="member-info" style="text-align: left;">
                 <div class="member-name" style="color: ${nameColor};">${safeName}</div>
                 <div class="member-tag">${m.tag}</div>
