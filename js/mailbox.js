@@ -78,7 +78,7 @@ async function openMessage(id, element) {
     document.getElementById('msg-date').innerText = "Envoyé le " + dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     
     // Parse le Markdown et injecte dans le body
-    document.getElementById('msg-body').innerHTML = marked.parse(msg.contenu);
+    document.getElementById('msg-body').innerHTML = DOMPurify.sanitize(marked.parse(msg.contenu));
 
     // --- GESTION RESPONSIVE MOBILE ---
     // Sur mobile, cacher la liste et afficher le panneau de lecture
