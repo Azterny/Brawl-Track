@@ -213,7 +213,7 @@
     <script>
         // --- AUTH & INIT ---
         const ADMIN_KEY_KEY = 'admin_key_v3';
-        let ADMIN_PASS = localStorage.getItem(ADMIN_KEY_KEY);
+        let ADMIN_PASS = sessionStorage.getItem(ADMIN_KEY_KEY);
         let myChart = null; 
 
         if(ADMIN_PASS) {
@@ -229,7 +229,7 @@
                 });
                 if(res.ok) {
                     ADMIN_PASS = p;
-                    localStorage.setItem(ADMIN_KEY_KEY, p);
+                    sessionStorage.setItem(ADMIN_KEY_KEY, p);
                     document.getElementById('login-overlay').classList.add('hidden');
                     loadData();
                 } else alert("INVALID PASSWORD");
@@ -237,7 +237,7 @@
         }
 
         function logout() {
-            localStorage.removeItem(ADMIN_KEY_KEY);
+            sessionStorage.removeItem(ADMIN_KEY_KEY);
             location.reload();
         }
 
@@ -425,7 +425,7 @@
                             <button onclick="manageCoins(${u.id})" class="btn-blue" title="Gérer Track-Coins">💰</button>
                             <button onclick="openMsgModal(${u.id}, '${u.username}')" class="btn-orange" title="Envoyer Message">✉️</button>
                             <button onclick="addTag(${u.id})" class="btn-green" title="Force Claim Tag">+</button>
-                            <button onclick="renameUser(${u.id}, '${u.username}')" title="Renommer">R</button>
+                            <button data-uid="u.id"data−uname="{u.id}" data-uname="u.id"data−uname="{escapeHtml(u.username)}" title="Renommer">R</button>
                             <button onclick="deleteUser(${u.id})" class="btn-red" title="Supprimer">X</button>
                         </td>
                     `;
