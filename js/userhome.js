@@ -33,7 +33,6 @@ async function initUserHome() {
         const linkedContainer = document.getElementById('linked-account-container');
         
         if (claimedList.length === 0) {
-            // Aucun compte lié : Affichage de la case "+"
             linkedContainer.innerHTML = `
                 <div class="empty-link-card clickable" onclick="openLinkModal()" style="min-height: 120px; max-height: 160px; height: auto;">
                     <div class="plus-btn">+</div>
@@ -41,7 +40,6 @@ async function initUserHome() {
                 </div>
             `;
         } else {
-            // Un compte est lié : On charge ses stats complètes (et celles de son club)
             const linkedTag = claimedList[0].tag;
             linkedContainer.innerHTML = `<div class="skeleton-box" style="width:100%; height:120px; border-radius:15px;"></div>`;
             await fetchAndRenderLinkedAccount(linkedTag, linkedContainer);
@@ -68,12 +66,6 @@ async function initUserHome() {
             renderGrid('follows-grid', [], {}, 'Vous ne suivez aucun compte.');
         }
 
-        // ==========================================
-        // 3. GESTION DES CLUBS SUIVIS
-        // ==========================================
-        // Le HTML affiche déjà "Fonctionnalité à venir..." par défaut dans #club-grid.
-        // Aucune action JS requise pour l'instant, mais l'espace est prêt !
-
     } catch (e) {
         console.error(e);
         localStorage.removeItem('token');
@@ -94,10 +86,11 @@ async function fetchAndRenderLinkedAccount(tag, container) {
         let nameColor = pData.nameColor || '#ffffff';
         if (nameColor.startsWith('0x')) nameColor = '#' + (nameColor.length >= 10 ? nameColor.slice(4) : nameColor.slice(2));
 
-        // 3. Calcul du prestige total depuis les brawlers
-        const prestigeValue = pData.brawlers
+        // FIX-PRESTIGE : utilise totalPrestigeLevel de l'API Supercell (archivé par le worker).
+        // Avant : brawlers.reduce(trophies / 1000) → approximation incorrecte après resets de saison.
+        const prestigeValue = pData.totalPrestigeLevel ?? (pData.brawlers
             ? pData.brawlers.reduce((sum, b) => sum + Math.floor((b.trophies || 0) / 1000), 0)
-            : 0;
+            : 0);
 
         // 4. HTML JOUEUR
         const playerHtml = `
@@ -156,7 +149,6 @@ async function fetchAndRenderLinkedAccount(tag, container) {
             }
         }
 
-        // Carte vide si pas de club
         if (!clubHtml) {
             clubHtml = `
                 <div class="empty-link-card">
@@ -173,7 +165,6 @@ async function fetchAndRenderLinkedAccount(tag, container) {
     }
 }
 
-// Fonction pour lier un compte via le bouton "+"
 function promptLinkAccount() {
     const tag = prompt("Entrez votre Tag Brawl Stars (ex: #2RUPLG8G) :\nCe compte deviendra votre compte principal.");
     if(!tag) return;
