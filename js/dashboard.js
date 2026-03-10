@@ -219,9 +219,13 @@ function renderProfile(data) {
 
     const survivorVictories = (data.soloVictories || 0) + (data.duoVictories || 0);
 
-    const prestiges = data.brawlers
+    // FIX-PRESTIGE : Utilise totalPrestigeLevel fourni directement par l'API Supercell.
+    // Avant : calcul côté client via brawlers.reduce(trophies / 1000) → valeur approchée
+    //         car elle ne tient pas compte des resets de saison ni des prestiges 2/3.
+    // Maintenant : valeur officielle archivée par le worker dans player_stats.prestige.
+    const prestiges = data.totalPrestigeLevel ?? (data.brawlers
         ? data.brawlers.reduce((sum, b) => sum + Math.floor((b.trophies || 0) / 1000), 0)
-        : 0;
+        : 0);
 
     document.getElementById('stats-area').innerHTML = `
         <div class="stat-card" style="display: flex; justify-content: space-between; align-items: center; text-align: left;">
@@ -389,9 +393,6 @@ function renderBrawlersGrid() {
             card.style.filter = "grayscale(100%) opacity(0.3)";
             card.style.cursor = "default";
         } else {
-            // BUG-D FIX : getBrawlerRank() appelé une seule fois par brawler owned.
-            // Avant : appelé 1x dans ce bloc else ET 1x dans le if(b.owned) ci-dessous
-            // → double calcul inutile (~70 brawlers = ~70 appels économisés).
             const rank = getBrawlerRank(b.trophies);
             card.classList.add(`rank-${rank}`);
             card.style.cursor = "pointer";
@@ -404,7 +405,6 @@ function renderBrawlersGrid() {
             badge.title = RANK_CONFIG[rank].label;
             card.appendChild(badge);
 
-            // Bloc trophées intégré ici (élimine le if(b.owned) redondant externe)
             const trophyDiv = document.createElement('div');
             trophyDiv.style.color = '#ffce00';
             trophyDiv.style.fontSize = '1em';
@@ -432,7 +432,6 @@ function renderBrawlersGrid() {
                 trophyDiv.appendChild(arrow);
             }
 
-            // trophyDiv sera ajouté après nameDiv ci-dessous
             card._trophyDiv = trophyDiv;
         }
 
@@ -453,7 +452,6 @@ function renderBrawlersGrid() {
         nameDiv.textContent = b.name;
         card.appendChild(nameDiv);
 
-        // Attache le bloc trophées (préparé dans le bloc owned ci-dessus)
         if (b.owned && card._trophyDiv) {
             card.appendChild(card._trophyDiv);
             delete card._trophyDiv;
@@ -724,9 +722,6 @@ function setBrawlerChartMode(mode, liveValOverride) {
 }
 
 function renderBrawlerChart() {
-    // OPT-8 : Le destroy() est maintenant géré dans renderGenericChart.
-    // Il n'est déclenché que si le time unit change (changement de mode).
-    // Pour la navigation (prev/next), le graphique est mis à jour en place.
     brawlerChartInstance = renderGenericChart({
         canvasId: 'brawlerChartCanvas',
         rawData: currentBrawlerHistory,
@@ -753,7 +748,6 @@ function renderMainChart() {
     const activeBtn = document.getElementById(btnId);
     if (activeBtn) activeBtn.classList.add('active');
 
-    // OPT-8 : Le destroy() est maintenant géré dans renderGenericChart.
     window.myChart = renderGenericChart({
         canvasId: 'trophyChart',
         rawData: fullHistoryData,
@@ -1087,6 +1081,7 @@ function preprocessData(rawData, isBrawler) {
         processed.push({
             date: (d.date || d.recorded_at).replace(' ', 'T') + 'Z',
             trophies: displayVal,
+            prestige: d.prestige ?? null,
             customType: specialType,
             customLabel: specialLabel
         });
@@ -1131,7 +1126,8 @@ function renderGenericChart(config) {
             y: pt.trophies,
             type: 'real',
             cType: pt.customType,
-            cLabel: pt.customLabel
+            cLabel: pt.customLabel,
+            prestige: pt.prestige
         }));
     } else {
         finalDataPoints = processedData.map(pt => ({
@@ -1139,7 +1135,8 @@ function renderGenericChart(config) {
             y: pt.trophies,
             type: 'real',
             cType: pt.customType,
-            cLabel: pt.customLabel
+            cLabel: pt.customLabel,
+            prestige: pt.prestige
         }));
     }
 
@@ -1213,10 +1210,6 @@ function renderGenericChart(config) {
         scaleMax = endDate;
     }
 
-    // BUG-E FIX : paramètre renommé segCtx pour éviter le shadow de la variable
-    // canvasCtx (Canvas 2D context) déclarée dans le scope externe.
-    // L'ancien nom 'canvasCtx' dans le callback Chart.js prêtait à confusion :
-    // ce paramètre est le contexte scripté Chart.js, pas le contexte Canvas 2D.
     const segmentCallback = {
         borderColor: segCtx => {
             const p1 = finalDataPoints[segCtx.p1DataIndex];
@@ -1225,11 +1218,6 @@ function renderGenericChart(config) {
         }
     };
 
-    // OPT-8 : Mise à jour en place du graphique existant si le time unit est inchangé.
-    // Cas typique : navigation prev/next dans le même mode (Jour, Semaine, Mois...).
-    // Évite destroy() + new Chart() → pas de garbage collection ni de full reflow.
-    // Si le time unit change (ex: passage mode "Jour" → "Heure"), on recrée le graphique
-    // car Chart.js nécessite une réinitialisation de l'adaptateur de temps.
     const existingChart = canvasId === 'trophyChart' ? window.myChart : brawlerChartInstance;
 
     if (existingChart && existingChart._btTimeUnit === timeUnit) {
@@ -1241,11 +1229,10 @@ function renderGenericChart(config) {
         ds.segment = segmentCallback;
         existingChart.options.scales.x.min = scaleMin;
         existingChart.options.scales.x.max = scaleMax;
-        existingChart.update('none'); // Mise à jour instantanée, sans animation
+        existingChart.update('none');
         return existingChart;
     }
 
-    // Time unit différent ou première création : destroy + recreate
     if (existingChart) existingChart.destroy();
 
     const canvasCtx = document.getElementById(canvasId).getContext('2d');
@@ -1283,6 +1270,10 @@ function renderGenericChart(config) {
                         label: function(context) {
                             const pt = context.raw;
                             if (pt.cLabel) return pt.cLabel;
+                            // FIX-PRESTIGE : affiche le prestige archivé dans le tooltip si disponible
+                            if (!isBrawler && pt.prestige != null) {
+                                return [`Trophées: ${pt.y}`, `Prestige: ${pt.prestige}`];
+                            }
                             return `Trophées: ${pt.y}`;
                         }
                     }
@@ -1308,7 +1299,6 @@ function renderGenericChart(config) {
         }
     });
 
-    // Mémorise le time unit courant pour les futures décisions update vs recreate
     newChart._btTimeUnit = timeUnit;
     return newChart;
 }
