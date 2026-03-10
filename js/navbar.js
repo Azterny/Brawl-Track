@@ -1,4 +1,3 @@
-// OPT-10 / BUG-A : Utilitaire d'échappement HTML — remplace encodeURIComponent()
 function escapeHtml(str) {
     return String(str)
         .replace(/&/g, '&amp;')
@@ -18,23 +17,21 @@ document.addEventListener("DOMContentLoaded", async function() {
     const username = localStorage.getItem('username') || 'Joueur';
     const safeUsername = escapeHtml(username);
     
-    // Vérification des notifications non lues avant de construire la NavBar
     let unreadCount = 0;
     if (token) {
         try {
-            const res = await fetch(`${API_BASE_NAV}/api/messages`, {
+            const res = await fetch(`${API_BASE_NAV}/api/messages/unread-count`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
-                const messages = await res.json();
-                unreadCount = messages.filter(m => m.is_read === 0).length;
+                const data = await res.json();
+                unreadCount = data.count || 0;
             }
         } catch (e) {
             console.warn("Erreur chargement notifications NavBar :", e);
         }
     }
     
-    // Indicateurs visuels
     const notifBadge = unreadCount > 0 ? `<span class="nav-notif-dot"></span>` : "";
     const notifCountText = unreadCount > 0 ? `<span style="background: #ff4757; color: white; border-radius: 10px; padding: 2px 6px; font-size: 0.8em; margin-left: 5px; font-weight: bold;">${unreadCount}</span>` : "";
 
@@ -58,14 +55,14 @@ document.addEventListener("DOMContentLoaded", async function() {
                 ☰ ${notifBadge}
             </div>
         </div>
-
-        </nav> <div id="mobile-nav-overlay" class="mobile-nav-overlay hidden">
+    </nav>
+    <div id="mobile-nav-overlay" class="mobile-nav-overlay hidden">
         <div class="mobile-nav-content">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <span style="font-family:'Lilita One'; color:#ffce00; font-size:1.5em;">MENU</span>
                 <button onclick="toggleMobileNav()" style="background:none; border:none; color:white; font-size:1.5em; width:auto; margin:0;">✕</button>
             </div>
-            ${getMobileLinks(token, safeUsername, username, notifCountText)}
+            ${getMobileLinks(token, safeUsername, notifCountText)}
         </div>
     </div>
     `;
@@ -100,10 +97,8 @@ function getRightActions(token, safeUsername, notifBadge, notifCountText) {
                 <div class="dropdown-menu right-aligned">
                     <a href="/home"><img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Mes Comptes</a>
                     <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')"><img src="/assets/icons/subscribe.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Abonnement</a>
-                    
                     <a href="/mailbox"><img src="/assets/icons/mailbox.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Messages ${notifCountText}</a>
                     <a href="#" onclick="alert('Paramètres : Bientôt Disponible !')"><img src="/assets/icons/settings.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Paramètres</a>
-                    
                     <div class="dropdown-divider"></div>
                     <a href="#" onclick="logoutNav()" style="color: #ff5555;">Déconnexion</a>
                 </div>
@@ -117,7 +112,7 @@ function getRightActions(token, safeUsername, notifBadge, notifCountText) {
     }
 }
 
-function getMobileLinks(token, safeUsername, username, notifCountText) {
+function getMobileLinks(token, safeUsername, notifCountText) {
     let html = "";
     if (token) {
         html += `
@@ -126,10 +121,8 @@ function getMobileLinks(token, safeUsername, username, notifCountText) {
             <a href="/home" class="mobile-link"><img src="/assets/icons/wipeout.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Mes Comptes</a>
             <a href="#" onclick="alert('⭐ Abonnement : Bientôt Disponible !')" class="mobile-link"><img src="/assets/icons/subscribe.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Abonnement</a>
             <a href="/leaderboard" class="mobile-link"><img src="/assets/icons/leaderboard.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Classements</a>
-            
             <a href="/mailbox" class="mobile-link"><img src="/assets/icons/mailbox.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Messages ${notifCountText}</a>
             <a href="#" class="mobile-link"><img src="/assets/icons/settings.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Paramètres</a>
-            
             <hr style="border-color:#333; width:100%; opacity:0.3;">
             <button onclick="logoutNav()" class="btn-danger" style="margin-top:20px; color: #ff5555;">Déconnexion</button>
         `;
@@ -179,7 +172,8 @@ function initSmartNavbar() {
     navbar.style.transition = 'transform 0.3s ease-in-out';
 
     const navHeight = navbar.offsetHeight;
-    document.body.style.paddingTop = navHeight + 'px';
+    const currentPadding = parseInt(getComputedStyle(document.body).paddingTop, 10) || 0;
+    document.body.style.paddingTop = (currentPadding + navHeight) + 'px';
 
     let lastScrollTop = 0;
 
@@ -195,6 +189,6 @@ function initSmartNavbar() {
             navbar.style.transform = 'translateY(0)';
         }
         
-        lastScrollTop = scrollTop; 
+        lastScrollTop = scrollTop;
     });
 }
