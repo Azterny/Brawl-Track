@@ -27,28 +27,11 @@ function isHourMode(mode) {
 }
 
 // =========================================================
-// === SYSTÈME DE RANGS BRAWLERS ===
+// RANK_CONFIG et getBrawlerRank sont définis dans utils.js
+// (partagé entre toutes les pages : dashboard, leaderboard…)
+// Les redéclarer ici en `const` causait une SyntaxError fatale
+// qui bloquait tout le chargement du dashboard.
 // =========================================================
-
-const RANK_CONFIG = {
-    wood:      { label: 'Wood',        neon: false, icon: '/assets/ranks/wood.webp',      trophyIcon: '/assets/trophy_normal.png' },
-    bronze:    { label: 'Bronze',      neon: false, icon: '/assets/ranks/bronze.webp',    trophyIcon: '/assets/trophy_normal.png' },
-    silver:    { label: 'Silver',      neon: false, icon: '/assets/ranks/silver.webp',    trophyIcon: '/assets/trophy_normal.png' },
-    gold:      { label: 'Gold',        neon: false, icon: '/assets/ranks/gold.webp',      trophyIcon: '/assets/trophy_normal.png' },
-    prestige1: { label: 'Prestige 1',  neon: true,  icon: '/assets/ranks/prestige1.webp', trophyIcon: '/assets/trophy_prestige.png' },
-    prestige2: { label: 'Prestige 2',  neon: true,  icon: '/assets/ranks/prestige2.webp', trophyIcon: '/assets/trophy_prestige.png' },
-    prestige3: { label: 'Prestige 3+', neon: true,  icon: '/assets/ranks/prestige3.webp', trophyIcon: '/assets/trophy_prestige.png' },
-};
-
-function getBrawlerRank(trophies) {
-    if (trophies >= 3000) return 'prestige3';
-    if (trophies >= 2000) return 'prestige2';
-    if (trophies >= 1000) return 'prestige1';
-    if (trophies >= 750)  return 'gold';
-    if (trophies >= 500)  return 'silver';
-    if (trophies >= 250)  return 'bronze';
-    return 'wood';
-}
 
 // =========================================================
 // === HELPER: calculateDateRange ===
@@ -219,10 +202,6 @@ function renderProfile(data) {
 
     const survivorVictories = (data.soloVictories || 0) + (data.duoVictories || 0);
 
-    // FIX-PRESTIGE : Utilise totalPrestigeLevel fourni directement par l'API Supercell.
-    // Avant : calcul côté client via brawlers.reduce(trophies / 1000) → valeur approchée
-    //         car elle ne tient pas compte des resets de saison ni des prestiges 2/3.
-    // Maintenant : valeur officielle archivée par le worker dans player_stats.prestige.
     const prestiges = data.totalPrestigeLevel ?? (data.brawlers
         ? data.brawlers.reduce((sum, b) => sum + Math.floor((b.trophies || 0) / 1000), 0)
         : 0);
@@ -1020,12 +999,10 @@ function renderClubCard(club) {
     
     clubCard.innerHTML = `
         <img src="${iconUrl}" class="club-icon" onerror="this.src='/assets/default_icon.png'" alt="Club Icon">
-        
         <div class="club-title-area">
             <h3 class="club-name">${club.name}</h3>
             <div class="club-tag">${club.tag}</div>
         </div>
-        
         <div class="club-stats-row">
             <div class="club-stat-item trophies" title="Total Trophées du Club">
                 <img src="/assets/trophy_normal.png" class="stat-icon">
@@ -1036,7 +1013,6 @@ function renderClubCard(club) {
                 <span class="stat-text">${membersCount} <span class="max-members">/ 30</span></span>
             </div>
         </div>
-        
         <div class="club-deco-glow"></div>
     `;
 }
@@ -1270,7 +1246,6 @@ function renderGenericChart(config) {
                         label: function(context) {
                             const pt = context.raw;
                             if (pt.cLabel) return pt.cLabel;
-                            // FIX-PRESTIGE : affiche le prestige archivé dans le tooltip si disponible
                             if (!isBrawler && pt.prestige != null) {
                                 return [`Trophées: ${pt.y}`, `Prestige: ${pt.prestige}`];
                             }
