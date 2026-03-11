@@ -1,5 +1,3 @@
-// js/link_account.js
-
 window.openLinkModal = function() {
     const modal = document.getElementById('link-account-modal');
     if (modal) {
@@ -12,33 +10,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const modal        = document.getElementById('link-account-modal');
-    const btnClose     = document.getElementById('close-link-modal');
-    const btnCloseSucc = document.getElementById('btn-close-success');
+    const modal = document.getElementById('link-account-modal');
+    const btnClose = document.getElementById('close-link-modal');
+    const btnCloseSuccess = document.getElementById('btn-close-success');
 
-    let currentTag         = "";
-    let mainTimerInterval  = null;
-    let verifyInterval     = null;
-
-    // Fix #6 — Nettoyage systématique des intervalles à la fermeture de la modale,
-    // Peu importe l'étape active, les timers sont toujours stoppés.
-    function stopAllIntervals() {
-        if (verifyInterval)    { clearInterval(verifyInterval);   verifyInterval   = null; }
-        if (mainTimerInterval) { clearInterval(mainTimerInterval); mainTimerInterval = null; }
-    }
-
+    // --- FERMETURE DE LA POPUP ---
     const closeModal = () => {
-        stopAllIntervals();
         modal.classList.add('hidden');
+        // Si on ferme sur l'étape de succès, on rafraîchit la page pour voir le compte lié
         if (!document.getElementById('step-4-success').classList.contains('hidden')) {
             window.location.reload();
         }
     };
 
-    if (btnClose)     btnClose.addEventListener('click', closeModal);
-    if (btnCloseSucc) btnCloseSucc.addEventListener('click', closeModal);
-
-    // Fermeture sur fond de modale
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCloseSuccess) btnCloseSuccess.addEventListener('click', closeModal);
+    
+    // Fermer si on clique sur le fond noir
     modal.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
     });
@@ -47,13 +35,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const step2 = document.getElementById('step-2-preview');
     const step3 = document.getElementById('step-3-challenge');
     const step4 = document.getElementById('step-4-success');
+    
+    let currentTag = "";
+    let mainTimerInterval = null;
+    let verifyInterval = null;
 
     function showStep(stepElement) {
         [step1, step2, step3, step4].forEach(el => el.classList.add('hidden'));
         stepElement.classList.remove('hidden');
     }
 
-    // --- VÉRIFICATION DU STATUT ---
+    // --- VERIFICATION DU STATUT ---
     window.checkCurrentStatus = async function(isInitialLoad = false) {
         try {
             const res = await fetch(`${API_URL}/api/link/status`, {
@@ -65,201 +57,188 @@ document.addEventListener('DOMContentLoaded', () => {
                 showStep(step4);
                 document.getElementById('linked-tag-display').innerText = data.tag;
             } else if (data.status === 'pending') {
-                modal.classList.remove('hidden');
-                currentTag = data.tag || '';
-                startChallenge(data.icon_id, data.brawler_name, data.seconds_left || 300);
+                modal.classList.remove('hidden'); // Force l'ouverture si défi en cours
+                currentTag = data.tag;
+                startChallenge(data.icon_id, data.brawler_name || 'un Brawler...', data.remaining_seconds);
             } else {
                 showStep(step1);
             }
         } catch (e) {
+            console.error(e);
             showStep(step1);
         }
     };
 
-    // --- ÉTAPE 1 : RECHERCHE DU TAG ---
-    const btnSearch = document.getElementById('btn-search-tag');
-    if (btnSearch) {
-        btnSearch.addEventListener('click', async () => {
-            const rawTag = document.getElementById('input-tag').value.trim().toUpperCase().replace('#', '');
-            if (!rawTag) return;
+    // Auto-check silencieux au chargement de userhome
+    window.checkCurrentStatus(true);
 
-            btnSearch.disabled = true;
-            btnSearch.innerText = "Recherche...";
+    // --- ETAPE 1 : Chercher le joueur ---
+    document.getElementById('btn-search-tag').addEventListener('click', async () => {
+        const input = document.getElementById('brawl-tag-input').value.trim();
+        if (!input) return;
 
-            try {
-                const res = await fetch(`${API_URL}/api/public/player/${rawTag}`);
-                if (!res.ok) throw new Error("Joueur introuvable");
-                const data = await res.json();
+        const btn = document.getElementById('btn-search-tag');
+        btn.disabled = true;
+        btn.innerText = "Recherche...";
+        document.getElementById('step-1-error').innerText = "";
 
-                currentTag = data.tag;
+        try {
+            const cleanTag = input.replace('#', '').toUpperCase();
+            const res = await fetch(`${API_URL}/api/public/player/${cleanTag}`);
+            
+            if (!res.ok) throw new Error("Joueur introuvable sur Brawl Stars.");
+            
+            const playerData = await res.json();
+            currentTag = playerData.tag; 
+            
+            document.getElementById('preview-name').innerText = playerData.name;
+            document.getElementById('preview-name').style.color = `#${playerData.nameColor.replace('0xff', '')}`;
+            document.getElementById('preview-trophies').innerText = `🏆 ${playerData.trophies}`;
+            document.getElementById('preview-icon').src = `https://cdn.brawlify.com/profile-icons/regular/${playerData.icon.id}.png`;
+            
+            showStep(step2);
+        } catch (e) {
+            document.getElementById('step-1-error').innerText = e.message;
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Chercher";
+        }
+    });
 
-                let nameColor = data.nameColor || '#ffffff';
-                if (nameColor.startsWith('0x')) nameColor = '#' + (nameColor.length >= 10 ? nameColor.slice(4) : nameColor.slice(2));
+    document.getElementById('btn-confirm-no').addEventListener('click', () => {
+        showStep(step1);
+        document.getElementById('brawl-tag-input').value = "";
+    });
 
-                document.getElementById('preview-icon').src     = `https://cdn.brawlify.com/profile-icons/regular/${data.icon?.id || 28000000}.png`;
-                document.getElementById('preview-name').innerText = data.name;
-                document.getElementById('preview-name').style.color = nameColor;
-                document.getElementById('preview-tag').innerText  = data.tag;
-                document.getElementById('preview-trophies').innerText = (data.trophies || 0).toLocaleString('fr-FR');
+    // --- ETAPE 2 -> 3 : Initialiser le défi ---
+    document.getElementById('btn-confirm-yes').addEventListener('click', async () => {
+        const btn = document.getElementById('btn-confirm-yes');
+        btn.disabled = true;
+        btn.innerText = "Génération...";
 
-                showStep(step2);
-            } catch (e) {
-                alert("Joueur introuvable. Vérifiez le tag.");
-            } finally {
-                btnSearch.disabled = false;
-                btnSearch.innerText = "Rechercher";
-            }
-        });
-    }
-
-    // --- ÉTAPE 2 : CONFIRMATION ---
-    const btnConfirm = document.getElementById('btn-confirm-tag');
-    if (btnConfirm) {
-        btnConfirm.addEventListener('click', async () => {
-            btnConfirm.disabled = true;
-            btnConfirm.innerText = "Initialisation...";
-
-            try {
-                const res = await fetch(`${API_URL}/api/link/init`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ tag: currentTag })
-                });
-                const data = await res.json();
-
-                if (res.ok && data.icon_id) {
-                    startChallenge(data.icon_id, data.brawler_name, data.seconds_left || 300);
-                } else {
-                    alert(data.message || "Erreur d'initialisation.");
-                    showStep(step1);
-                }
-            } catch (e) {
-                alert("Erreur de connexion avec le serveur.");
+        try {
+            const res = await fetch(`${API_URL}/api/link/init`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ tag: currentTag })
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                startChallenge(data.icon_id, data.brawler_name, data.remaining_seconds);
+            } else {
+                alert(data.message || "Erreur lors de l'initialisation.");
                 showStep(step1);
-            } finally {
-                btnConfirm.disabled = false;
-                btnConfirm.innerText = "Oui, c'est moi";
             }
-        });
-    }
+        } catch (e) {
+            alert("Erreur de connexion avec le serveur.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Oui, c'est moi";
+        }
+    });
 
-    // --- GESTION DU DÉFI ---
+    // --- GESTION DU DEFI ---
     function startChallenge(iconId, brawlerName, secondsLeft) {
         showStep(step3);
-
-        const challengeIcon = document.getElementById('challenge-icon');
-        if (challengeIcon) challengeIcon.src = `https://cdn.brawlify.com/profile-icons/regular/${iconId}.png`;
-        if (brawlerName) {
-            const el = document.getElementById('challenge-brawler');
-            if (el) el.innerText = brawlerName;
-        }
-
-        stopAllIntervals(); // Stoppe tout timer précédent avant d'en créer de nouveaux
+        document.getElementById('challenge-icon').src = `https://cdn.brawlify.com/profile-icons/regular/${iconId}.png`;
+        if (brawlerName) document.getElementById('challenge-brawler').innerText = brawlerName;
+        
+        clearInterval(mainTimerInterval);
         let timeLeft = secondsLeft;
-
+        
         mainTimerInterval = setInterval(() => {
             timeLeft--;
             if (timeLeft <= 0) {
-                stopAllIntervals();
-                alert("Le temps est écoulé. Vous pourrez recommencer quand vous serez prêt.");
+                clearInterval(mainTimerInterval);
+                alert("Le temps est écoulé. Vous pourrez recommencer quand vous serez prêt !");
                 window.location.reload();
             } else {
                 const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
                 const s = (timeLeft % 60).toString().padStart(2, '0');
-                const timerEl = document.getElementById('challenge-timer');
-                if (timerEl) timerEl.innerText = `${m}:${s}`;
+                document.getElementById('challenge-timer').innerText = `${m}:${s}`;
             }
         }, 1000);
     }
 
-    // --- BOUCLE DE VÉRIFICATION ---
-    const btnVerify = document.getElementById('btn-start-verify');
-    if (btnVerify) {
-        btnVerify.addEventListener('click', () => {
-            const msgBox = document.getElementById('verify-status-msg');
+    // --- BOUCLE DE VERIFICATION ---
+    document.getElementById('btn-start-verify').addEventListener('click', () => {
+        const btn = document.getElementById('btn-start-verify');
+        const msgBox = document.getElementById('verify-status-msg');
+        
+        btn.disabled = true;
+        btn.innerText = "Vérification en cours...";
+        msgBox.innerText = "Interrogation de Supercell... (Jusqu'à 90s)";
+        msgBox.style.color = "#fbdc10";
+        
+        let attempts = 0;
+        const maxAttempts = 9;
 
-            btnVerify.disabled = true;
-            btnVerify.innerText = "Vérification en cours...";
-            if (msgBox) {
-                msgBox.innerText = "Interrogation de Supercell... (Jusqu'à 90s)";
-                msgBox.style.color = "#fbdc10";
+        checkIconAPI();
+
+        verifyInterval = setInterval(() => {
+            attempts++;
+            if (attempts >= maxAttempts) {
+                clearInterval(verifyInterval);
+                btn.disabled = false;
+                btn.innerText = "J'ai changé mon icône ! Vérifier";
+                msgBox.innerText = "Délai dépassé. Assurez-vous d'avoir équipé l'icône et réessayez.";
+                msgBox.style.color = "#ff4757";
+                return;
             }
-
-            let attempts   = 0;
-            const maxAttempts = 9;
-
             checkIconAPI();
+        }, 10000);
 
-            verifyInterval = setInterval(() => {
-                attempts++;
-                if (attempts >= maxAttempts) {
-                    stopAllIntervals();
-                    btnVerify.disabled = false;
-                    btnVerify.innerText = "J'ai changé mon icône ! Vérifier";
-                    if (msgBox) {
-                        msgBox.innerText = "Délai dépassé. Assurez-vous d'avoir équipé l'icône et réessayez.";
-                        msgBox.style.color = "#ff4757";
-                    }
-                    return;
-                }
-                checkIconAPI();
-            }, 10000);
-
-            async function checkIconAPI() {
-                try {
-                    const res = await fetch(`${API_URL}/api/link/verify`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const data = await res.json();
-
-                    if (data.status === 'success') {
-                        stopAllIntervals();
-                        const display = document.getElementById('linked-tag-display');
-                        if (display) display.innerText = currentTag;
-                        showStep(step4);
-                    } else if (data.status === 'expired') {
-                        stopAllIntervals();
-                        alert("Le temps est écoulé !");
-                        window.location.reload();
-                    }
-                } catch (e) {
-                    // Erreur réseau silencieuse — le prochain tick réessaiera
-                }
-            }
-        });
-    }
-
-    // --- ANNULER OU DÉLIER ---
-    const btnCancel = document.getElementById('btn-cancel-challenge');
-    if (btnCancel) {
-        btnCancel.addEventListener('click', async () => {
-            if (confirm("Voulez-vous annuler la vérification pour le moment ?")) {
-                stopAllIntervals();
-                await fetch(`${API_URL}/api/link/cancel`, {
+        async function checkIconAPI() {
+            try {
+                const res = await fetch(`${API_URL}/api/link/verify`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
-                }).catch(() => {});
-                window.location.reload();
-            }
-        });
-    }
-
-    const btnUnclaim = document.getElementById('btn-unclaim-account');
-    if (btnUnclaim) {
-        btnUnclaim.addEventListener('click', async () => {
-            if (confirm("Attention : Délier ce compte arrêtera la collecte de vos statistiques. Continuer ?")) {
-                const tagEl = document.getElementById('linked-tag-display');
-                const res = await fetch(`${API_URL}/api/unclaim-tag`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ tag: tagEl ? tagEl.innerText : '' })
                 });
-                if (res.ok) {
-                    alert("Compte délié avec succès.");
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    clearInterval(verifyInterval);
+                    clearInterval(mainTimerInterval);
+                    document.getElementById('linked-tag-display').innerText = currentTag;
+                    showStep(step4);
+                } else if (data.status === 'expired') {
+                    clearInterval(verifyInterval);
+                    alert("Le temps est écoulé !");
                     window.location.reload();
                 }
+            } catch (e) {}
+        }
+    });
+
+    // --- ANNULER OU DELIER ---
+    document.getElementById('btn-cancel-challenge').addEventListener('click', async () => {
+        if(confirm("Voulez-vous annuler la vérification pour le moment ?")) {
+            await fetch(`${API_URL}/api/link/cancel`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            window.location.reload();
+        }
+    });
+
+    document.getElementById('btn-unclaim-account').addEventListener('click', async () => {
+        if(confirm("Attention : Délier ce compte arrêtera la collecte de vos statistiques. Continuer ?")) {
+            const res = await fetch(`${API_URL}/api/unclaim-tag`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ tag: document.getElementById('linked-tag-display').innerText })
+            });
+            if (res.ok) {
+                alert("Compte délié avec succès.");
+                window.location.reload(); // Au lieu de renvoyer sur /home, on actualise la popup
             }
-        });
-    }
+        }
+    });
 });
