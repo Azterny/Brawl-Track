@@ -1,5 +1,5 @@
 // =========================================================
-// === SETTINGS.JS — Paramètres du compte utilisateur ===
+// === SETTINGS.JS — Paramètres du compte utilisateur ====
 // =========================================================
 
 // --- CONFIGURATION INTERVALLE ---
