@@ -2,662 +2,1076 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Brut - Brawl Track</title>
-    <link rel="icon" type="image/png" href="assets/favicon.png">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brawl-Track | Admin Panel</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="js/config.js"></script>
     <style>
-        /* --- STYLE PRIMAIRE & FONCTIONNEL --- */
-        body {
-            background-color: #000;
-            color: #ccc;
-            font-family: monospace, sans-serif;
-            margin: 0; padding: 20px;
-            font-size: 14px;
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #0d0f14;
+            --bg2:       #141720;
+            --bg3:       #1c2030;
+            --border:    rgba(255,255,255,0.08);
+            --yellow:    #ffce00;
+            --blue:      #4a9eff;
+            --red:       #ff4757;
+            --green:     #2ecc71;
+            --orange:    #fd7e14;
+            --purple:    #9b59b6;
+            --text:      #e8eaf0;
+            --muted:     #6b7280;
+            --radius:    10px;
         }
 
-        #main-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            border: 1px solid #444;
-            background: #111;
-            padding: 10px;
-        }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
 
+        /* ── LOGIN ── */
         #login-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: flex;
+            align-items: center; justify-content: center; z-index: 9999;
         }
-        .login-box { border: 2px solid #ffce00; padding: 20px; text-align: center; background: #111; }
+        .login-box {
+            background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
+            padding: 40px; width: 360px; text-align: center;
+        }
+        .login-box h2 { color: var(--yellow); margin-bottom: 24px; font-size: 1.5rem; letter-spacing: 2px; }
+        .login-box input {
+            width: 100%; padding: 12px; background: var(--bg3); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 1rem; margin-bottom: 12px;
+        }
+        .login-box button { width: 100%; }
+
+        /* ── LAYOUT ── */
+        #app { display: none; flex-direction: column; min-height: 100vh; }
+        #app.visible { display: flex; }
 
         header {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #ffce00; padding-bottom: 10px; margin-bottom: 15px;
+            background: var(--bg2); border-bottom: 1px solid var(--border);
+            padding: 0 24px; display: flex; align-items: center; gap: 16px; height: 56px;
         }
-        h1 { margin: 0; color: #ffce00; font-size: 1.5em; text-transform: uppercase; }
+        header h1 { color: var(--yellow); font-size: 1.1rem; letter-spacing: 1px; font-weight: 700; flex: 1; }
+        .header-meta { color: var(--muted); font-size: 0.8rem; display: flex; gap: 16px; align-items: center; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-box { border: 1px solid #333; background: #0a0a0a; padding: 10px; }
-        .stat-box h3 { margin: 0 0 5px 0; font-size: 0.8em; color: #888; text-transform: uppercase; }
-        .stat-box p { margin: 0; font-size: 1.2em; color: #fff; font-weight: bold; }
-
-        .controls {
-            background: #222; border: 1px solid #444; padding: 10px; margin-bottom: 10px;
-            display: flex; flex-wrap: wrap; gap: 15px; align-items: center;
+        /* ── TABS ── */
+        nav.tabs {
+            background: var(--bg2); border-bottom: 1px solid var(--border);
+            display: flex; padding: 0 24px; gap: 4px; overflow-x: auto;
         }
-        
-        input, select, button, textarea {
-            background: #000; color: #fff; border: 1px solid #555;
-            padding: 5px 10px; font-family: monospace; font-size: 1em; cursor: pointer;
+        nav.tabs button {
+            padding: 14px 20px; background: transparent; border: none; color: var(--muted);
+            cursor: pointer; font-size: 0.9rem; border-bottom: 2px solid transparent;
+            white-space: nowrap; transition: color .2s, border-color .2s;
         }
-        input:focus, select:focus, textarea:focus { border-color: #ffce00; outline: none; }
-        
-        button:hover { background: #333; }
-        button.active { background: #ffce00; color: #000; font-weight: bold; border-color: #ffce00; }
-        
-        .btn-green { color: #28a745; border-color: #28a745; }
-        .btn-green:hover { background: #28a745; color: #000; }
-        .btn-red { color: #ff5555; border-color: #ff5555; }
-        .btn-red:hover { background: #ff5555; color: #000; }
-        .btn-blue { color: #007bff; border-color: #007bff; }
-        .btn-blue:hover { background: #007bff; color: #fff; }
-        .btn-orange { color: #fd7e14; border-color: #fd7e14; }
-        .btn-orange:hover { background: #fd7e14; color: #fff; }
+        nav.tabs button:hover { color: var(--text); }
+        nav.tabs button.active { color: var(--yellow); border-bottom-color: var(--yellow); font-weight: 600; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.95em; }
-        th { text-align: left; border-bottom: 2px solid #444; padding: 8px; color: #888; text-transform: uppercase; }
-        td { border-bottom: 1px solid #222; padding: 6px 8px; vertical-align: middle; }
-        tr:hover { background: #1a1a1a; }
+        /* ── MAIN ── */
+        main { flex: 1; padding: 24px; max-width: 1400px; width: 100%; margin: 0 auto; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
 
-        .hidden { display: none !important; }
-        .badge { display: inline-block; padding: 2px 5px; border: 1px solid #444; color: #ffce00; font-size: 0.9em; }
-        
-        .filter-label { display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; color: #aaa; }
-        .filter-label input:checked + span { color: #fff; text-decoration: underline; }
-
-        .details-row { background: #080808; border-bottom: 1px solid #444; }
-        .details-table td { border: none; color: #888; font-size: 0.9em; padding: 3px 10px; }
-        
-        #analytics-container { height: 350px; width: 100%; background: #0a0a0a; border: 1px solid #333; margin-bottom: 20px; padding: 10px; box-sizing: border-box; }
-        .verified-icon { color: #28a745; font-weight: bold; font-size: 1.1em; }
-
-        /* --- MODALE INBOX --- */
-        #msg-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 10000;
-            display: flex; justify-content: center; align-items: center;
+        /* ── STATS CARDS ── */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px; text-align: center;
         }
-        .msg-box {
-            background: #111; border: 2px solid #fd7e14; padding: 20px; width: 600px;
-            display: flex; flex-direction: column; gap: 15px; box-shadow: 0 0 20px rgba(253, 126, 20, 0.2);
-        }
-        .msg-box h2 { color: #fd7e14; margin: 0; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .msg-box label { color: #888; font-size: 0.9em; font-weight: bold; }
-        .msg-box input, .msg-box textarea { width: 100%; box-sizing: border-box; }
-        .msg-box textarea { height: 200px; resize: vertical; }
-        
-        /* Rendu Markdown Prévisualisation */
-        .msg-preview {
-            background: #000; border: 1px solid #555; height: 200px; padding: 15px;
-            overflow-y: auto; color: #fff; box-sizing: border-box; font-family: sans-serif;
-            border-left: 3px solid #ffce00;
-        }
-        .msg-preview h1 { color: #ffce00; font-size: 1.5em; margin-top: 0; }
-        .msg-preview h2 { color: #ffce00; font-size: 1.3em; }
-        .msg-preview h3 { color: #ffce00; font-size: 1.1em; }
-        .msg-preview a { color: #fd7e14; text-decoration: none; }
-        .msg-preview a:hover { text-decoration: underline; }
+        .stat-card .val { font-size: 1.8rem; font-weight: 700; color: var(--yellow); }
+        .stat-card .lbl { color: var(--muted); font-size: 0.78rem; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
 
-        .msg-actions { display: flex; justify-content: space-between; margin-top: 5px; }
-        .msg-actions-right { display: flex; gap: 10px; }
+        /* ── SYSTEM BARS ── */
+        .sys-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .sys-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+        .sys-card .sys-label { color: var(--muted); font-size: 0.8rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+        .sys-card .sys-val { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+        .progress-bar { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: 4px; transition: width .4s; }
+
+        /* ── TOOLBAR ── */
+        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        .toolbar input[type=text], .toolbar input[type=search], .toolbar select {
+            padding: 8px 12px; background: var(--bg2); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 0.9rem; min-width: 200px;
+        }
+        .toolbar span.count { color: var(--muted); font-size: 0.85rem; margin-left: auto; }
+
+        /* ── TABLE ── */
+        .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: var(--bg3); }
+        th { padding: 10px 14px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); white-space: nowrap; }
+        td { padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: middle; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .expand-row td { background: var(--bg3) !important; padding: 12px 20px; }
+
+        /* ── BADGES ── */
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-basic      { background: rgba(107,114,128,.3); color: #9ca3af; }
+        .badge-subscriber { background: rgba(0,229,255,.15); color: #00e5ff; }
+        .badge-premium    { background: rgba(255,206,0,.15);  color: var(--yellow); }
+        .badge-tag        { background: var(--bg3); color: var(--muted); font-family: monospace; }
+        .badge-ok         { background: rgba(46,204,113,.15); color: var(--green); }
+        .badge-off        { background: rgba(255,71,87,.15);  color: var(--red); }
+        .badge-unread     { background: rgba(255,71,87,.2);   color: var(--red); }
+
+        /* ── BUTTONS ── */
+        button, .btn { padding: 6px 14px; border: none; border-radius: 7px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: opacity .15s; display: inline-flex; align-items: center; gap: 5px; }
+        button:hover { opacity: .85; }
+        .btn-yellow { background: var(--yellow);  color: #000; }
+        .btn-blue   { background: var(--blue);    color: #fff; }
+        .btn-red    { background: var(--red);     color: #fff; }
+        .btn-green  { background: var(--green);   color: #fff; }
+        .btn-orange { background: var(--orange);  color: #fff; }
+        .btn-purple { background: var(--purple);  color: #fff; }
+        .btn-ghost  { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+
+        /* ── PAGINATION ── */
+        .pager { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+        .pager button { min-width: 36px; justify-content: center; }
+        .pager .page-info { color: var(--muted); font-size: 0.85rem; margin: 0 6px; }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+            padding: 28px; width: 600px; max-width: 95vw; max-height: 90vh; overflow-y: auto; position: relative;
+        }
+        .modal-box h3 { color: var(--yellow); margin-bottom: 18px; font-size: 1.1rem; }
+        .modal-close {
+            position: absolute; top: 14px; right: 18px; background: none; border: none;
+            color: var(--muted); font-size: 1.4rem; cursor: pointer; line-height: 1;
+        }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 12px; background: var(--bg3); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 0.9rem;
+        }
+        .form-group textarea { min-height: 120px; resize: vertical; font-family: monospace; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* ── MARKDOWN PREVIEW ── */
+        .md-preview {
+            min-height: 120px; max-height: 280px; overflow-y: auto; padding: 14px;
+            background: #000; border: 1px solid var(--border); border-left: 3px solid var(--yellow);
+            border-radius: 8px; color: var(--text); font-size: 0.9rem; line-height: 1.6;
+        }
+        .md-preview h1, .md-preview h2, .md-preview h3 { color: var(--yellow); margin: .5em 0 .3em; }
+        .md-preview a   { color: var(--orange); }
+        .md-preview code { background: var(--bg3); padding: 2px 5px; border-radius: 4px; }
+        .md-preview pre  { background: var(--bg3); padding: 10px; border-radius: 6px; overflow-x: auto; }
+        .md-preview strong { color: #fff; }
+        .md-preview ul, .md-preview ol { padding-left: 20px; margin: .4em 0; }
+        .md-tabs { display: flex; gap: 4px; margin-bottom: 6px; }
+        .md-tabs button { padding: 4px 12px; font-size: 0.8rem; }
+
+        /* ── MESSAGES INBOX ── */
+        .msg-layout { display: grid; grid-template-columns: 320px 1fr; gap: 16px; min-height: 500px; }
+        .msg-list { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow-y: auto; max-height: 600px; }
+        .msg-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+        .msg-item:hover { background: rgba(255,255,255,.03); }
+        .msg-item.active { background: rgba(255,206,0,.08); border-left: 3px solid var(--yellow); }
+        .msg-item.unread .msg-subj { font-weight: 700; color: #fff; }
+        .msg-item.read .msg-subj { color: var(--muted); }
+        .msg-subj    { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .msg-meta    { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+        .msg-preview { font-size: 0.78rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+        .msg-read-pane { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; overflow-y: auto; max-height: 600px; }
+        .msg-empty { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--muted); font-size: 0.95rem; }
+
+        /* ── ANALYTICS CHART ── */
+        .chart-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+
+        /* ── MISC ── */
+        .hidden  { display: none !important; }
+        .mt-16   { margin-top: 16px; }
+        .section-title { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title span { color: var(--muted); font-size: 0.8rem; font-weight: 400; }
+        input[type=number] { width: 70px; padding: 4px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); }
+
+        @media (max-width: 768px) {
+            .msg-layout { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
 
-    <div id="login-overlay">
-        <div class="login-box">
-            <h2 style="color:#ffce00; margin-top:0;">ADMIN ACCESS</h2>
-            <input type="password" id="admin-pass" placeholder="Password" style="margin-bottom:10px;">
-            <br>
-            <button onclick="login()" style="width:100%">ENTER</button>
-        </div>
+<!-- ── LOGIN ── -->
+<div id="login-overlay">
+    <div class="login-box">
+        <h2>ADMIN ACCESS</h2>
+        <input type="password" id="admin-pass" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')login()">
+        <button class="btn-yellow" onclick="login()" style="margin-top:4px;">Connexion</button>
+        <p id="login-err" style="color:var(--red); font-size:0.85rem; margin-top:10px;"></p>
     </div>
+</div>
 
-    <div id="msg-modal" class="hidden">
-        <div class="msg-box">
-            <h2 id="msg-title">ENVOYER UN MESSAGE</h2>
-            <input type="hidden" id="msg-uid">
-            
-            <div>
-                <label>Objet du message :</label>
-                <input type="text" id="msg-obj" placeholder="Ex: Bienvenue sur Brawl-Track !">
-            </div>
+<!-- ── APP ── -->
+<div id="app">
 
-            <div>
-                <label>Date & Heure d'envoi (Optionnel) :</label><br>
-                <input type="datetime-local" id="msg-date">
-            </div>
-            
-            <div>
-                <label>Contenu (Markdown : # Titre, **Gras**, *Italique*, [Texte](Lien)) :</label>
-                <textarea id="msg-content" placeholder="Rédigez le message ici..."></textarea>
-                <div id="msg-preview" class="hidden msg-preview"></div>
-            </div>
+    <header>
+        <h1>⚡ BRAWL-TRACK ADMIN</h1>
+        <div class="header-meta">
+            <span id="hdr-users">— utilisateurs</span>
+            <span id="hdr-tags">— tags</span>
+            <span id="hdr-last-arch" style="color:var(--green);">—</span>
+            <button class="btn-ghost" style="padding:4px 12px; font-size:0.8rem;" onclick="logout()">Déconnexion</button>
+        </div>
+    </header>
 
-            <div class="msg-actions">
-                <button onclick="closeMsgModal()" class="btn-red">ANNULER</button>
-                <div class="msg-actions-right">
-                    <button onclick="togglePreview()" id="btn-preview" class="btn-blue">PRÉVISUALISER</button>
-                    <button onclick="confirmSendMessage()" class="btn-green">ENVOYER</button>
+    <nav class="tabs">
+        <button class="active" onclick="setTab('analytics')">📈 Analytics</button>
+        <button onclick="setTab('users')">👤 Utilisateurs</button>
+        <button onclick="setTab('tags')">🏷 Tags</button>
+        <button onclick="setTab('messages')">✉️ Messages <span id="tab-msg-badge" style="background:var(--red); color:#fff; border-radius:10px; padding:1px 6px; font-size:0.75rem; margin-left:4px; display:none;"></span></button>
+        <button onclick="setTab('system')">🖥 Système</button>
+    </nav>
+
+    <main>
+
+        <!-- ════════════════ ANALYTICS ════════════════ -->
+        <div id="tab-analytics" class="tab-panel active">
+            <div class="stats-row" id="stats-cards"></div>
+            <div class="chart-wrap">
+                <div class="section-title">Activité — 30 derniers jours</div>
+                <canvas id="analyticsChart" height="100"></canvas>
+            </div>
+        </div>
+
+        <!-- ════════════════ USERS ════════════════ -->
+        <div id="tab-users" class="tab-panel">
+            <div class="toolbar">
+                <input type="search" id="user-search" placeholder="Rechercher utilisateur..." oninput="filterUsers()">
+                <select id="user-tier-filter" onchange="filterUsers()">
+                    <option value="">Tous les grades</option>
+                    <option value="basic">Basic</option>
+                    <option value="subscriber">Subscriber</option>
+                    <option value="premium">Premium</option>
+                </select>
+                <button class="btn-ghost" onclick="refreshData()">↺ Actualiser</button>
+                <span class="count" id="user-count-label"></span>
+            </div>
+            <div class="table-wrap">
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th style="width:28px"></th>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Grade</th>
+                            <th>Coins</th>
+                            <th>Tag lié</th>
+                            <th>Dernière connexion</th>
+                            <th>Archives</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody"></tbody>
+                </table>
+            </div>
+            <div class="pager" id="user-pager"></div>
+        </div>
+
+        <!-- ════════════════ TAGS ════════════════ -->
+        <div id="tab-tags" class="tab-panel">
+            <div class="toolbar">
+                <input type="search" id="tag-search" placeholder="Tag ou propriétaire..." oninput="searchTags()">
+                <select id="tag-filter" onchange="searchTags()">
+                    <option value="">Tous</option>
+                    <option value="claimed">Revendiqués</option>
+                    <option value="unclaimed">Non revendiqués</option>
+                    <option value="verified">Vérifiés</option>
+                    <option value="top_global">Top Global</option>
+                </select>
+                <button class="btn-ghost" onclick="loadTags()">↺ Actualiser</button>
+                <span class="count" id="tag-count-label"></span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tag</th>
+                            <th>Propriétaire</th>
+                            <th>Intervalle</th>
+                            <th>Statut</th>
+                            <th>Trophées</th>
+                            <th>Archives</th>
+                            <th>Prochaine màj</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tags-tbody"></tbody>
+                </table>
+            </div>
+            <div class="pager" id="tag-pager"></div>
+        </div>
+
+        <!-- ════════════════ MESSAGES ════════════════ -->
+        <div id="tab-messages" class="tab-panel">
+            <div class="toolbar" style="margin-bottom:16px;">
+                <button class="btn-yellow" onclick="openMsgModal(null, 'Choisir destinataire...')">+ Nouveau message</button>
+                <button class="btn-orange" onclick="openMsgModal('all', 'BROADCAST — Tous les utilisateurs')">📢 Broadcast</button>
+                <input type="search" id="msg-search" placeholder="Rechercher..." oninput="searchMessages()" style="margin-left:auto;">
+                <button class="btn-ghost" onclick="loadMessages()">↺ Actualiser</button>
+            </div>
+            <div class="msg-layout">
+                <div>
+                    <div class="msg-list" id="msg-list-panel"></div>
+                    <div class="pager" id="msg-pager"></div>
+                </div>
+                <div class="msg-read-pane" id="msg-read-pane">
+                    <div class="msg-empty" id="msg-empty-state">Sélectionnez un message</div>
+                    <div id="msg-active-state" class="hidden">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; gap:12px; flex-wrap:wrap;">
+                            <div>
+                                <h3 id="msg-view-subj" style="color:var(--yellow); margin-bottom:4px;"></h3>
+                                <div id="msg-view-meta" style="color:var(--muted); font-size:0.8rem;"></div>
+                            </div>
+                            <button class="btn-red" onclick="deleteCurrentMessage()">Supprimer</button>
+                        </div>
+                        <hr style="border:none; border-top:1px solid var(--border); margin-bottom:16px;">
+                        <div id="msg-view-body" class="md-preview" style="max-height:none;"></div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="main-container">
-        
-        <header>
-            <h1>Admin Panel <span style="font-size:0.5em; color:#666;">v4.1</span></h1>
-            <div>
-                <button onclick="loadData()">REFRESH</button>
-                <button onclick="logout()" class="btn-red">LOGOUT</button>
-            </div>
-        </header>
-
-        <div id="stats-area" class="stats-grid">Loading Stats...</div>
-
-        <div class="controls">
-            <div style="border-right: 1px solid #444; padding-right: 15px;">
-                <button id="btn-analytics" onclick="setView('analytics')">ANALYTICS</button>
-                <button id="btn-users" onclick="setView('users')" class="active">UTILISATEURS</button>
-                <button id="btn-tags" onclick="setView('tags')">TAGS</button>
-            </div>
-
-            <div id="search-container">
-                <input type="text" id="search" placeholder="Recherche..." onkeyup="renderView()" style="width: 150px;">
-            </div>
-
-            <div id="filters-users" style="display:flex; gap:15px; flex-wrap:wrap;">
-                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('premium')"> <span>Premium</span></label>
-                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('subscriber')"> <span>Abonnés</span></label>
-                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('basic')"> <span>Basics</span></label>
-                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('connected_today')"> <span>Connecté Aujourd'hui</span></label>
-                <button id="btn-broadcast" onclick="openMsgModal('all', 'TOUS LES JOUEURS')" class="btn-orange" style="margin-left: 10px;">✉️ ENVOYER À TOUS</button>
-            </div>
-
-            <div id="filters-tags" class="hidden" style="display:flex; gap:15px;">
-                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('claimed')"> <span>Claimed</span></label>
-                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('unclaimed')"> <span>Unclaimed</span></label>
-                <label class="filter-label"><input type="checkbox" onchange="toggleFilter('verified')"> <span>Vérifiés</span></label>
-            </div>
-
-            <div id="sort-container" style="margin-left:auto; display:flex; gap:5px;">
-                <span>Tri:</span>
-                <select id="sort-select" onchange="renderView()"></select>
-                <button onclick="toggleSort()">▼</button>
+        <!-- ════════════════ SYSTEM ════════════════ -->
+        <div id="tab-system" class="tab-panel">
+            <div class="sys-grid" id="sys-cards"></div>
+            <div class="section-title mt-16">Actions de maintenance</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn-ghost" onclick="refreshData()">↺ Actualiser toutes les données</button>
             </div>
         </div>
 
-        <div id="analytics-container" class="hidden">
-            <canvas id="analyticsChart"></canvas>
-        </div>
+    </main>
+</div>
 
-        <table id="data-table">
-            <thead id="thead"></thead>
-            <tbody id="tbody"></tbody>
-        </table>
-
+<!-- ══ MODAL UTILISATEUR ══ -->
+<div id="user-modal" class="modal-overlay">
+    <div class="modal-box" style="width:500px;">
+        <button class="modal-close" onclick="closeModal('user-modal')">&times;</button>
+        <h3 id="user-modal-title">Détails utilisateur</h3>
+        <div id="user-modal-body"></div>
     </div>
+</div>
 
-    <script src="js/config.js"></script>
-    <script>
-        // --- AUTH & INIT ---
-        const ADMIN_KEY_KEY = 'admin_key_v3';
-        let ADMIN_PASS = sessionStorage.getItem(ADMIN_KEY_KEY);
-        let myChart = null; 
+<!-- ══ MODAL MESSAGE ══ -->
+<div id="msg-modal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('msg-modal')">&times;</button>
+        <h3 id="msg-modal-title">Nouveau message</h3>
+        <input type="hidden" id="msg-uid">
 
-        if(ADMIN_PASS) {
-            document.getElementById('login-overlay').classList.add('hidden');
-            loadData();
+        <div class="form-row" style="margin-bottom:12px;">
+            <div class="form-group" style="margin:0;">
+                <label>Destinataire</label>
+                <input type="text" id="msg-recipient-display" readonly style="background:var(--bg3); cursor:default;">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>Date d'envoi (optionnel)</label>
+                <input type="datetime-local" id="msg-date-input">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Objet</label>
+            <input type="text" id="msg-obj" placeholder="Objet du message...">
+        </div>
+        <div class="form-group">
+            <div class="md-tabs">
+                <button class="btn-ghost active" id="md-tab-edit" onclick="switchMdTab('edit')" style="font-size:0.78rem; padding:3px 10px;">✏ Écrire</button>
+                <button class="btn-ghost" id="md-tab-preview" onclick="switchMdTab('preview')" style="font-size:0.78rem; padding:3px 10px;">👁 Aperçu</button>
+            </div>
+            <label style="display:none;">Contenu (Markdown)</label>
+            <textarea id="msg-content" placeholder="Contenu en Markdown..." oninput="updateMdPreview()" style="font-family:monospace;"></textarea>
+            <div id="md-preview-panel" class="md-preview hidden" style="min-height:120px;"></div>
+        </div>
+        <button class="btn-yellow" onclick="sendMessage()" style="width:100%; padding:10px;">Envoyer</button>
+    </div>
+</div>
+
+<script>
+// =========================================================
+// === STATE & CONFIG
+// =========================================================
+const ADMIN_SESSION_KEY = 'bt_admin_token_v4'; // Fix #2 — token de session, pas le mot de passe
+let ADMIN_TOKEN = sessionStorage.getItem(ADMIN_SESSION_KEY) || '';
+let currentTab  = 'analytics';
+let analyticsChart = null;
+
+// Données brutes
+let rawUsers    = [];
+let rawTags     = [];
+let rawMessages = [];
+let totalTags   = 0;
+let totalMsgs   = 0;
+let currentMsgId = null;
+
+// Pagination
+const PER_PAGE = 50;
+let userPage = 1;
+let tagPage  = 1;
+let msgPage  = 1;
+let tagSearchTimer = null;
+let msgSearchTimer = null;
+
+// =========================================================
+// === HEADERS
+// =========================================================
+function adminHeaders() {
+    return { 'Content-Type': 'application/json', 'X-Admin-Token': ADMIN_TOKEN };
+}
+
+// =========================================================
+// === AUTH — Fix #2 : session UUID, pas le mot de passe
+// =========================================================
+if (ADMIN_TOKEN) {
+    verifySession();
+} else {
+    document.getElementById('login-overlay').style.display = 'flex';
+}
+
+async function verifySession() {
+    try {
+        const r = await fetch(`${API_URL}/api/admin/session/check`, { headers: adminHeaders() });
+        if (r.ok) {
+            startApp();
+        } else {
+            sessionStorage.removeItem(ADMIN_SESSION_KEY);
+            ADMIN_TOKEN = '';
+            document.getElementById('login-overlay').style.display = 'flex';
+        }
+    } catch {
+        document.getElementById('login-overlay').style.display = 'flex';
+    }
+}
+
+async function login() {
+    const p = document.getElementById('admin-pass').value;
+    const errEl = document.getElementById('login-err');
+    errEl.innerText = '';
+    try {
+        const r = await fetch(`${API_URL}/api/admin/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: p })
+        });
+        const d = await r.json();
+        if (r.ok) {
+            ADMIN_TOKEN = d.token;
+            sessionStorage.setItem(ADMIN_SESSION_KEY, ADMIN_TOKEN);
+            document.getElementById('login-overlay').style.display = 'none';
+            startApp();
+        } else {
+            errEl.innerText = d.message || 'Mot de passe incorrect';
+        }
+    } catch {
+        errEl.innerText = 'Erreur de connexion';
+    }
+}
+
+async function logout() {
+    await fetch(`${API_URL}/api/admin/session/logout`, { method: 'POST', headers: adminHeaders() }).catch(() => {});
+    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    location.reload();
+}
+
+// =========================================================
+// === TABS
+// =========================================================
+function setTab(name) {
+    currentTab = name;
+    document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('nav.tabs button').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${name}`).classList.add('active');
+    document.querySelectorAll('nav.tabs button').forEach(btn => {
+        if (btn.getAttribute('onclick')?.includes(`'${name}'`)) btn.classList.add('active');
+    });
+
+    if (name === 'analytics') loadAnalytics();
+    if (name === 'users')     renderUsers();
+    if (name === 'tags')      renderTags();
+    if (name === 'messages')  loadMessages();
+    if (name === 'system')    loadSystem();
+}
+
+// =========================================================
+// === INIT
+// =========================================================
+function startApp() {
+    document.getElementById('app').classList.add('visible');
+    refreshData();
+}
+
+async function refreshData() {
+    await Promise.all([loadStats(), loadUsersData(), loadAnalytics()]);
+    if (currentTab === 'tags')     loadTags();
+    if (currentTab === 'messages') loadMessages();
+    if (currentTab === 'system')   loadSystem();
+}
+
+// =========================================================
+// === STATS (header + cards)
+// =========================================================
+async function loadStats() {
+    try {
+        const r = await fetch(`${API_URL}/api/admin/stats`, { headers: adminHeaders() });
+        if (!r.ok) return;
+        const d = await r.json();
+
+        document.getElementById('hdr-users').innerText     = `${d.users} utilisateurs`;
+        document.getElementById('hdr-tags').innerText      = `${d.total_tags} tags`;
+        document.getElementById('hdr-last-arch').innerText = d.last_archive_date
+            ? `Dernière archive : ${d.last_archive_date.substring(0,16)}`
+            : '';
+
+        // Badges messages non lus
+        if (d.unread_messages > 0) {
+            const badge = document.getElementById('tab-msg-badge');
+            badge.style.display = '';
+            badge.innerText = d.unread_messages;
         }
 
-        async function login() {
-            const p = document.getElementById('admin-pass').value;
-            try {
-                const res = await fetch(`${API_URL}/api/admin/login`, {
-                    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password:p})
-                });
-                if(res.ok) {
-                    ADMIN_PASS = p;
-                    sessionStorage.setItem(ADMIN_KEY_KEY, p);
-                    document.getElementById('login-overlay').classList.add('hidden');
-                    loadData();
-                } else alert("INVALID PASSWORD");
-            } catch(e) { alert("CONNECTION ERROR"); }
-        }
+        // Stats cards
+        const cards = [
+            { val: d.users,                lbl: 'Utilisateurs' },
+            { val: d.total_tags,           lbl: 'Tags Total' },
+            { val: d.claimed_tags,         lbl: 'Tags revendiqués' },
+            { val: d.top_global_tags,      lbl: 'Top Global' },
+            { val: d.total_follows,        lbl: 'Follows' },
+            { val: d.records_global.toLocaleString('fr-FR'),   lbl: 'Archives globales' },
+            { val: d.records_brawlers.toLocaleString('fr-FR'), lbl: 'Archives brawlers' },
+            { val: d.total_messages,       lbl: 'Messages' },
+        ];
+        document.getElementById('stats-cards').innerHTML = cards.map(c =>
+            `<div class="stat-card"><div class="val">${c.val}</div><div class="lbl">${c.lbl}</div></div>`
+        ).join('');
 
-        function logout() {
-            sessionStorage.removeItem(ADMIN_KEY_KEY);
-            location.reload();
-        }
+        // Système
+        _lastStats = d;
 
-        // --- DATA ---
-        let rawUsers = [], rawTags = [], rawAnalytics = [];
-        let view = 'users'; 
-        let filters = new Set();
-        let sortDir = 1; 
+    } catch(e) { console.error(e); }
+}
 
-        async function loadData() {
-            if(!ADMIN_PASS) return;
-            if(view !== 'analytics') document.getElementById('tbody').innerHTML = '<tr><td colspan="10" style="text-align:center">Loading data...</td></tr>';
-            
-            fetch(`${API_URL}/api/admin/stats`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
-                .then(r=>r.json()).then(renderStats).catch(e=>console.error(e));
-            
-            fetch(`${API_URL}/api/admin/analytics`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
-                .then(r=>r.json()).then(data => {
-                    rawAnalytics = data.reverse(); 
-                    if(view === 'analytics') renderView();
-                });
+let _lastStats = null;
+function loadSystem() {
+    if (!_lastStats) { loadStats().then(loadSystem); return; }
+    const d = _lastStats;
 
-            fetch(`${API_URL}/api/admin/users`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
-                .then(r=>r.json()).then(data => {
-                    const map = new Map();
-                    data.forEach(r => {
-                        if(!map.has(r.id)) map.set(r.id, { ...r, tags: [] });
-                        if(r.brawl_tag) map.get(r.id).tags.push({ 
-                            id: r.tag_id, str: r.brawl_tag, interval: r.rec_temp, 
-                            last: r.last_archive, total: r.total_archives || 0
-                        });
-                    });
-                    rawUsers = Array.from(map.values());
-                    if(view === 'users') renderView();
-                });
+    const ramPct  = d.ram_percent || 0;
+    const diskPct = d.disk_percent || 0;
+    const cpuPct  = d.cpu || 0;
 
-            fetch(`${API_URL}/api/admin/tags`, {headers:{'X-Admin-Pass': ADMIN_PASS}})
-                .then(r=>r.json()).then(data => {
-                    rawTags = data;
-                    if(view === 'tags') renderView();
-                });
-        }
+    const barColor = (pct) => pct > 85 ? 'var(--red)' : pct > 60 ? 'var(--orange)' : 'var(--green)';
 
-        // --- LOGIQUE VUE & TRI ---
-        function setView(v) {
-            view = v;
-            document.getElementById('btn-analytics').className = v==='analytics'?'active':'';
-            document.getElementById('btn-users').className = v==='users'?'active':'';
-            document.getElementById('btn-tags').className = v==='tags'?'active':'';
-            
-            document.getElementById('filters-users').className = v==='users'?'':'hidden';
-            document.getElementById('filters-tags').className = v==='tags'?'':'hidden';
-            document.getElementById('search-container').className = v==='analytics'?'hidden':'';
-            document.getElementById('sort-container').className = v==='analytics'?'hidden':'';
-            
-            document.getElementById('analytics-container').className = v==='analytics'?'':'hidden';
-            document.getElementById('data-table').className = v==='analytics'?'hidden':'';
+    document.getElementById('sys-cards').innerHTML = `
+        <div class="sys-card">
+            <div class="sys-label">CPU</div>
+            <div class="sys-val" style="color:${barColor(cpuPct)}">${cpuPct}%</div>
+            <div class="progress-bar"><div class="progress-bar-fill" style="width:${cpuPct}%; background:${barColor(cpuPct)};"></div></div>
+        </div>
+        <div class="sys-card">
+            <div class="sys-label">RAM</div>
+            <div class="sys-val" style="color:${barColor(ramPct)}">${d.ram_used_mb} Mo / ${d.ram_total_mb} Mo</div>
+            <div class="progress-bar"><div class="progress-bar-fill" style="width:${ramPct}%; background:${barColor(ramPct)};"></div></div>
+        </div>
+        <div class="sys-card">
+            <div class="sys-label">Disque</div>
+            <div class="sys-val" style="color:${barColor(diskPct)}">${d.disk_used_gb} Go / ${d.disk_total_gb} Go</div>
+            <div class="progress-bar"><div class="progress-bar-fill" style="width:${diskPct}%; background:${barColor(diskPct)};"></div></div>
+        </div>
+        <div class="sys-card">
+            <div class="sys-label">Prochaine archive</div>
+            <div class="sys-val" style="font-size:1rem; color:var(--yellow)">${d.next_archive_date ? d.next_archive_date.substring(0,16) : '—'}</div>
+        </div>
+    `;
+}
 
-            filters.clear();
-            document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);
-            
-            const sel = document.getElementById('sort-select');
-            sel.innerHTML = '';
-            if(v === 'users') {
-                sel.innerHTML += '<option value="id">ID</option>';
-                sel.innerHTML += '<option value="name">Nom (Alpha)</option>';
-                sel.innerHTML += '<option value="last_login">Dernière Connexion</option>';
-                sel.innerHTML += '<option value="coins">Track-Coins</option>';
-            } else if(v === 'tags') {
-                sel.innerHTML += '<option value="id">ID (Tag)</option>';
-                sel.innerHTML += '<option value="owner">Nom Propriétaire</option>';
-                sel.innerHTML += '<option value="next_archive">Prochaine Archive</option>';
-                sel.innerHTML += '<option value="last_archive">Dernière Archive</option>';
-                sel.innerHTML += '<option value="trophies">Nombre de Trophées</option>';
-            }
-            renderView();
-        }
+// =========================================================
+// === ANALYTICS
+// =========================================================
+async function loadAnalytics() {
+    try {
+        const r = await fetch(`${API_URL}/api/admin/analytics`, { headers: adminHeaders() });
+        if (!r.ok) return;
+        const data = await r.json();
+        const rows = [...data].reverse();
 
-        function toggleFilter(f) {
-            if(filters.has(f)) filters.delete(f); else filters.add(f);
-            renderView();
-        }
-        function toggleSort() { sortDir *= -1; renderView(); }
+        const labels   = rows.map(d => d.date.slice(5));
+        const visits   = rows.map(d => d.visits);
+        const uniques  = rows.map(d => d.unique_visitors);
+        const imgs     = rows.map(d => d.img_generations);
 
-        // --- PROCESSING CORE ---
-        function getProcessedData() {
-            let data = [];
-            const search = document.getElementById('search').value.toLowerCase();
-            const now = new Date();
+        if (analyticsChart) analyticsChart.destroy();
 
-            if(view === 'users') {
-                data = rawUsers.map(u => ({...u}));
-                if(search) data = data.filter(u => u.username.toLowerCase().includes(search) || u.id.toString().includes(search));
-                
-                const typeFilters = ['premium', 'subscriber', 'basic'];
-                const hasTypeFilter = typeFilters.some(f => filters.has(f));
-                if(hasTypeFilter) {
-                    data = data.filter(u => {
-                        if(filters.has('premium') && u.tier === 'premium') return true;
-                        if(filters.has('subscriber') && u.tier === 'subscriber') return true;
-                        if(filters.has('basic') && u.tier === 'basic') return true;
-                        return false;
-                    });
+        analyticsChart = new Chart(document.getElementById('analyticsChart'), {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Visites',          data: visits,  borderColor: '#4a9eff', backgroundColor: 'rgba(74,158,255,.1)', tension: .4, fill: true },
+                    { label: 'Visiteurs uniques', data: uniques, borderColor: '#ffce00', backgroundColor: 'rgba(255,206,0,.1)',  tension: .4, fill: false },
+                    { label: 'Images générées',   data: imgs,    borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,.1)', tension: .4, fill: false },
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#9ca3af', boxWidth: 12 } } },
+                scales: {
+                    x: { ticks: { color: '#4b5563' }, grid: { color: '#1c2030' } },
+                    y: { ticks: { color: '#4b5563' }, grid: { color: '#1c2030' } }
                 }
-                if(filters.has('connected_today')) data = data.filter(u => u.last_login && (now - new Date(u.last_login) < 86400000));
-
-                const crit = document.getElementById('sort-select').value;
-                data.sort((a,b) => {
-                    let vA, vB;
-                    if(crit === 'id') { vA = a.id; vB = b.id; }
-                    else if(crit === 'name') { vA = a.username.toLowerCase(); vB = b.username.toLowerCase(); }
-                    else if(crit === 'last_login') { vA = a.last_login || ''; vB = b.last_login || ''; }
-                    else if(crit === 'coins') { vA = a.track_coins || 0; vB = b.track_coins || 0; }
-                    
-                    if(vA < vB) return -1 * sortDir;
-                    if(vA > vB) return 1 * sortDir;
-                    return 0;
-                });
-            } else if(view === 'tags') {
-                data = rawTags.map(t => ({...t}));
-                if(search) data = data.filter(t => t.tag_str.toLowerCase().includes(search) || (t.owner_name && t.owner_name.toLowerCase().includes(search)));
-                if(filters.has('claimed')) data = data.filter(t => t.claimer_id);
-                if(filters.has('unclaimed')) data = data.filter(t => !t.claimer_id);
-                if(filters.has('verified')) data = data.filter(t => t.is_verified);
-
-                const crit = document.getElementById('sort-select').value;
-                data.sort((a,b) => {
-                    let vA, vB;
-                    if(crit === 'id') { vA = a.tag_str; vB = b.tag_str; }
-                    else if(crit === 'owner') { vA = a.owner_name ? a.owner_name.toLowerCase() : 'zzzz'; vB = b.owner_name ? b.owner_name.toLowerCase() : 'zzzz'; }
-                    else if(crit === 'last_archive') { vA = a.last_archive || ''; vB = b.last_archive || ''; }
-                    else if(crit === 'trophies') { vA = a.current_trophies || 0; vB = b.current_trophies || 0; }
-                    else if(crit === 'next_archive') {
-                        const getNext = (t) => t.last_archive ? new Date(t.last_archive.replace(' ', 'T')).getTime() + (t.rec_temp*60000) : 0;
-                        vA = getNext(a); vB = getNext(b);
-                    }
-                    if(vA < vB) return -1 * sortDir;
-                    if(vA > vB) return 1 * sortDir;
-                    return 0;
-                });
             }
-            return data;
+        });
+    } catch(e) { console.error(e); }
+}
+
+// =========================================================
+// === USERS
+// =========================================================
+async function loadUsersData() {
+    try {
+        const r = await fetch(`${API_URL}/api/admin/users`, { headers: adminHeaders() });
+        if (!r.ok) return;
+        rawUsers = await r.json();
+        if (currentTab === 'users') renderUsers();
+    } catch(e) { console.error(e); }
+}
+
+function getFilteredUsers() {
+    const q    = (document.getElementById('user-search')?.value || '').toLowerCase();
+    const tier = document.getElementById('user-tier-filter')?.value || '';
+    return rawUsers.filter(u => {
+        const matchQ = !q || u.username.toLowerCase().includes(q) || (u.brawl_tag||'').toLowerCase().includes(q) || String(u.id).includes(q);
+        const matchT = !tier || u.tier === tier;
+        return matchQ && matchT;
+    });
+}
+
+function filterUsers() { userPage = 1; renderUsers(); }
+
+function renderUsers() {
+    const data  = getFilteredUsers();
+    const total = data.length;
+    const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+    userPage    = Math.min(userPage, pages);
+    const slice = data.slice((userPage-1)*PER_PAGE, userPage*PER_PAGE);
+
+    document.getElementById('user-count-label').innerText = `${total} résultat(s)`;
+
+    // Regrouper les tags par user id (la requête peut retourner plusieurs lignes par user)
+    const userMap = new Map();
+    slice.forEach(u => {
+        if (!userMap.has(u.id)) userMap.set(u.id, { ...u, tags: [] });
+        if (u.brawl_tag) userMap.get(u.id).tags.push({ id: u.tag_id, str: u.brawl_tag, interval: u.rec_temp, last: u.last_archive, total: u.total_archives || 0 });
+    });
+    const users = Array.from(userMap.values());
+
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = '';
+
+    users.forEach(u => {
+        const tierBadge = `<span class="badge badge-${u.tier}">${u.tier}</span>`;
+        const primaryTag = u.tags.length > 0 ? `<span class="badge badge-tag">${u.tags[0].str}</span>` : `<span style="color:var(--muted)">—</span>`;
+        const loginStr   = u.last_login ? u.last_login.substring(0,16) : '—';
+        const archTotal  = u.tags.reduce((s,t) => s + (t.total||0), 0);
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><button class="btn-ghost" style="padding:2px 6px; font-size:0.75rem;" onclick="toggleUserRow(${u.id})">▶</button></td>
+            <td style="color:var(--muted); font-size:0.85rem;">${u.id}</td>
+            <td style="font-weight:600; color:#fff;">${escHtml(u.username)}</td>
+            <td>${tierBadge}</td>
+            <td style="color:var(--yellow);">${u.track_coins || 0}</td>
+            <td>${primaryTag}</td>
+            <td style="color:var(--muted); font-size:0.8rem;">${loginStr}</td>
+            <td style="color:var(--muted); font-size:0.8rem;">${archTotal}</td>
+            <td>
+                <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                    <button class="btn-blue"   onclick="openUserModal(${u.id})">Éditer</button>
+                    <button class="btn-orange" onclick="openMsgModal(${u.id}, '${escHtml(u.username)}')">Msg</button>
+                    <button class="btn-red"    onclick="deleteUser(${u.id}, '${escHtml(u.username)}')">Suppr.</button>
+                </div>
+            </td>`;
+        tbody.appendChild(row);
+
+        // Ligne expandable
+        const expRow = document.createElement('tr');
+        expRow.id     = `exp-${u.id}`;
+        expRow.className = 'hidden';
+        expRow.innerHTML = `<td colspan="9" class="expand-row">
+            <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+                <div style="min-width:200px;">
+                    <div style="color:var(--muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:6px;">Grade</div>
+                    <select onchange="updateTier(${u.id}, this.value)" style="background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:5px 10px;">
+                        <option value="basic"      ${u.tier==='basic'?'selected':''}>Basic</option>
+                        <option value="subscriber" ${u.tier==='subscriber'?'selected':''}>Subscriber</option>
+                        <option value="premium"    ${u.tier==='premium'?'selected':''}>Premium</option>
+                    </select>
+                </div>
+                <div>
+                    <div style="color:var(--muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:6px;">Track-Coins</div>
+                    <div style="display:flex; gap:6px;">
+                        <input type="number" id="coins-input-${u.id}" value="100" style="width:80px;">
+                        <button class="btn-yellow" onclick="manageCoins(${u.id})">Appliquer</button>
+                    </div>
+                </div>
+                <div>
+                    <div style="color:var(--muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:6px;">Lier Tag</div>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="clm-${u.id}" placeholder="#TAG" style="width:120px; background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:5px 8px;">
+                        <button class="btn-green" onclick="claimTag(${u.id})">Assigner</button>
+                    </div>
+                </div>
+                ${u.tags.length > 0 ? `
+                <div>
+                    <div style="color:var(--muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:6px;">Tags liés</div>
+                    ${u.tags.map(t => `<div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
+                        <span class="badge badge-tag">${t.str}</span>
+                        <span style="color:var(--muted); font-size:0.75rem;">${t.total} archives</span>
+                        <button class="btn-ghost" style="font-size:0.75rem; padding:2px 8px;" onclick="window.location.href='admin_edit.html?tag_id=${t.id}'">Éditer hist.</button>
+                    </div>`).join('')}
+                </div>` : ''}
+            </div>
+        </td>`;
+        tbody.appendChild(expRow);
+    });
+
+    renderPager('user-pager', userPage, pages, (p) => { userPage = p; renderUsers(); });
+}
+
+function toggleUserRow(id) {
+    const row = document.getElementById(`exp-${id}`);
+    if (row) row.classList.toggle('hidden');
+}
+
+function openUserModal(uid) {
+    const u = rawUsers.find(r => r.id === uid);
+    if (!u) return;
+    document.getElementById('user-modal-title').innerText = `Utilisateur — ${u.username} (ID ${u.id})`;
+    document.getElementById('user-modal-body').innerHTML = `
+        <div class="form-group">
+            <label>Renommer</label>
+            <div style="display:flex;gap:8px;"><input type="text" id="mod-rename" value="${escHtml(u.username)}" placeholder="Nouveau pseudo"><button class="btn-yellow" onclick="renameUser(${u.id})">Renommer</button></div>
+        </div>`;
+    openModal('user-modal');
+}
+
+async function renameUser(id) {
+    const val = document.getElementById('mod-rename').value.trim();
+    if (!val) return;
+    await api(`user/${id}/rename`, 'POST', { username: val });
+    closeModal('user-modal');
+}
+
+async function updateTier(uid, tier) {
+    await api('update-tier', 'POST', { user_id: uid, tier });
+    await loadUsersData();
+}
+
+async function manageCoins(uid) {
+    const amt = parseInt(document.getElementById(`coins-input-${uid}`).value);
+    if (isNaN(amt)) return;
+    await api(`user/${uid}/coins`, 'POST', { amount: amt });
+    await loadUsersData();
+}
+
+async function claimTag(uid) {
+    const tag = document.getElementById(`clm-${uid}`).value.trim();
+    if (!tag) return;
+    await api(`user/${uid}/claim`, 'POST', { tag });
+    await loadUsersData();
+}
+
+async function deleteUser(id, name) {
+    if (!confirm(`Supprimer définitivement "${name}" (ID ${id}) ?`)) return;
+    await api(`user/${id}/delete`, 'DELETE');
+    await loadUsersData();
+}
+
+// =========================================================
+// === TAGS
+// =========================================================
+async function loadTags(offset) {
+    offset = offset ?? (tagPage-1)*PER_PAGE;
+    const q      = document.getElementById('tag-search')?.value || '';
+    const filter = document.getElementById('tag-filter')?.value || '';
+
+    let url = `${API_URL}/api/admin/tags?limit=${PER_PAGE}&offset=${offset}`;
+    if (q)      url += `&q=${encodeURIComponent(q)}`;
+    if (filter) url += `&filter=${encodeURIComponent(filter)}`;
+
+    try {
+        const r = await fetch(url, { headers: adminHeaders() });
+        if (!r.ok) return;
+        const data = await r.json();
+        rawTags   = data.tags || data; // compatibilité ancien format
+        totalTags = data.total || rawTags.length;
+        renderTags();
+    } catch(e) { console.error(e); }
+}
+
+function searchTags() {
+    tagPage = 1;
+    clearTimeout(tagSearchTimer);
+    tagSearchTimer = setTimeout(loadTags, 300);
+}
+
+function renderTags() {
+    const pages = Math.max(1, Math.ceil(totalTags / PER_PAGE));
+    document.getElementById('tag-count-label').innerText = `${totalTags} tags au total (affichage limité à 1000)`;
+
+    const tbody = document.getElementById('tags-tbody');
+    tbody.innerHTML = '';
+
+    rawTags.forEach(t => {
+        const owner   = t.owner_name ? `<a href="#" onclick="filterToUser('${escHtml(t.owner_name)}')" style="color:var(--blue)">${escHtml(t.owner_name)}</a>` : `<span style="color:var(--muted)">—</span>`;
+        const verified = t.is_verified   ? `<span class="badge badge-ok">✔ vérifié</span>` : '';
+        const topG     = t.is_top_global ? `<span class="badge badge-purple" style="background:rgba(155,89,182,.15);color:var(--purple);">top global</span>` : '';
+        const trophies = t.current_trophies != null ? t.current_trophies.toLocaleString('fr-FR') : '—';
+        const archives = t.total_archives || 0;
+
+        let nextStr = '—';
+        if (t.last_archive) {
+            const diff = Math.ceil((new Date(t.last_archive.replace(' ','T')).getTime() + t.rec_temp*60000 - Date.now()) / 60000);
+            nextStr = diff > 0 ? `${diff} min` : '<span style="color:var(--green)">Maintenant</span>';
         }
 
-        // --- RENDER ---
-        function renderView() {
-            if(view === 'analytics') {
-                renderAnalyticsChart();
-                return;
-            }
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td style="color:var(--muted); font-size:0.8rem;">${t.id}</td>
+            <td><span class="badge badge-tag">${t.tag_str}</span></td>
+            <td>${owner}</td>
+            <td><input type="number" value="${t.rec_temp}" style="width:65px;" onchange="updFreq(${t.id}, this)"> min</td>
+            <td>${verified} ${topG}</td>
+            <td style="color:var(--yellow);">${trophies}</td>
+            <td style="color:var(--muted); font-size:0.8rem;">${archives}</td>
+            <td style="font-size:0.8rem;">${nextStr}</td>
+            <td>
+                <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                    <button class="btn-blue"   onclick="window.location.href='admin_edit.html?tag_id=${t.id}'">Hist.</button>
+                    ${t.claimer_id ? `<button class="btn-orange" onclick="unclaim(${t.id})">Unclaim</button>` : ''}
+                    <button class="btn-red" onclick="delTag(${t.id})">Suppr.</button>
+                </div>
+            </td>`;
+        tbody.appendChild(row);
+    });
 
-            const tbody = document.getElementById('tbody');
-            const thead = document.getElementById('thead');
-            tbody.innerHTML = '';
-            
-            const data = getProcessedData();
+    renderPager('tag-pager', tagPage, pages, (p) => { tagPage = p; loadTags((p-1)*PER_PAGE); });
+}
 
-            if(view === 'users') {
-                thead.innerHTML = `<tr><th>+</th><th>ID</th><th>NOM</th><th>GRADE</th><th>COINS</th><th>LIENS</th><th>CONNEXION</th><th>TAG LIÉ</th><th>ACTIONS</th></tr>`;
-                
-                data.forEach(u => {
-                    const row = document.createElement('tr');
-                    const primaryTag = u.tags.length > 0 ? `<span class="badge">${u.tags[0].str}</span>` : '<span style="color:#555">Aucun</span>';
-                    
-                    const discordColor = u.discord_confirmed ? '#7289da' : '#333';
-                    const emailColor = u.email_confirmed ? '#28a745' : '#333';
-                    const linksHTML = `<span style="color:${discordColor}; font-size:1.2em" title="Discord">💬</span> <span style="color:${emailColor}; font-size:1.2em" title="Email">📧</span>`;
-                    
-                    row.innerHTML = `
-                        <td><button style="padding:0 5px" onclick="toggleDetails(${u.id})">▼</button></td>
-                        <td>${u.id}</td>
-                        <td style="font-weight:bold; color:#fff">${u.username}</td>
-                        <td>
-                            <select onchange="updateTier(${u.id}, this.value)" style="padding:0;">
-                                <option value="basic" ${u.tier==='basic'?'selected':''}>Basic</option>
-                                <option value="subscriber" ${u.tier==='subscriber'?'selected':''}>Subscriber</option>
-                                <option value="premium" ${u.tier==='premium'?'selected':''}>Premium</option>
-                            </select>
-                        </td>
-                        <td style="color:#ffce00; font-weight:bold;">${u.track_coins || 0}</td>
-                        <td>${linksHTML}</td>
-                        <td>${u.last_login || '-'}</td>
-                        <td>${primaryTag}</td>
-                        <td>
-                            <button onclick="manageCoins(${u.id})" class="btn-blue" title="Gérer Track-Coins">💰</button>
-                            <button onclick="openMsgModal(${u.id}, '${u.username}')" class="btn-orange" title="Envoyer Message">✉️</button>
-                            <button onclick="addTag(${u.id})" class="btn-green" title="Force Claim Tag">+</button>
-                            <button data-uid="u.id"data−uname="{u.id}" data-uname="u.id"data−uname="{escapeHtml(u.username)}" title="Renommer">R</button>
-                            <button onclick="deleteUser(${u.id})" class="btn-red" title="Supprimer">X</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
+function filterToUser(name) {
+    document.getElementById('user-search').value = name;
+    setTab('users');
+}
 
-                    if(u.tags.length > 0) {
-                        const dr = document.createElement('tr');
-                        dr.id = `d-${u.id}`;
-                        dr.className = 'hidden details-row';
-                        let h = '<td colspan="9"><table class="details-table" style="width:90%; margin:auto;">';
-                        u.tags.forEach(t => {
-                            h += `<tr>
-                                <td style="width:20px;">↳</td>
-                                <td class="badge">${t.str}</td>
-                                <td>Freq: <input type="number" value="${t.interval}" style="width:40px; text-align:center" onchange="updFreq(${t.id}, this)">m</td>
-                                <td>Last: ${t.last || 'Never'}</td>
-                                <td>Arch: ${t.total}</td>
-                                <td><button onclick="window.location.href='admin_edit.html?tag_id=${t.id}'" class="btn-blue">EDIT</button></td>
-                                <td style="text-align:right"><button onclick="unclaim(${t.id})" class="btn-orange">UNCLAIM</button></td>
-                            </tr>`;
-                        });
-                        h += '</table></td>';
-                        dr.innerHTML = h;
-                        tbody.appendChild(dr);
-                    }
-                });
-            } else if (view === 'tags') {
-                thead.innerHTML = `<tr><th>PROPRIÉTAIRE</th><th>TAG</th><th>FREQ</th><th>LAST ARCH.</th><th>NEXT ARCH.</th><th>TROPHÉES</th><th>ARCHIVES</th><th>ACTIONS</th></tr>`;
-                data.forEach(t => {
-                    const row = document.createElement('tr');
-                    const owner = t.owner_name ? `<span style="color:#fff; font-weight:bold">${t.owner_name}</span>` : '<span style="color:#555">-- UNCLAIMED --</span>';
-                    const verifiedIcon = t.is_verified ? '<span class="verified-icon" title="Compte Vérifié In-Game">✔️</span>' : '';
-                    
-                    let nextStr = '-';
-                    if(t.last_archive) {
-                        const d = new Date(t.last_archive.replace(' ', 'T')).getTime();
-                        const n = d + (t.rec_temp * 60000);
-                        const diff = Math.ceil((n - Date.now()) / 60000);
-                        nextStr = diff > 0 ? diff + ' min' : 'Maintenant';
-                    }
+async function updFreq(tid, el) {
+    const mins = parseInt(el.value, 10);
+    const ok   = await api(`tag/${tid}/frequency`, 'POST', { minutes: mins });
+    el.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+    setTimeout(() => el.style.borderColor = '', 1500);
+}
 
-                    row.innerHTML = `
-                        <td>${owner}</td>
-                        <td class="badge">${t.tag_str} ${verifiedIcon}</td>
-                        <td><input type="number" value="${t.rec_temp}" style="width:50px" onchange="updFreq(${t.id}, this)"></td>
-                        <td>${t.last_archive || '-'}</td>
-                        <td>${nextStr}</td>
-                        <td style="color:#ffce00">${t.current_trophies || 0}</td>
-                        <td>${t.total_archives}</td>
-                        <td>
-                            ${t.claimer_id ? `<button onclick="unclaim(${t.id})" class="btn-orange">UNCLAIM</button>` : ''}
-                            <button onclick="window.location.href='admin_edit.html?tag_id=${t.id}'" class="btn-blue">EDIT</button>
-                            <button onclick="delTag(${t.id})" class="btn-red">DEL</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            }
-        }
+async function unclaim(tid) {
+    if (!confirm('Dissocier ce tag de son propriétaire ?')) return;
+    await api(`tag/${tid}/unclaim`);
+    loadTags();
+}
 
-        function renderAnalyticsChart() {
-            if(!rawAnalytics || rawAnalytics.length === 0) return;
-            const ctx = document.getElementById('analyticsChart').getContext('2d');
-            if(myChart) myChart.destroy();
-            
-            const labels = rawAnalytics.map(d => {
-                const parts = d.date.split('-'); 
-                return `${parts[2]}/${parts[1]}`;
-            });
-            
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Visites', data: rawAnalytics.map(d => d.visits), borderColor: '#007bff', backgroundColor: 'transparent', tension: 0.3 },
-                        { label: 'Uniques', data: rawAnalytics.map(d => d.unique_visitors), borderColor: '#28a745', backgroundColor: 'transparent', tension: 0.3 },
-                        { label: 'Logins', data: rawAnalytics.map(d => d.logins), borderColor: '#ffce00', backgroundColor: 'transparent', tension: 0.3 },
-                        { label: 'Images Générées', data: rawAnalytics.map(d => d.img_generations), borderColor: '#fd7e14', backgroundColor: 'transparent', tension: 0.3 }
-                    ]
-                },
-                options: { 
-                    responsive: true, maintainAspectRatio: false, color: '#ccc',
-                    scales: { y: { beginAtZero: true, grid: { color: '#333' } }, x: { grid: { color: '#333' } } },
-                    plugins: { legend: { labels: { color: '#fff' } } }
-                }
-            });
-        }
+async function delTag(tid) {
+    if (!confirm('Supprimer ce tag et TOUT son historique ? Irréversible.')) return;
+    const r = await fetch(`${API_URL}/api/admin/tag/${tid}`, { method: 'DELETE', headers: adminHeaders() });
+    if (r.ok) loadTags();
+}
 
-        function renderStats(d) {
-            const h = document.getElementById('stats-area');
-            h.innerHTML = `
-                <div class="stat-box"><h3>USERS</h3><p>${d.users}</p></div>
-                <div class="stat-box"><h3>ARCHIVE G/B</h3><p>${d.records_global} / ${d.records_brawlers}</p></div>
-                <div class="stat-box"><h3>TAGS (C/T)</h3><p>${d.claimed_tags}/${d.total_tags}</p></div>
-                <div class="stat-box"><h3>STORAGE</h3><p>${d.disk_str}</p></div>
-                <div class="stat-box"><h3>LAST ARCH.</h3><p style="font-size:0.9em">${d.last_archive_date||'-'}</p></div>
-                <div class="stat-box"><h3>NEXT ARCH.</h3><p style="color:#28a745; font-size:0.9em">${d.next_archive_date||'-'}</p></div>
-                <div class="stat-box"><h3>CPU</h3><p>${d.cpu}%</p></div>
-                <div class="stat-box"><h3>RAM</h3><p>${d.ram}%</p></div>
-            `;
-        }
-        
-        // --- LOGIQUE INBOX & MODALE ---
-        function parseMarkdown(text) {
-            return text
-                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                .replace(/\*\*(.*)\*\*/gim, '<b>$1</b>')
-                .replace(/\*(.*)\*/gim, '<i>$1</i>')
-                .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
-                .replace(/\n/gim, '<br>');
-        }
+// =========================================================
+// === MESSAGES
+// =========================================================
+async function loadMessages(page) {
+    msgPage = page || msgPage;
+    const q   = document.getElementById('msg-search')?.value || '';
+    const url = `${API_URL}/api/admin/messages?page=${msgPage}&per_page=${PER_PAGE}${q ? `&q=${encodeURIComponent(q)}` : ''}`;
+    try {
+        const r = await fetch(url, { headers: adminHeaders() });
+        if (!r.ok) return;
+        const data = await r.json();
+        rawMessages = data.messages || [];
+        totalMsgs   = data.total || 0;
+        renderMsgList();
+    } catch(e) { console.error(e); }
+}
 
-        function openMsgModal(uid, username) {
-            document.getElementById('msg-uid').value = uid;
-            document.getElementById('msg-title').innerText = uid === 'all' ? "MESSAGE À TOUS LES JOUEURS" : `MESSAGE À ${username.toUpperCase()}`;
-            document.getElementById('msg-obj').value = '';
-            document.getElementById('msg-content').value = '';
-            
-            // Format de la date (heure locale actuelle)
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('msg-date').value = now.toISOString().slice(0,16);
+function searchMessages() {
+    msgPage = 1;
+    clearTimeout(msgSearchTimer);
+    msgSearchTimer = setTimeout(() => loadMessages(1), 300);
+}
 
-            document.getElementById('msg-content').classList.remove('hidden');
-            document.getElementById('msg-preview').classList.add('hidden');
-            document.getElementById('btn-preview').innerText = 'PRÉVISUALISER';
-            
-            document.getElementById('msg-modal').classList.remove('hidden');
-        }
+function renderMsgList() {
+    const panel = document.getElementById('msg-list-panel');
+    panel.innerHTML = '';
 
-        function closeMsgModal() {
-            document.getElementById('msg-modal').classList.add('hidden');
-        }
+    if (rawMessages.length === 0) {
+        panel.innerHTML = `<div style="padding:20px; text-align:center; color:var(--muted);">Aucun message</div>`;
+        return;
+    }
 
-        function togglePreview() {
-            const content = document.getElementById('msg-content');
-            const preview = document.getElementById('msg-preview');
-            const btn = document.getElementById('btn-preview');
+    rawMessages.forEach(m => {
+        const div = document.createElement('div');
+        div.className = `msg-item ${m.is_read ? 'read' : 'unread'}`;
+        if (m.id === currentMsgId) div.classList.add('active');
+        const dateStr = new Date(m.date_envoi.replace(' ','T')+'Z').toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        div.innerHTML = `
+            <div class="msg-subj">${escHtml(m.objet)}</div>
+            <div class="msg-meta">À : <strong>${escHtml(m.username || `user#${m.user_id}`)}</strong> — ${dateStr}</div>
+            <div class="msg-preview">${escHtml(m.contenu.substring(0,60))}...</div>`;
+        div.onclick = () => openMessage(m.id, div);
+        panel.appendChild(div);
+    });
 
-            if(content.classList.contains('hidden')) {
-                // Retour au mode Édition
-                content.classList.remove('hidden');
-                preview.classList.add('hidden');
-                btn.innerText = 'PRÉVISUALISER';
-            } else {
-                // Mode Prévisualisation Markdown
-                preview.innerHTML = parseMarkdown(content.value);
-                content.classList.add('hidden');
-                preview.classList.remove('hidden');
-                btn.innerText = 'ÉDITER';
-            }
-        }
+    const pages = Math.max(1, Math.ceil(totalMsgs / PER_PAGE));
+    renderPager('msg-pager', msgPage, pages, (p) => loadMessages(p));
+}
 
-        function confirmSendMessage() {
-            const uid = document.getElementById('msg-uid').value;
-            const obj = document.getElementById('msg-obj').value;
-            const content = document.getElementById('msg-content').value;
-            const inputDate = document.getElementById('msg-date').value;
+function openMessage(id, el) {
+    currentMsgId = id;
+    document.querySelectorAll('.msg-item').forEach(i => i.classList.remove('active'));
+    if (el) el.classList.add('active');
 
-            if(!obj || !content) { alert("Objet et contenu requis !"); return; }
-            
-            let dateEnvoiUtc = null;
-            
-            // Si l'admin a entré une date, on la convertit en UTC avant de l'envoyer au serveur
-            if(inputDate) {
-                const localDate = new Date(inputDate);
-                // toISOString() renvoie "YYYY-MM-DDTHH:mm:ss.sssZ" qui est toujours en UTC
-                dateEnvoiUtc = localDate.toISOString().slice(0, 19).replace('T', ' ');
-            }
+    const m = rawMessages.find(r => r.id === id);
+    if (!m) return;
 
-            api(`messages/send`, 'POST', {user_id: uid, objet: obj, contenu: content, date_envoi: dateEnvoiUtc}).then(ok => {
-                if(ok) {
-                    alert("Message programmé / envoyé avec succès !");
-                    closeMsgModal();
-                }
-            });
-        }
+    document.getElementById('msg-empty-state').classList.add('hidden');
+    document.getElementById('msg-active-state').classList.remove('hidden');
 
-        // --- AUTRES ACTIONS ---
-        function toggleDetails(id) { const r=document.getElementById('d-'+id); if(r) r.classList.toggle('hidden'); }
-        
-        async function api(url, method='POST', body={}) {
-            const res = await fetch(`${API_URL}/api/admin/${url}`, {
-                method: method, headers:{'Content-Type':'application/json', 'X-Admin-Pass':ADMIN_PASS}, body:JSON.stringify(body)
-            });
-            if(res.ok) { loadData(); return true; }
-            else { alert("ERROR"); return false; }
-        }
+    const dateObj = new Date(m.date_envoi.replace(' ','T')+'Z');
+    document.getElementById('msg-view-subj').innerText = m.objet;
+    document.getElementById('msg-view-meta').innerText = `De : Admin — À : ${m.username || 'user#'+m.user_id} — ${dateObj.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}`;
+    document.getElementById('msg-view-body').innerHTML = DOMPurify.sanitize(marked.parse(m.contenu));
+}
 
-        function renameUser(id, old) { const n=prompt("Name:", old); if(n && n!==old) api(`user/${id}/rename`, 'POST', {username:n}); }
-        function addTag(id) { const t=prompt("Tag (#...):"); if(t) api(`user/${id}/claim`, 'POST', {tag:t}); }
-        
-        function manageCoins(uid) {
-            const val = prompt("Modifier les Track-Coins :\n(+100 pour ajouter, -50 pour retirer)");
-            const amt = parseInt(val, 10);
-            if(!isNaN(amt)) api(`user/${uid}/coins`, 'POST', {amount: amt});
-        }
+async function deleteCurrentMessage() {
+    if (!currentMsgId || !confirm('Supprimer ce message ?')) return;
+    const r = await fetch(`${API_URL}/api/admin/message/${currentMsgId}`, { method: 'DELETE', headers: adminHeaders() });
+    if (r.ok) {
+        currentMsgId = null;
+        document.getElementById('msg-empty-state').classList.remove('hidden');
+        document.getElementById('msg-active-state').classList.add('hidden');
+        loadMessages();
+    }
+}
 
-        function deleteUser(id) { 
-            if(confirm("⚠ SUPPRIMER DEFINITIVEMENT CET UTILISATEUR ?\n(Ses tags deviendront orphelins)")) {
-                api(`user/${id}/delete`, 'DELETE'); 
-            }
-        } 
-        
-        function unclaim(tid) { 
-            if(confirm("Unclaim Tag ?")) api(`tag/${tid}/unclaim`); 
-        }
-        
-        function delTag(tid) { 
-            if(confirm("⚠ SUPPRIMER CE TAG ET TOUT SON HISTORIQUE ?\nCette action est irréversible.")) {
-                fetch(`${API_URL}/api/admin/tag/${tid}`, {method:'DELETE', headers:{'X-Admin-Pass':ADMIN_PASS}}).then(loadData); 
-            }
-        }
-        
-        function updateTier(uid, tier) { api(`update-tier`, 'POST', {user_id:uid, tier:tier}); }
-        function updFreq(tid, el) {
-            api(`tag/${tid}/frequency`, 'POST', { minutes: parseInt(el.value, 10) })
-                .then(ok => {
-                    el.style.borderColor = ok ? '#28a745' : '#ff5555';
-                    el.title = ok ? 'Fréquence mise à jour' : 'Erreur de mise à jour';
-                })
-                .catch(() => {
-                    el.style.borderColor = '#ff5555';
-                    el.title = 'Erreur réseau';
-                });
-        }
+// =========================================================
+// === MODAL MESSAGE
+// =========================================================
+function openMsgModal(uid, displayName) {
+    document.getElementById('msg-uid').value           = uid || '';
+    document.getElementById('msg-recipient-display').value = uid === 'all'
+        ? '📢 BROADCAST — Tous les utilisateurs'
+        : (displayName || `User ID ${uid}`);
+    document.getElementById('msg-obj').value      = '';
+    document.getElementById('msg-content').value  = '';
+    document.getElementById('md-preview-panel').innerHTML = '';
+    document.getElementById('msg-date-input').value = '';
+    switchMdTab('edit');
+    openModal('msg-modal');
+}
 
-        // Init view
-        setView('users');
-    </script>
+function switchMdTab(tab) {
+    const editing   = tab === 'edit';
+    document.getElementById('msg-content').classList.toggle('hidden', !editing);
+    document.getElementById('md-preview-panel').classList.toggle('hidden', editing);
+    document.getElementById('md-tab-edit').classList.toggle('active', editing);
+    document.getElementById('md-tab-preview').classList.toggle('active', !editing);
+    if (!editing) {
+        const raw = document.getElementById('msg-content').value;
+        document.getElementById('md-preview-panel').innerHTML = DOMPurify.sanitize(marked.parse(raw));
+    }
+}
+
+function updateMdPreview() {
+    if (!document.getElementById('md-preview-panel').classList.contains('hidden')) {
+        const raw = document.getElementById('msg-content').value;
+        document.getElementById('md-preview-panel').innerHTML = DOMPurify.sanitize(marked.parse(raw));
+    }
+}
+
+async function sendMessage() {
+    const uid     = document.getElementById('msg-uid').value;
+    const objet   = document.getElementById('msg-obj').value.trim();
+    const contenu = document.getElementById('msg-content').value.trim();
+    const dateRaw = document.getElementById('msg-date-input').value;
+
+    if (!objet || !contenu) { alert('Objet et contenu requis.'); return; }
+
+    let dateEnvoi = null;
+    if (dateRaw) {
+        dateEnvoi = new Date(dateRaw).toISOString().slice(0,19).replace('T',' ');
+    }
+
+    const ok = await api('messages/send', 'POST', { user_id: uid || null, objet, contenu, date_envoi: dateEnvoi });
+    if (ok) {
+        closeModal('msg-modal');
+        loadMessages();
+    }
+}
+
+// =========================================================
+// === UTILS
+// =========================================================
+async function api(url, method = 'POST', body = {}) {
+    try {
+        const opts = { method, headers: adminHeaders() };
+        if (method !== 'GET' && method !== 'DELETE') opts.body = JSON.stringify(body);
+        const r = await fetch(`${API_URL}/api/admin/${url}`, opts);
+        if (!r.ok) { const d = await r.json().catch(() => ({})); alert(d.message || 'Erreur'); return false; }
+        return true;
+    } catch { alert('Erreur réseau'); return false; }
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function renderPager(id, current, total, cb) {
+    const el = document.getElementById(id);
+    if (!el || total <= 1) { if (el) el.innerHTML = ''; return; }
+    el.innerHTML = '';
+
+    const prev = document.createElement('button');
+    prev.className = 'btn-ghost'; prev.innerText = '←'; prev.disabled = current <= 1;
+    prev.onclick = () => cb(current - 1);
+    el.appendChild(prev);
+
+    const info = document.createElement('span');
+    info.className = 'page-info'; info.innerText = `${current} / ${total}`;
+    el.appendChild(info);
+
+    const next = document.createElement('button');
+    next.className = 'btn-ghost'; next.innerText = '→'; next.disabled = current >= total;
+    next.onclick = () => cb(current + 1);
+    el.appendChild(next);
+}
+
+function escHtml(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Fermer modales sur fond
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
 </body>
 </html>
