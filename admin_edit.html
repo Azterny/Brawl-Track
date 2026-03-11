@@ -2,222 +2,404 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Edit Tag - Brawl Track</title>
-    <link rel="icon" type="image/png" href="assets/favicon.png">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brawl-Track | Éditeur d'historique</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="js/config.js"></script>
     <style>
-        body { background-color: #000; color: #ccc; font-family: monospace; margin: 0; padding: 20px; font-size: 14px; }
-        #container { max-width: 1000px; margin: 0 auto; border: 1px solid #444; background: #111; padding: 15px; }
-        header { display: flex; justify-content: space-between; border-bottom: 2px solid #ffce00; padding-bottom: 15px; margin-bottom: 20px; }
-        .title-block h1 { margin: 0; color: #fff; font-size: 1.5em; }
-        .title-block h2 { margin: 5px 0 0 0; color: #ffce00; font-size: 1.1em; }
-        .controls { background: #222; padding: 10px; display: flex; gap: 10px; margin-bottom: 15px; border: 1px solid #333; }
-        select, button, input { background: #000; color: #fff; border: 1px solid #555; padding: 5px 10px; cursor: pointer; font-family: monospace; }
-        button:hover { background: #333; }
-        .btn-green { color: #28a745; border-color: #28a745; }
-        .btn-red { color: #ff5555; border-color: #ff5555; }
-        #chart-container { background: #080808; border: 1px solid #333; padding: 10px; height: 300px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; border-bottom: 2px solid #444; padding: 5px; color: #888; }
-        td { border-bottom: 1px solid #222; padding: 5px; }
-        tr:hover { background: #1a1a1a; }
-        .loading { text-align: center; padding: 20px; color: #888; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:     #0d0f14;
+            --bg2:    #141720;
+            --bg3:    #1c2030;
+            --border: rgba(255,255,255,0.08);
+            --yellow: #ffce00;
+            --blue:   #4a9eff;
+            --red:    #ff4757;
+            --green:  #2ecc71;
+            --text:   #e8eaf0;
+            --muted:  #6b7280;
+            --radius: 10px;
+        }
+
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; padding: 24px; }
+
+        header {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+            padding-bottom: 16px; border-bottom: 1px solid var(--border);
+        }
+        header h1 { color: var(--yellow); font-size: 1.1rem; }
+        header .back { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+        header .back:hover { color: var(--text); }
+        .tag-info { margin-left: auto; text-align: right; }
+        .tag-info .tag-str  { color: var(--yellow); font-family: monospace; font-size: 1rem; }
+        .tag-info .tag-owner { color: var(--muted); font-size: 0.8rem; }
+
+        .controls {
+            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+            background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px; margin-bottom: 20px;
+        }
+        .controls label { color: var(--muted); font-size: 0.8rem; }
+        .controls select {
+            padding: 8px 12px; background: var(--bg3); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 0.9rem; min-width: 220px;
+        }
+
+        .chart-wrap {
+            background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px; margin-bottom: 20px;
+        }
+        .chart-wrap canvas { max-height: 220px; }
+
+        .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: var(--bg3); }
+        th { padding: 10px 16px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+        td { padding: 10px 16px; border-top: 1px solid var(--border); vertical-align: middle; }
+        tr:hover td { background: rgba(255,255,255,.02); }
+
+        button { padding: 6px 14px; border: none; border-radius: 7px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: opacity .15s; }
+        button:hover { opacity: .85; }
+        .btn-yellow { background: var(--yellow); color: #000; }
+        .btn-blue   { background: var(--blue);   color: #fff; }
+        .btn-red    { background: var(--red);     color: #fff; }
+        .btn-green  { background: var(--green);   color: #fff; }
+        .btn-ghost  { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+
+        .stats-bar {
+            display: flex; gap: 16px; flex-wrap: wrap;
+            background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 14px 20px; margin-bottom: 20px;
+        }
+        .stats-bar .item { text-align: center; }
+        .stats-bar .val  { font-size: 1.2rem; font-weight: 700; color: var(--yellow); }
+        .stats-bar .lbl  { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75);
+            z-index: 100; align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+            padding: 28px; width: 420px; max-width: 95vw; position: relative;
+        }
+        .modal-box h3 { color: var(--yellow); margin-bottom: 18px; }
+        .modal-close { position: absolute; top: 14px; right: 18px; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px 12px; background: var(--bg3); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-size: 0.9rem;
+        }
+
+        .empty { text-align: center; padding: 30px; color: var(--muted); }
+        #error-banner { background: rgba(255,71,87,.15); border: 1px solid var(--red); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; color: var(--red); display: none; }
     </style>
 </head>
 <body>
 
-<div id="container">
-    <header>
-        <div class="title-block">
-            <h1 id="owner-name">Chargement...</h1>
-            <h2 id="tag-str">#...</h2>
-        </div>
-        <button onclick="window.location.href='admin.html'">[ RETOUR ]</button>
-    </header>
-
-    <div id="chart-container">
-        <canvas id="myChart"></canvas>
+<header>
+    <a href="admin.html" class="back">← Retour Admin</a>
+    <h1>Éditeur d'historique</h1>
+    <div class="tag-info">
+        <div class="tag-str" id="tag-str-display">Chargement...</div>
+        <div class="tag-owner" id="tag-owner-display"></div>
     </div>
+</header>
 
-    <div class="controls">
-        <span>Affichage :</span>
-        <select id="view-select" onchange="loadHistory()">
-            <option value="global">GLOBAL (Utilisateur)</option>
-            <option disabled>--- BRAWLERS ---</option>
-        </select>
-        <button onclick="addPoint()" class="btn-green">+ AJOUTER POINT</button>
-        <button onclick="loadHistory()">ACTUALISER</button>
-    </div>
+<div id="error-banner"></div>
 
+<div class="stats-bar" id="stats-bar"></div>
+
+<div class="controls">
+    <label>Affichage :</label>
+    <select id="view-select" onchange="loadHistory()">
+        <option value="global">GLOBAL (Utilisateur)</option>
+        <option disabled>─── Brawlers ───</option>
+    </select>
+    <button class="btn-green" onclick="openAddModal()">+ Ajouter un point</button>
+    <button class="btn-ghost" onclick="loadHistory()">↺ Actualiser</button>
+    <span id="record-count" style="color:var(--muted); font-size:0.85rem; margin-left:auto;"></span>
+</div>
+
+<div class="chart-wrap">
+    <canvas id="myChart"></canvas>
+</div>
+
+<div class="table-wrap">
     <table>
         <thead>
             <tr>
-                <th>DATE (UTC)</th>
-                <th>TROPHÉES</th>
-                <th style="text-align:right">ACTIONS</th>
+                <th>Date (UTC)</th>
+                <th>Trophées</th>
+                <th>Prestige</th>
+                <th style="text-align:right;">Actions</th>
             </tr>
         </thead>
         <tbody id="tbody"></tbody>
     </table>
 </div>
 
-<script src="js/config.js"></script>
+<!-- MODAL AJOUT / ÉDITION -->
+<div id="edit-modal" class="modal-overlay">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <h3 id="modal-title">Ajouter un point</h3>
+        <input type="hidden" id="edit-point-id">
+        <input type="hidden" id="edit-is-brawler">
+
+        <div class="form-group">
+            <label>Trophées</label>
+            <input type="number" id="edit-trophies" placeholder="0" min="0">
+        </div>
+        <div class="form-group" id="field-prestige" style="display:none;">
+            <label>Prestige (global uniquement)</label>
+            <input type="number" id="edit-prestige" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+            <label>Date (YYYY-MM-DD HH:MM:SS)</label>
+            <input type="text" id="edit-date" placeholder="2025-01-01 12:00:00">
+        </div>
+        <div style="display:flex; gap:10px; margin-top:4px;">
+            <button class="btn-yellow" onclick="submitEdit()" style="flex:1; padding:10px;">Enregistrer</button>
+            <button class="btn-ghost" onclick="closeModal()" style="padding:10px 16px;">Annuler</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    const params = new URLSearchParams(window.location.search);
-    const TAG_ID = params.get('tag_id');
-    const ADMIN_KEY = sessionStorage.getItem('admin_key_v3');
+const ADMIN_SESSION_KEY = 'bt_admin_token_v4';
+const ADMIN_TOKEN = sessionStorage.getItem(ADMIN_SESSION_KEY) || '';
 
-    if (!TAG_ID || !ADMIN_KEY) {
-        alert("Accès non autorisé ou session expirée. Veuillez vous reconnecter.");
-        window.location.href = 'admin.html';
-    }
+if (!ADMIN_TOKEN) {
+    alert('Session expirée. Veuillez vous reconnecter.');
+    window.location.href = 'admin.html';
+}
 
-    let chartInstance = null;
+const params  = new URLSearchParams(window.location.search);
+const TAG_ID  = params.get('tag_id');
+if (!TAG_ID) { alert('tag_id manquant.'); window.location.href = 'admin.html'; }
 
-    async function init() {
-        await loadTagDetails();
-        loadHistory();
-    }
+let chartInstance = null;
+let brawlerNames  = {}; // { id: name }
+let currentData   = [];
 
-    async function loadTagDetails() {
-        try {
-            const res = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/details`, {
-                headers: { 'X-Admin-Pass': ADMIN_KEY }
-            });
-            if(!res.ok) throw new Error("Erreur load details");
-            const data = await res.json();
+function headers() {
+    return { 'Content-Type': 'application/json', 'X-Admin-Token': ADMIN_TOKEN };
+}
 
-            document.getElementById('owner-name').innerText = data.owner;
-            document.getElementById('tag-str').innerText = data.tag;
+async function init() {
+    await Promise.all([loadBrawlerNames(), loadTagDetails()]);
+    loadHistory();
+}
 
-            const sel = document.getElementById('view-select');
-            data.brawlers.forEach(bid => {
-                const opt = document.createElement('option');
-                opt.value = bid;
-                opt.innerText = `Brawler ID: ${bid}`;
-                sel.appendChild(opt);
-            });
+// Chargement des noms de brawlers depuis l'API publique
+async function loadBrawlerNames() {
+    try {
+        const r = await fetch(`${API_URL}/api/brawlers`);
+        if (r.ok) {
+            const d = await r.json();
+            (d.items || []).forEach(b => { brawlerNames[b.id] = b.name; });
+        }
+    } catch(e) { console.warn('Brawlers list unavailable:', e); }
+}
 
-        } catch(e) { console.error(e); alert("Impossible de charger le tag"); }
-    }
+async function loadTagDetails() {
+    try {
+        const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/details`, { headers: headers() });
+        if (!r.ok) throw new Error('Tag introuvable');
+        const d = await r.json();
 
-    async function loadHistory() {
-        const view = document.getElementById('view-select').value;
-        const tbody = document.getElementById('tbody');
-        tbody.innerHTML = '<tr><td colspan="3" class="loading">Chargement...</td></tr>';
+        document.getElementById('tag-str-display').innerText  = d.tag;
+        document.getElementById('tag-owner-display').innerText = d.owner !== 'Aucun' ? `Propriétaire : ${d.owner}` : 'Tag non revendiqué';
+        document.title = `Admin — ${d.tag}`;
 
-        let url = `${API_URL}/api/admin/tag/${TAG_ID}/history`;
-        if(view !== 'global') url += `?brawler_id=${view}`;
-
-        try {
-            const res = await fetch(url, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
-            const data = await res.json();
-            renderTable(data);
-            const chartData = [...data].reverse();
-            renderChart(chartData);
-        } catch(e) { tbody.innerHTML = '<tr><td colspan="3">Erreur</td></tr>'; }
-    }
-
-    function renderTable(data) {
-        const tbody = document.getElementById('tbody');
-        tbody.innerHTML = '';
-        const isBrawler = document.getElementById('view-select').value !== 'global';
-
-        data.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${row.recorded_at}</td>
-                <td style="color:#ffce00; font-weight:bold;">${row.trophies}</td>
-                <td style="text-align:right">
-                    <button onclick="editPoint(${row.id}, ${row.trophies}, ${isBrawler})">EDIT</button>
-                    <button onclick="deletePoint(${row.id}, ${isBrawler})" class="btn-red">DEL</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+        const sel = document.getElementById('view-select');
+        d.brawlers.forEach(bid => {
+            const opt  = document.createElement('option');
+            opt.value  = bid;
+            opt.innerText = brawlerNames[bid] ? `${brawlerNames[bid]} (${bid})` : `Brawler ID: ${bid}`;
+            sel.appendChild(opt);
         });
-        if(data.length === 0) tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">Aucun historique</td></tr>';
+    } catch(e) {
+        showError('Impossible de charger le tag : ' + e.message);
+    }
+}
+
+async function loadHistory() {
+    const view  = document.getElementById('view-select').value;
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = `<tr><td colspan="4" class="empty">Chargement...</td></tr>`;
+
+    let url = `${API_URL}/api/admin/tag/${TAG_ID}/history`;
+    if (view !== 'global') url += `?brawler_id=${view}`;
+
+    try {
+        const r = await fetch(url, { headers: headers() });
+        if (!r.ok) throw new Error('Erreur API');
+        currentData = await r.json();
+
+        renderTable(currentData, view !== 'global');
+        renderChart([...currentData].reverse(), view !== 'global');
+        renderStats(currentData);
+
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="4" class="empty">Erreur de chargement.</td></tr>`;
+    }
+}
+
+function renderStats(data) {
+    const bar = document.getElementById('stats-bar');
+    if (data.length === 0) { bar.innerHTML = ''; return; }
+
+    const trophies  = data.map(d => d.trophies);
+    const maxT      = Math.max(...trophies);
+    const minT      = Math.min(...trophies);
+    const last      = data[0].trophies;
+    const first     = data[data.length-1].trophies;
+    const delta     = last - first;
+    const deltaColor = delta >= 0 ? 'var(--green)' : 'var(--red)';
+
+    bar.innerHTML = `
+        <div class="item"><div class="val">${data.length}</div><div class="lbl">Points</div></div>
+        <div class="item"><div class="val" style="color:var(--yellow)">${last.toLocaleString('fr-FR')}</div><div class="lbl">Actuel</div></div>
+        <div class="item"><div class="val">${maxT.toLocaleString('fr-FR')}</div><div class="lbl">Maximum</div></div>
+        <div class="item"><div class="val">${minT.toLocaleString('fr-FR')}</div><div class="lbl">Minimum</div></div>
+        <div class="item"><div class="val" style="color:${deltaColor}">${delta >= 0 ? '+' : ''}${delta.toLocaleString('fr-FR')}</div><div class="lbl">Évolution totale</div></div>
+    `;
+}
+
+function renderTable(data, isBrawler) {
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+    document.getElementById('record-count').innerText = `${data.length} enregistrement(s)`;
+
+    if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="empty">Aucun historique pour cette vue.</td></tr>`;
+        return;
     }
 
-    function renderChart(data) {
-        const ctx = document.getElementById('myChart').getContext('2d');
-        if(chartInstance) chartInstance.destroy();
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="font-family:monospace; font-size:0.85rem; color:var(--muted);">${row.recorded_at}</td>
+            <td style="color:var(--yellow); font-weight:700; font-size:1rem;">${row.trophies.toLocaleString('fr-FR')}</td>
+            <td style="color:var(--muted);">${row.prestige != null ? row.prestige : '—'}</td>
+            <td style="text-align:right;">
+                <div style="display:flex; gap:6px; justify-content:flex-end;">
+                    <button class="btn-blue" onclick="openEditModal(${row.id}, ${row.trophies}, ${row.prestige || 0}, '${row.recorded_at}', ${isBrawler})">Éditer</button>
+                    <button class="btn-red"  onclick="deletePoint(${row.id}, ${isBrawler})">Suppr.</button>
+                </div>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+}
 
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.map(d => d.recorded_at.split(' ')[0]),
-                datasets: [{
-                    label: 'Trophées',
-                    data: data.map(d => d.trophies),
-                    borderColor: '#ffce00',
-                    backgroundColor: 'rgba(255, 206, 0, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.1,
-                    pointRadius: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { ticks: { color: '#666' }, grid: { color: '#222' } },
-                    y: { ticks: { color: '#666' }, grid: { color: '#222' } }
-                }
+function renderChart(data, isBrawler) {
+    const ctx = document.getElementById('myChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(d => d.recorded_at.substring(0,10)),
+            datasets: [{
+                label: 'Trophées',
+                data: data.map(d => d.trophies),
+                borderColor: isBrawler ? '#4a9eff' : '#ffce00',
+                backgroundColor: isBrawler ? 'rgba(74,158,255,0.08)' : 'rgba(255,206,0,0.08)',
+                borderWidth: 2, tension: 0.2, pointRadius: 2, fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#4b5563', maxTicksLimit: 12 }, grid: { color: '#1c2030' } },
+                y: { ticks: { color: '#4b5563' }, grid: { color: '#1c2030' } }
             }
-        });
-    }
+        }
+    });
+}
 
-    async function addPoint() {
+// ── MODAL AJOUT ──────────────────────────────────────────
+function openAddModal() {
+    const view = document.getElementById('view-select').value;
+    const now  = new Date().toISOString().slice(0,19).replace('T',' ');
+    document.getElementById('modal-title').innerText    = 'Ajouter un point';
+    document.getElementById('edit-point-id').value      = '';
+    document.getElementById('edit-is-brawler').value    = view !== 'global' ? '1' : '0';
+    document.getElementById('edit-trophies').value      = '';
+    document.getElementById('edit-prestige').value      = '0';
+    document.getElementById('edit-date').value          = now;
+    document.getElementById('field-prestige').style.display = view === 'global' ? 'block' : 'none';
+    openModal();
+}
+
+function openEditModal(id, trophies, prestige, date, isBrawler) {
+    document.getElementById('modal-title').innerText    = 'Modifier ce point';
+    document.getElementById('edit-point-id').value      = id;
+    document.getElementById('edit-is-brawler').value    = isBrawler ? '1' : '0';
+    document.getElementById('edit-trophies').value      = trophies;
+    document.getElementById('edit-prestige').value      = prestige || 0;
+    document.getElementById('edit-date').value          = date;
+    document.getElementById('field-prestige').style.display = isBrawler ? 'none' : 'block';
+    openModal();
+}
+
+async function submitEdit() {
+    const pointId   = document.getElementById('edit-point-id').value;
+    const isBrawler = document.getElementById('edit-is-brawler').value === '1';
+    const trophies  = parseInt(document.getElementById('edit-trophies').value);
+    const prestige  = parseInt(document.getElementById('edit-prestige').value) || 0;
+    const date      = document.getElementById('edit-date').value.trim();
+
+    if (isNaN(trophies)) { alert('Trophées invalides.'); return; }
+
+    if (pointId) {
+        // Édition
+        await sendAction('PUT', { id: parseInt(pointId), trophies, is_brawler: isBrawler });
+    } else {
+        // Ajout
         const view = document.getElementById('view-select').value;
-        const val = prompt("Nombre de Trophées :");
-        if(!val) return;
-        
-        const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-        const date = prompt("Date (YYYY-MM-DD HH:MM:SS) :", now);
-        if(!date) return;
-
-        const payload = {
-            tag_id: TAG_ID,
-            trophies: parseInt(val),
-            date: date,
-            brawler_id: view === 'global' ? null : view
-        };
-
+        const payload = { tag_id: parseInt(TAG_ID), trophies, date };
+        if (isBrawler) payload.brawler_id = parseInt(view);
+        else           payload.prestige   = prestige;
         await sendAction('POST', payload);
     }
+}
 
-    async function editPoint(id, oldVal, isBrawler) {
-        const newVal = prompt("Nouveaux Trophées :", oldVal);
-        if(!newVal || newVal == oldVal) return;
+async function deletePoint(id, isBrawler) {
+    if (!confirm('Supprimer ce point ?')) return;
+    await sendAction('DELETE', { id, is_brawler: isBrawler });
+}
 
-        const payload = { id: id, trophies: parseInt(newVal), is_brawler: isBrawler };
-        await sendAction('PUT', payload);
-    }
+async function sendAction(method, body) {
+    try {
+        const r = await fetch(`${API_URL}/api/admin/point`, {
+            method,
+            headers: headers(),
+            body: JSON.stringify(body)
+        });
+        const d = await r.json();
+        if (r.ok) { closeModal(); loadHistory(); }
+        else showError(d.message || 'Erreur');
+    } catch { showError('Erreur réseau'); }
+}
 
-    async function deletePoint(id, isBrawler) {
-        if(!confirm("Supprimer ce point d'archive ?")) return;
-        const payload = { id: id, is_brawler: isBrawler };
-        await sendAction('DELETE', payload);
-    }
+function openModal()  { document.getElementById('edit-modal').classList.add('open'); }
+function closeModal() { document.getElementById('edit-modal').classList.remove('open'); }
+function showError(msg) { const el = document.getElementById('error-banner'); el.style.display = 'block'; el.innerText = msg; }
 
-    async function sendAction(method, body) {
-        try {
-            const res = await fetch(`${API_URL}/api/admin/point`, {
-                method: method,
-                headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
-                body: JSON.stringify(body)
-            });
-            const d = await res.json();
-            if(res.ok) {
-                loadHistory();
-            } else {
-                alert("Erreur: " + d.message);
-            }
-        } catch(e) { alert("Erreur Réseau"); }
-    }
+document.getElementById('edit-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('edit-modal')) closeModal();
+});
 
-    init();
+init();
 </script>
 </body>
 </html>
