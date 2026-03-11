@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let mainTimerInterval  = null;
     let verifyInterval     = null;
 
-    // Fix #6 — Nettoyage systématique des intervalles à la fermeture de la modale
+    // Fix #6 — Nettoyage systématique des intervalles à la fermeture de la modale,
     // Peu importe l'étape active, les timers sont toujours stoppés.
     function stopAllIntervals() {
         if (verifyInterval)    { clearInterval(verifyInterval);   verifyInterval   = null; }
