@@ -4,27 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brawl-Track | Plans d'Abonnement</title>
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/assets/logo.png">
     <style>
-        /* --- RESET & VARIABLES --- */
         :root {
             --bg-dark: #0f111a;
             --bg-card: #181c25;
             --text-main: #f1f1f1;
             --text-muted: #a1a5b5;
-            
-            /* Couleurs des grades (Style Néon) */
-            --color-subscriber: #00e5ff; /* Cyan */
-            --color-super-subscriber: #b500ff; /* Violet/Magenta */
-            --color-premium: #ffcc00; /* Or / Doré */
-            
+            --color-subscriber:       #00e5ff;
+            --color-super-subscriber: #b500ff;
+            --color-premium:          #ffcc00;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg-dark);
@@ -38,36 +32,30 @@
             background-image: radial-gradient(circle at top, #1a1f35 0%, var(--bg-dark) 60%);
         }
 
-        /* --- HEADER & TITRES --- */
         .hero-section {
             text-align: center;
             margin-top: 60px;
             margin-bottom: 50px;
             padding: 0 20px;
         }
+        .hero-title { font-size: 3rem; font-weight: 800; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        .hero-title span { color: var(--color-premium); }
+        .hero-subtitle { font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto; line-height: 1.5; }
 
-        .hero-title {
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
-        }
-
-        .hero-title span {
+        /* Fix #18 — Badge "Bientôt disponible" */
+        .coming-soon-banner {
+            background: rgba(255,206,0,0.1);
+            border: 1px solid rgba(255,206,0,0.3);
+            border-radius: 12px;
+            padding: 14px 28px;
+            margin-bottom: 40px;
+            text-align: center;
             color: var(--color-premium);
-        }
-
-        .hero-subtitle {
-            font-size: 1.2rem;
-            color: var(--text-muted);
+            font-size: 0.95rem;
             max-width: 600px;
-            margin: 0 auto;
-            line-height: 1.5;
         }
+        .coming-soon-banner strong { display: block; font-size: 1rem; margin-bottom: 4px; }
 
-        /* --- PRICING CARDS --- */
         .pricing-container {
             display: flex;
             flex-wrap: wrap;
@@ -92,155 +80,64 @@
             z-index: 1;
         }
 
-        /* Effets de bordure et néon par grade */
-        .card-subscriber {
-            border-color: rgba(0, 229, 255, 0.2);
-            box-shadow: 0 10px 30px rgba(0, 229, 255, 0.05);
-        }
-        .card-subscriber:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 229, 255, 0.2);
-            border-color: var(--color-subscriber);
-        }
+        .card-subscriber { border-color: rgba(0,229,255,0.2); box-shadow: 0 10px 30px rgba(0,229,255,0.05); }
+        .card-subscriber:hover { transform: translateY(-10px); box-shadow: 0 15px 40px rgba(0,229,255,0.2); border-color: var(--color-subscriber); }
 
-        .card-super-subscriber {
-            border-color: rgba(181, 0, 255, 0.2);
-            box-shadow: 0 10px 30px rgba(181, 0, 255, 0.05);
-            /* Mise en avant du plan intermédiaire */
-            transform: scale(1.05);
-            z-index: 2;
-        }
-        .card-super-subscriber:hover {
-            transform: scale(1.05) translateY(-10px);
-            box-shadow: 0 15px 40px rgba(181, 0, 255, 0.2);
-            border-color: var(--color-super-subscriber);
-        }
+        .card-super-subscriber { border-color: rgba(181,0,255,0.2); box-shadow: 0 10px 30px rgba(181,0,255,0.05); transform: scale(1.05); z-index: 2; }
+        .card-super-subscriber:hover { transform: scale(1.05) translateY(-10px); box-shadow: 0 15px 40px rgba(181,0,255,0.2); border-color: var(--color-super-subscriber); }
 
-        .card-premium {
-            border-color: rgba(255, 204, 0, 0.2);
-            box-shadow: 0 10px 30px rgba(255, 204, 0, 0.05);
-        }
-        .card-premium:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(255, 204, 0, 0.2);
-            border-color: var(--color-premium);
-        }
+        .card-premium { border-color: rgba(255,204,0,0.2); box-shadow: 0 10px 30px rgba(255,204,0,0.05); }
+        .card-premium:hover { transform: translateY(-10px); box-shadow: 0 15px 40px rgba(255,204,0,0.2); border-color: var(--color-premium); }
 
-        /* Badge populaire */
         .badge-popular {
-            position: absolute;
-            top: -15px;
+            position: absolute; top: -15px;
             background: linear-gradient(90deg, #ff007b, #b500ff);
-            color: white;
-            padding: 5px 20px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            box-shadow: 0 5px 15px rgba(181, 0, 255, 0.4);
+            color: white; padding: 5px 20px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: bold; text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(181,0,255,0.4);
         }
 
-        /* Icônes de Grade */
-        .grade-icon {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
-            transition: transform 0.3s ease;
-        }
-        .pricing-card:hover .grade-icon {
-            transform: scale(1.1);
-        }
+        .grade-icon { width: 80px; height: 80px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); transition: transform 0.3s ease; }
+        .pricing-card:hover .grade-icon { transform: scale(1.1); }
 
-        /* Textes de la carte */
-        .plan-name {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-transform: capitalize;
-        }
-        
-        .subscriber-text { color: var(--color-subscriber); }
+        .plan-name { font-size: 1.8rem; font-weight: bold; margin-bottom: 10px; text-transform: capitalize; }
+        .subscriber-text       { color: var(--color-subscriber); }
         .super-subscriber-text { color: var(--color-super-subscriber); }
-        .premium-text { color: var(--color-premium); }
+        .premium-text          { color: var(--color-premium); }
 
-        .plan-price {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 5px;
-        }
+        .plan-price    { font-size: 2.5rem; font-weight: 800; margin-bottom: 5px; }
+        .plan-duration { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 30px; }
 
-        .plan-duration {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 30px;
-        }
+        .benefits-list { list-style: none; width: 100%; margin-bottom: 30px; flex-grow: 1; }
+        .benefits-list li { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
 
-        /* Liste des avantages */
-        .benefits-list {
-            list-style: none;
-            width: 100%;
-            margin-bottom: 30px;
-            flex-grow: 1;
-        }
+        .check-icon { font-size: 1.1rem; font-weight: bold; }
+        .subscriber-check       { color: var(--color-subscriber); }
+        .super-subscriber-check { color: var(--color-super-subscriber); }
+        .premium-check          { color: var(--color-premium); }
 
-        .benefits-list li {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .benefits-list li:last-child {
-            border-bottom: none;
-        }
-
-        .check-icon {
-            margin-right: 10px;
-            font-weight: bold;
-        }
-        .subscriber-check { color: var(--color-subscriber); }
-        .super-check { color: var(--color-super-subscriber); }
-        .premium-check { color: var(--color-premium); }
-
-        /* Boutons d'action */
+        /* Fix #18 — Bouton désactivé tant que Stripe n'est pas intégré */
         .cta-btn {
-            width: 100%;
-            padding: 15px;
-            border-radius: 12px;
-            border: none;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-            color: var(--bg-dark);
+            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 800; cursor: not-allowed;
+            text-transform: uppercase; letter-spacing: 1px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            opacity: 0.55;
+            position: relative;
+        }
+        .btn-subscriber       { background: linear-gradient(135deg, #00c8e8, #0099bb); color: #fff; }
+        .btn-super-subscriber { background: linear-gradient(135deg, #9900cc, #6600aa); color: #fff; }
+        .btn-premium          { background: linear-gradient(135deg, #ffcc00, #ff9900); color: #000; }
+
+        .soon-label {
+            display: block; font-size: 0.72rem; font-weight: 400; letter-spacing: 0;
+            text-transform: none; margin-top: 4px; opacity: 0.8;
         }
 
-        .btn-subscriber {
-            background-color: var(--color-subscriber);
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
-        }
-        .btn-subscriber:hover { background-color: #00b8cc; }
-
-        .btn-super-subscriber {
-            background: linear-gradient(90deg, #b500ff, #7a00ff);
-            color: white;
-            box-shadow: 0 0 15px rgba(181, 0, 255, 0.4);
-        }
-        .btn-super-subscriber:hover { box-shadow: 0 0 25px rgba(181, 0, 255, 0.6); }
-
-        .btn-premium {
-            background-color: var(--color-premium);
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
-        }
-        .btn-premium:hover { background-color: #e6b800; }
-
-        /* Responsive */
-        @media (max-width: 1050px) {
-            .card-super-subscriber { transform: scale(1); }
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2rem; }
+            .pricing-container { gap: 24px; }
+            .card-super-subscriber { transform: none; }
             .card-super-subscriber:hover { transform: translateY(-10px); }
         }
     </style>
@@ -248,100 +145,78 @@
 <body>
 
     <div class="hero-section">
-        <h1 class="hero-title">Passez au niveau <span>Supérieur</span></h1>
-        <p class="hero-subtitle">
-            Débloquez la puissance totale de Brawl-Track. Suivez vos performances en temps réel, analysez vos statistiques à la loupe et prenez une longueur d'avance sur vos adversaires.
-        </p>
+        <h1 class="hero-title">Passe à la <span>vitesse supérieure</span></h1>
+        <p class="hero-subtitle">Débloquez des mises à jour en temps réel, plus de profils suivis et des statistiques avancées.</p>
+    </div>
+
+    <!-- Fix #18 — Information explicite sur la disponibilité -->
+    <div class="coming-soon-banner">
+        <strong>Les abonnements arrivent bientôt</strong>
+        L'intégration du paiement est en cours de développement. Revenez prochainement !
     </div>
 
     <div class="pricing-container">
 
+        <!-- SUBSCRIBER -->
         <div class="pricing-card card-subscriber">
             <img src="/assets/grade/subscriber.png" alt="Subscriber Icon" class="grade-icon" onerror="this.src='https://via.placeholder.com/80/00e5ff/ffffff?text=SUB'">
             <h2 class="plan-name subscriber-text">Subscriber</h2>
             <div class="plan-price">2.99€</div>
             <div class="plan-duration">par mois</div>
-            
             <ul class="benefits-list">
-                <li><span class="check-icon subscriber-check">✓</span> Mise à jour toutes les 60 min</li>
-                <li><span class="check-icon subscriber-check">✓</span> Suivi jusqu'à 50 joueurs</li>
-                <li><span class="check-icon subscriber-check">✓</span> 2 profils revendiqués (Claim)</li>
-                <li><span class="check-icon subscriber-check">✓</span> Sans publicités</li>
-                <li><span class="check-icon subscriber-check">✓</span> Historique détaillé sur 30 jours</li>
+                <li><span class="check-icon subscriber-check">✓</span> <b>Mise à jour toutes les heures</b></li>
+                <li><span class="check-icon subscriber-check">✓</span> Suivi jusqu'à <b>50 joueurs</b></li>
+                <li><span class="check-icon subscriber-check">✓</span> <b>2 profils</b> revendiqués (Claim)</li>
+                <li><span class="check-icon subscriber-check">✓</span> Bordure Cyan sur le Leaderboard</li>
+                <li><span class="check-icon subscriber-check">✓</span> Historique 6 mois</li>
             </ul>
-            
-            <button class="cta-btn btn-subscriber" onclick="handleSubscribe('subscriber')">S'abonner</button>
+            <button class="cta-btn btn-subscriber" disabled>
+                S'abonner
+                <span class="soon-label">Disponible prochainement</span>
+            </button>
         </div>
 
+        <!-- SUPER SUBSCRIBER -->
         <div class="pricing-card card-super-subscriber">
-            <div class="badge-popular">Le plus populaire</div>
-            <img src="/assets/grade/super_subscriber.png" alt="Super Subscriber Icon" class="grade-icon" onerror="this.src='https://via.placeholder.com/80/b500ff/ffffff?text=SSUB'">
+            <span class="badge-popular">Populaire</span>
+            <img src="/assets/grade/super_subscriber.png" alt="Super Subscriber Icon" class="grade-icon" onerror="this.src='https://via.placeholder.com/80/b500ff/ffffff?text=SUPER'">
             <h2 class="plan-name super-subscriber-text">Super Subscriber</h2>
-            <div class="plan-price">4.99€</div>
+            <div class="plan-price">5.99€</div>
             <div class="plan-duration">par mois</div>
-            
             <ul class="benefits-list">
-                <li><span class="check-icon super-check">✓</span> Mise à jour toutes les 30 min</li>
-                <li><span class="check-icon super-check">✓</span> Suivi jusqu'à 75 joueurs</li>
-                <li><span class="check-icon super-check">✓</span> 3 profils revendiqués (Claim)</li>
-                <li><span class="check-icon super-check">✓</span> Badge Exclusif sur votre profil</li>
-                <li><span class="check-icon super-check">✓</span> Accès aux graphiques avancés</li>
-                <li><span class="check-icon super-check">✓</span> Support prioritaire</li>
+                <li><span class="check-icon super-subscriber-check">✓</span> <b>Mise à jour toutes les 30 min</b></li>
+                <li><span class="check-icon super-subscriber-check">✓</span> Suivi jusqu'à <b>75 joueurs</b></li>
+                <li><span class="check-icon super-subscriber-check">✓</span> <b>3 profils</b> revendiqués (Claim)</li>
+                <li><span class="check-icon super-subscriber-check">✓</span> Bordure Violette sur le Leaderboard</li>
+                <li><span class="check-icon super-subscriber-check">✓</span> Historique 1 an</li>
             </ul>
-            
-            <button class="cta-btn btn-super-subscriber" onclick="handleSubscribe('super_subscriber')">S'abonner</button>
+            <button class="cta-btn btn-super-subscriber" disabled>
+                S'abonner
+                <span class="soon-label">Disponible prochainement</span>
+            </button>
         </div>
 
+        <!-- PREMIUM -->
         <div class="pricing-card card-premium">
             <img src="/assets/grade/premium.png" alt="Premium Icon" class="grade-icon" onerror="this.src='https://via.placeholder.com/80/ffcc00/ffffff?text=PREM'">
             <h2 class="plan-name premium-text">Premium</h2>
             <div class="plan-price">8.99€</div>
             <div class="plan-duration">par mois</div>
-            
             <ul class="benefits-list">
                 <li><span class="check-icon premium-check">✓</span> <b>Mise à jour toutes les 15 min</b></li>
                 <li><span class="check-icon premium-check">✓</span> Suivi jusqu'à <b>100 joueurs</b></li>
                 <li><span class="check-icon premium-check">✓</span> <b>5 profils</b> revendiqués (Claim)</li>
-                <li><span class="check-icon premium-check">✓</span> Bordure & Néon Or sur le Leaderboard</li>
-                <li><span class="check-icon premium-check">✓</span> Historique illimité des statistiques</li>
+                <li><span class="check-icon premium-check">✓</span> Bordure &amp; Néon Or sur le Leaderboard</li>
+                <li><span class="check-icon premium-check">✓</span> Historique illimité</li>
                 <li><span class="check-icon premium-check">✓</span> Serveurs dédiés ultra-rapides</li>
             </ul>
-            
-            <button class="cta-btn btn-premium" onclick="handleSubscribe('premium')">Devenir Premium</button>
+            <button class="cta-btn btn-premium" disabled>
+                Devenir Premium
+                <span class="soon-label">Disponible prochainement</span>
+            </button>
         </div>
 
     </div>
-
-    <script>
-        // Fonction simulée pour l'intégration de paiement (Stripe, PayPal, etc.)
-        function handleSubscribe(planName) {
-            // Vérification de l'authentification (basé sur l'écosystème JS existant)
-            const token = localStorage.getItem('bt_token');
-            
-            if (!token) {
-                alert("Veuillez vous connecter pour souscrire à l'abonnement " + planName.toUpperCase() + ".");
-                // window.location.href = "/login.html"; // Décommenter en production
-                return;
-            }
-
-            console.log(`[Brawl-Track] Préparation du checkout pour le plan : ${planName}`);
-            
-            // Animation du bouton
-            const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "Redirection...";
-            btn.style.opacity = "0.8";
-            btn.style.cursor = "wait";
-
-            // Simulation d'une requête API vers le backend app_api.py
-            setTimeout(() => {
-                alert(`🎉 Redirection vers la page de paiement sécurisée pour l'offre ${planName.replace('_', ' ').toUpperCase()} !`);
-                btn.innerText = originalText;
-                btn.style.opacity = "1";
-                btn.style.cursor = "pointer";
-            }, 800);
-        }
-    </script>
 
 </body>
 </html>
