@@ -2,8 +2,14 @@ let currentZone = 'global';
 let currentCategory = null; 
 let selectedBrawlerId = null;
 let currentDataList = []; 
+let globalBrawlersList = []; // CORRECTION : Déclaration manquante ajoutée
 
 document.addEventListener("DOMContentLoaded", () => {
+    initLeaderboardRouter();
+});
+
+// CORRECTION : Permet au bouton "Précédent/Suivant" du navigateur de fonctionner correctement
+window.addEventListener("popstate", () => {
     initLeaderboardRouter();
 });
 
@@ -44,7 +50,6 @@ async function initLeaderboardRouter() {
         }
         loadCategory(currentCategory);
     } else {
-        // C'EST ICI QUE ÇA MANQUAIT !
         renderMenu();
     }
 }
@@ -230,7 +235,6 @@ function renderList(items, type, targetId = 'dynamic-content') {
     items.forEach(item => {
         let nameColor = item.nameColor ? (item.nameColor.startsWith('0x') ? '#' + item.nameColor.slice(4) : item.nameColor) : '#fff';
         
-        // --- NOUVEAU : Logique Top 3 ---
         let topClass = '';
         if (item.rank === 1) topClass = 'top-1';
         else if (item.rank === 2) topClass = 'top-2';
