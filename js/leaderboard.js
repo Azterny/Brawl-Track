@@ -2,7 +2,6 @@ let currentZone = 'global';
 let currentCategory = null; 
 let selectedBrawlerId = null;
 let currentDataList = []; 
-let globalBrawlersList = []; // CORRECTION : Déclaration manquante ajoutée
 
 document.addEventListener("DOMContentLoaded", () => {
     initLeaderboardRouter();
