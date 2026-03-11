@@ -11,7 +11,7 @@ async function initUserHome() {
         const res = await fetchAuth(`${API_URL}/api/my-stats`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!res) return; // 401 géré par fetchAuth
+        if (!res) return; // 401 géré par fetchAuth,
 
         if (!res.ok) throw new Error("Session expirée");
         const data = await res.json();
