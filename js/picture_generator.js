@@ -1,4 +1,4 @@
-/* =========================================
+/* ==========================================
    PICTURE GENERATOR — Module d'exportation d'images
    Fix #10 : détection des échecs CORS avant le rendu html2canvas.
    Si des images externes n'ont pas pu être chargées avec crossOrigin=anonymous,
