@@ -1,4 +1,4 @@
-// --- LOGIQUE SPECIFIQUE ACCUEIL --
+// --- LOGIQUE SPECIFIQUE ACCUEIL ---
 
 // 1. Recherche Publique
 function publicSearch() {
