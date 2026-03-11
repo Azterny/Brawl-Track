@@ -1,5 +1,5 @@
 // =========================================================
-// === AUTH.JS — Authentification & Intercepteur global ===
+// === AUTH.JS — Authentification & Intercepteur global ====
 // =========================================================
 
 // Fix #1 — Intercepteur global 401
