@@ -128,6 +128,17 @@
         /* ——— BADGE ——— */
         .badge { display: inline-block; padding: 1px 6px; border: 1px solid var(--border2); color: var(--acc); font-size: 0.85em; }
         .badge-g { color: var(--green); border-color: var(--green); }
+        /* ——— PAGINATION ——— */
+        .pagination-bar {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+            padding: 6px 12px; background: var(--bg2); border: 1px solid var(--border);
+            border-top: none;
+        }
+        .pagination-bar:empty { display: none; }
+        .pg-info { color: var(--t2); font-size: 0.82em; }
+        .pg-controls { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+        .pg-label { color: var(--t2); font-size: 0.82em; white-space: nowrap; }
+        .pg-controls button:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -214,6 +225,7 @@
                     <tr><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">Chargement...</td></tr>
                 </tbody>
             </table>
+            <div id="hist-pagination" class="pagination-bar"></div>
         </div>
 
         <!-- SIDE PANEL -->
@@ -297,6 +309,35 @@
     let tagDetails = {};
     let editingId = null;
     let isBrawlerView = false;
+    let histPage = 0, histPageSize = 100;
+
+    // ——— PAGINATION HELPERS ———
+    function renderPaginationBar(containerId, page, pageSize, total, fnPage, fnSize) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        const from = total === 0 ? 0 : page * pageSize + 1;
+        const to   = Math.min((page + 1) * pageSize, total);
+        el.innerHTML = `
+            <span class="pg-info">${from}–${to} / ${total}</span>
+            <div class="pg-controls">
+                <button class="btn btn-ghost btn-sm" onclick="${fnPage}(${page - 1})" ${page === 0 ? 'disabled' : ''}>◀</button>
+                <span class="pg-label">Page ${page + 1}&nbsp;/&nbsp;${totalPages}</span>
+                <button class="btn btn-ghost btn-sm" onclick="${fnPage}(${page + 1})" ${page >= totalPages - 1 ? 'disabled' : ''}>▶</button>
+            </div>
+            <select class="btn btn-ghost btn-sm" onchange="${fnSize}(+this.value)" style="padding:2px 8px;">
+                ${[5, 10, 50, 100, 500, 1000].map(s =>
+                    `<option value="${s}"${s === pageSize ? ' selected' : ''}>${s} / page</option>`
+                ).join('')}
+            </select>
+        `;
+    }
+    function setHistPage(p) {
+        const maxPage = Math.max(0, Math.ceil(allHistory.length / histPageSize) - 1);
+        histPage = Math.max(0, Math.min(p, maxPage));
+        renderTable(allHistory);
+    }
+    function setHistPageSize(sz) { histPageSize = sz; histPage = 0; renderTable(allHistory); }
 
     function escH(s) {
         if (s == null) return '';
@@ -397,11 +438,11 @@
                 ? (tagDetails.brawlers?.find(b => String(b.id) === view)?.name || `Brawler ${view}`)
                 : 'Global';
             document.getElementById('table-title').textContent = title;
-            document.getElementById('table-count').textContent = `${data.length} point(s)`;
+            // table-count est géré par renderTable via la barre de pagination
         } catch { body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red)">Erreur de chargement</td></tr>'; }
     }
 
-    function onViewChange() { editingId = null; loadHistory(); }
+    function onViewChange() { editingId = null; histPage = 0; loadHistory(); }
 
     // ——— CHART ———
     function setPeriod(days) {
@@ -460,15 +501,24 @@
     function renderTable(data) {
         const tbody = document.getElementById('hist-body');
         tbody.innerHTML = '';
+        const total = data.length;
 
-        if (!data.length) {
+        if (!total) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">Aucun historique</td></tr>';
+            document.getElementById('hist-pagination').innerHTML = '';
+            document.getElementById('table-count').textContent = '';
             return;
         }
 
-        data.forEach((row, idx) => {
-            // Delta vs previous point (data is newest-first, so idx+1 is older)
-            const prev = data[idx + 1];
+        renderPaginationBar('hist-pagination', histPage, histPageSize, total, 'setHistPage', 'setHistPageSize');
+        document.getElementById('table-count').textContent = `${total} point(s)`;
+
+        const pageData = data.slice(histPage * histPageSize, (histPage + 1) * histPageSize);
+
+        pageData.forEach((row) => {
+            // Delta par rapport au point précédent dans le tableau complet (newest-first)
+            const globalIdx = data.indexOf(row);
+            const prev = data[globalIdx + 1];
             let deltaHTML = '<span class="delta-zero">—</span>';
             if (prev !== undefined) {
                 const d = row.trophies - prev.trophies;
@@ -522,8 +572,11 @@
     // ——— CRUD POINTS ———
     function startEdit(id, trophies, date) {
         editingId = id;
+        // Auto-naviguer vers la page qui contient ce point
+        const idx = allHistory.findIndex(p => p.id === id);
+        if (idx !== -1) histPage = Math.floor(idx / histPageSize);
         renderTable(allHistory);
-        // Scroll to edit row
+        // Scroll vers la ligne d'édition
         const el = document.getElementById('edit-' + id);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }

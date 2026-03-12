@@ -6,6 +6,8 @@
     <title>Admin Panel — Brawl Track</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
@@ -257,6 +259,78 @@
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: var(--border2); }
+        /* ——— PAGINATION ——— */
+        .pagination-bar {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+            padding: 6px 12px; background: var(--bg2); border: 1px solid var(--border);
+            border-top: none;
+        }
+        .pagination-bar:empty { display: none; }
+        .pg-info { color: var(--t2); font-size: 0.82em; }
+        .pg-controls { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+        .pg-label { color: var(--t2); font-size: 0.82em; white-space: nowrap; }
+        .pg-controls button:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+        /* ——— MULTI-DESTINATAIRES (COMPOSE) ——— */
+        .recipients-tags {
+            display: flex; flex-wrap: wrap; gap: 5px; min-height: 32px; padding: 4px 6px;
+            background: var(--bg); border: 1px solid var(--border2); align-items: center;
+        }
+        .recipient-tag {
+            display: flex; align-items: center; gap: 5px;
+            background: var(--bg3); border: 1px solid var(--border2);
+            padding: 2px 7px; font-size: 0.82em; color: var(--text);
+        }
+        .recipient-tag button {
+            background: none; border: none; color: var(--red);
+            cursor: pointer; padding: 0; font-size: 1em; line-height: 1;
+        }
+        .user-suggestions {
+            position: absolute; left: 0; right: 0; z-index: 200;
+            background: var(--bg2); border: 1px solid var(--border2);
+            border-top: none; max-height: 160px; overflow-y: auto;
+        }
+        .user-suggestion {
+            padding: 6px 10px; cursor: pointer;
+            border-bottom: 1px solid var(--border); font-size: 0.88em;
+        }
+        .user-suggestion:hover { background: var(--bg3); }
+        .user-suggestion:last-child { border-bottom: none; }
+        /* ——— PANEL SUPPRESSION DESTINATAIRES ——— */
+        .del-recipients-panel {
+            background: var(--bg3); border: 1px solid var(--border2); border-top: none;
+            max-height: 220px; overflow-y: auto; flex-shrink: 0;
+        }
+        .recipient-check-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 5px 10px; border-bottom: 1px solid var(--border);
+            cursor: pointer; font-size: 0.88em;
+        }
+        .recipient-check-row:hover { background: var(--bg2); }
+        .recipient-check-row:last-child { border-bottom: none; }
+        /* ——— RENDU MARKDOWN MESSAGES (MAILBOX-LIKE) ——— */
+        .mrp-body { line-height: 1.7; font-size: 0.95em; }
+        .mrp-body h1, .mrp-body h2, .mrp-body h3 { color: var(--acc); margin: 12px 0 6px; }
+        .mrp-body p { margin-bottom: 0.85em; }
+        .mrp-body strong { color: var(--acc); }
+        .mrp-body em { color: var(--t2); font-style: italic; }
+        .mrp-body ul, .mrp-body ol { margin-bottom: 0.85em; padding-left: 20px; }
+        .mrp-body blockquote {
+            border-left: 3px solid var(--acc); padding: 8px 12px;
+            background: var(--bg3); color: var(--t2); font-style: italic; margin: 8px 0;
+        }
+        .mrp-body code { background: #000; padding: 1px 5px; border: 1px solid var(--border2); color: var(--orange); }
+        .mrp-body a { color: var(--blue); }
+        /* Prévisualisation Compose — même style */
+        .md-preview p { margin-bottom: 0.85em; }
+        .md-preview strong { color: var(--acc); }
+        .md-preview em { color: var(--t2); font-style: italic; }
+        .md-preview ul, .md-preview ol { margin-bottom: 0.85em; padding-left: 20px; }
+        .md-preview blockquote {
+            border-left: 3px solid var(--acc); padding: 8px 12px;
+            background: var(--bg3); color: var(--t2); font-style: italic; margin: 8px 0;
+        }
+        .md-preview code { background: #000; padding: 1px 5px; border: 1px solid var(--border2); color: var(--orange); }
+        .md-preview a { color: var(--blue); }
     </style>
 </head>
 <body>
@@ -275,20 +349,24 @@
 <div id="compose-overlay" class="overlay hidden">
     <div class="modal">
         <h3 id="compose-title">NOUVEAU MESSAGE</h3>
-        <input type="hidden" id="c-uid">
 
         <div class="fr">
-            <label>Destinataire</label>
+            <label>Destinataires</label>
             <select id="c-target" onchange="onTargetChange()">
                 <option value="all">Tous les joueurs (broadcast)</option>
-                <option value="specific" id="c-opt-specific">Utilisateur spécifique...</option>
+                <option value="specific">Utilisateur(s) spécifique(s)...</option>
             </select>
         </div>
-        <div class="fr" id="c-user-search-row">
-            <label>Rechercher un utilisateur</label>
-            <div class="inline-form">
-                <input type="text" id="c-user-search" placeholder="Nom d'utilisateur..." style="flex:1">
-                <button onclick="searchUser()" class="btn-ghost btn">RECHERCHER</button>
+        <div class="fr hidden" id="c-user-search-row">
+            <label>Destinataires sélectionnés</label>
+            <div id="c-recipients-tags" class="recipients-tags">
+                <span style="color:var(--t3);font-size:0.82em">Aucun destinataire</span>
+            </div>
+            <div style="position:relative; margin-top:6px;">
+                <input type="text" id="c-user-search"
+                       placeholder="Rechercher et ajouter un utilisateur..."
+                       oninput="onUserSearchInput()" autocomplete="off" style="width:100%">
+                <div id="c-user-suggestions" class="user-suggestions hidden"></div>
             </div>
             <div id="c-user-result" style="color:var(--t2); font-size:0.82em; margin-top:4px;"></div>
         </div>
@@ -433,6 +511,7 @@
                     </tbody>
                 </table>
             </div>
+            <div id="u-pagination" class="pagination-bar"></div>
         </div>
 
         <!-- ==== TAB: TAGS ==== -->
@@ -471,6 +550,7 @@
                     </tbody>
                 </table>
             </div>
+            <div id="t-pagination" class="pagination-bar"></div>
         </div>
 
         <!-- ==== TAB: MESSAGES ==== -->
@@ -499,9 +579,12 @@
                                 <span>Lu : <span id="mr-reads" style="color:var(--green);">—</span></span>
                             </div>
                         </div>
-                        <div class="mrp-body" id="mr-body"></div>
+                        <div class="mrp-body" id="mr-body" style="font-family:sans-serif;"></div>
+                        <div id="del-recipients-panel" class="del-recipients-panel hidden"></div>
                         <div class="mrp-foot">
-                            <button onclick="deleteMessage()" class="btn btn-red btn-sm">SUPPRIMER</button>
+                            <div id="mrp-foot-buttons">
+                                <button onclick="deleteMessage()" class="btn btn-red btn-sm">SUPPRIMER</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -563,6 +646,28 @@ if (PASS) { document.getElementById('login-overlay').classList.add('hidden'); lo
 
 document.getElementById('admin-pass').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 
+// ====== PAGINATION ======
+function renderPaginationBar(containerId, page, pageSize, total, fnPage, fnSize) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const from = total === 0 ? 0 : page * pageSize + 1;
+    const to   = Math.min((page + 1) * pageSize, total);
+    el.innerHTML = `
+        <span class="pg-info">${from}–${to} / ${total}</span>
+        <div class="pg-controls">
+            <button class="btn btn-ghost btn-sm" onclick="${fnPage}(${page - 1})" ${page === 0 ? 'disabled' : ''}>◀</button>
+            <span class="pg-label">Page ${page + 1}&nbsp;/&nbsp;${totalPages}</span>
+            <button class="btn btn-ghost btn-sm" onclick="${fnPage}(${page + 1})" ${page >= totalPages - 1 ? 'disabled' : ''}>▶</button>
+        </div>
+        <select class="btn btn-ghost btn-sm" onchange="${fnSize}(+this.value)" style="padding:2px 8px;">
+            ${[5, 10, 50, 100, 500, 1000].map(s =>
+                `<option value="${s}"${s === pageSize ? ' selected' : ''}>${s} / page</option>`
+            ).join('')}
+        </select>
+    `;
+}
+
 async function login() {
     const p = document.getElementById('admin-pass').value.trim();
     if (!p) return;
@@ -609,6 +714,8 @@ let rawUsers = [], rawTags = [], rawAnalytics = [], rawMessages = [];
 let overview = {};
 let uFilters = new Set(), tFilters = new Set();
 let uSortDir = 1, tSortDir = -1;
+let uPage = 0, uPageSize = 100;
+let tPage = 0, tPageSize = 100;
 let chartActivity = null, chartArchives = null;
 let selectedMsgId = null;
 let maintEnabled = false;
@@ -721,7 +828,7 @@ function renderRecentTables() {
 function renderCharts() {
     if (!rawAnalytics.length) return;
     const labels = rawAnalytics.map(d => { const p = d.date.split('-'); return `${p[2]}/${p[1]}`; });
-    const cOpts = {
+    const baseOpts = {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { labels: { color: '#aaa', boxWidth: 12, font: { size: 11 } } } },
         scales: {
@@ -736,29 +843,45 @@ function renderCharts() {
         data: {
             labels,
             datasets: [
-                { label: 'Connexions', data: rawAnalytics.map(d => d.logins), borderColor: '#1e88e5', backgroundColor: 'rgba(30,136,229,0.08)', tension: 0.3, borderWidth: 2, pointRadius: 2 },
-                { label: 'Inscriptions', data: rawAnalytics.map(d => d.registrations ?? 0), borderColor: '#28a745', backgroundColor: 'rgba(40,167,69,0.08)', tension: 0.3, borderWidth: 2, pointRadius: 2 },
-                { label: 'Images', data: rawAnalytics.map(d => d.img_generations ?? 0), borderColor: '#fd7e14', backgroundColor: 'transparent', tension: 0.3, borderWidth: 1, pointRadius: 1 }
+                { label: 'Connexions',   data: rawAnalytics.map(d => d.logins),             borderColor: '#1e88e5', backgroundColor: 'rgba(30,136,229,0.08)', tension: 0.3, borderWidth: 2, pointRadius: 2 },
+                { label: 'Inscriptions', data: rawAnalytics.map(d => d.registrations ?? 0), borderColor: '#28a745', backgroundColor: 'rgba(40,167,69,0.08)',  tension: 0.3, borderWidth: 2, pointRadius: 2 },
+                { label: 'Images',       data: rawAnalytics.map(d => d.img_generations ?? 0), borderColor: '#fd7e14', backgroundColor: 'transparent',          tension: 0.3, borderWidth: 1, pointRadius: 1 }
             ]
         },
-        options: cOpts
+        options: baseOpts
     });
 
+    // Graphique archives : barres empilées par catégorie (claim / classés / exceptions)
     if (chartArchives) chartArchives.destroy();
     chartArchives = new Chart(document.getElementById('chart-archives').getContext('2d'), {
         type: 'bar',
         data: {
             labels,
             datasets: [
-                { label: 'Archives', data: rawAnalytics.map(d => d.archives_count ?? 0), backgroundColor: 'rgba(255,206,0,0.5)', borderColor: '#ffce00', borderWidth: 1 }
+                { label: 'Claim',       data: rawAnalytics.map(d => d.archives_claim      ?? 0), backgroundColor: 'rgba(255,206,0,0.78)',  borderColor: '#ffce00', borderWidth: 1 },
+                { label: 'Classés',     data: rawAnalytics.map(d => d.archives_ranked     ?? 0), backgroundColor: 'rgba(30,136,229,0.78)', borderColor: '#1e88e5', borderWidth: 1 },
+                { label: 'Exceptions',  data: rawAnalytics.map(d => d.archives_exceptions ?? 0), backgroundColor: 'rgba(253,126,20,0.78)', borderColor: '#fd7e14', borderWidth: 1 }
             ]
         },
-        options: { ...cOpts, plugins: { legend: { display: false } } }
+        options: {
+            ...baseOpts,
+            plugins: { legend: { labels: { color: '#aaa', boxWidth: 10, font: { size: 10 } } } },
+            scales: {
+                x: { ...baseOpts.scales.x, stacked: true },
+                y: { ...baseOpts.scales.y, stacked: true }
+            }
+        }
     });
 }
 
 // ====== USERS TAB ======
-function toggleUFilter(f) { uFilters.has(f) ? uFilters.delete(f) : uFilters.add(f); renderUsers(); }
+function toggleUFilter(f) { uFilters.has(f) ? uFilters.delete(f) : uFilters.add(f); uPage = 0; renderUsers(); }
+function setUPage(p) {
+    const total = getFilteredUsers().length;
+    uPage = Math.max(0, Math.min(p, Math.max(0, Math.ceil(total / uPageSize) - 1)));
+    renderUsers();
+}
+function setUPageSize(sz) { uPageSize = sz; uPage = 0; renderUsers(); }
 
 function getFilteredUsers() {
     let data = rawUsers.map(u => ({ ...u }));
@@ -788,12 +911,17 @@ function getFilteredUsers() {
 
 function renderUsers() {
     const tbody = document.getElementById('users-body');
-    const data = getFilteredUsers();
+    const allData = getFilteredUsers();
+    const total = allData.length;
 
-    if (!data.length) {
+    if (!total) {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--t3);padding:30px">Aucun résultat</td></tr>';
+        document.getElementById('u-pagination').innerHTML = '';
         return;
     }
+
+    renderPaginationBar('u-pagination', uPage, uPageSize, total, 'setUPage', 'setUPageSize');
+    const data = allData.slice(uPage * uPageSize, (uPage + 1) * uPageSize);
 
     tbody.innerHTML = '';
     data.forEach(u => {
@@ -822,7 +950,7 @@ function renderUsers() {
             <td>${tag}</td>
             <td>
                 <button onclick="manageCoins(${u.id})" class="btn btn-ghost btn-sm" title="Coins">💰</button>
-                <button onclick="openCompose(${u.id}, '${escH(u.username)}')" class="btn btn-orange btn-sm" title="Message">✉</button>
+                <button onclick="openCompose([${u.id}], '${escH(u.username)}')" class="btn btn-orange btn-sm" title="Message">✉</button>
                 <button onclick="addTag(${u.id})" class="btn btn-green btn-sm" title="Claim tag">+Tag</button>
                 <button onclick="renameUser(${u.id}, '${escH(u.username)}')" class="btn btn-ghost btn-sm" title="Renommer">R</button>
                 <button onclick="deleteUser(${u.id}, '${escH(u.username)}')" class="btn btn-red btn-sm" title="Supprimer">✕</button>
@@ -869,7 +997,13 @@ function toggleDetails(id, btn) {
 }
 
 // ====== TAGS TAB ======
-function toggleTFilter(f) { tFilters.has(f) ? tFilters.delete(f) : tFilters.add(f); renderTags(); }
+function toggleTFilter(f) { tFilters.has(f) ? tFilters.delete(f) : tFilters.add(f); tPage = 0; renderTags(); }
+function setTPage(p) {
+    const total = getFilteredTags().length;
+    tPage = Math.max(0, Math.min(p, Math.max(0, Math.ceil(total / tPageSize) - 1)));
+    renderTags();
+}
+function setTPageSize(sz) { tPageSize = sz; tPage = 0; renderTags(); }
 
 function getFilteredTags() {
     let data = rawTags.map(t => ({ ...t }));
@@ -898,13 +1032,18 @@ function getFilteredTags() {
 
 function renderTags() {
     const tbody = document.getElementById('tags-body');
-    const data = getFilteredTags();
-    document.getElementById('tags-count').textContent = `${data.length} tag(s)`;
+    const allData = getFilteredTags();
+    const total = allData.length;
+    document.getElementById('tags-count').textContent = `${total} tag(s)`;
 
-    if (!data.length) {
+    if (!total) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:30px">Aucun résultat</td></tr>';
+        document.getElementById('t-pagination').innerHTML = '';
         return;
     }
+
+    renderPaginationBar('t-pagination', tPage, tPageSize, total, 'setTPage', 'setTPageSize');
+    const data = allData.slice(tPage * tPageSize, (tPage + 1) * tPageSize);
 
     tbody.innerHTML = data.map(t => {
         const owner = t.owner_name
@@ -956,14 +1095,17 @@ function renderMessages() {
         return;
     }
     body.innerHTML = rawMessages.map(m => {
-        const toLabel = m.user_id === 'all' || m.user_id === null
+        const isAll = m.user_id === 'all' || m.user_id === null;
+        const toLabel = isAll
             ? '<span class="all">✦ TOUS LES JOUEURS</span>'
             : escH(m.username || `User #${m.user_id}`);
-        const reads = m.read_count !== undefined ? `${m.read_count} lu(s)` : '';
+        const reads  = m.read_count !== undefined ? `${m.read_count} lu(s)` : '';
         const active = m.id === selectedMsgId ? 'active' : '';
+        const preview = (m.contenu || '').replace(/[#*`_>\[\]()]/g, '').substring(0, 55);
         return `<div class="msg-item ${active}" onclick="selectMessage(${m.id})">
             <div class="msg-to">${toLabel}</div>
             <div class="msg-subj">${escH(m.objet)}</div>
+            <div style="color:var(--t3);font-size:0.73em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${escH(preview)}…</div>
             <div class="msg-meta">
                 <span>${escH(m.date_envoi || m.created_at || '—')}</span>
                 <span>${reads}</span>
@@ -978,20 +1120,38 @@ function selectMessage(id) {
     if (!m) return;
 
     document.querySelectorAll('.msg-item').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.msg-item').forEach(el => { if (el.onclick.toString().includes(id)) el.classList.add('active'); });
+    document.querySelectorAll('.msg-item').forEach(el => {
+        if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(`(${id})`)) el.classList.add('active');
+    });
 
     document.getElementById('msg-empty').classList.add('hidden');
-    const active = document.getElementById('msg-active');
-    active.classList.remove('hidden');
-    active.style.display = 'flex';
+    const activeEl = document.getElementById('msg-active');
+    activeEl.classList.remove('hidden');
+    activeEl.style.display = 'flex';
 
     document.getElementById('mr-subject').textContent = m.objet || '(sans objet)';
-    document.getElementById('mr-to').textContent = m.user_id === 'all' || !m.user_id ? 'Tous les joueurs' : (m.username || `User #${m.user_id}`);
-    document.getElementById('mr-date').textContent = m.date_envoi || m.created_at || '—';
+    const isAll = m.user_id === 'all' || !m.user_id;
+    document.getElementById('mr-to').textContent    = isAll ? 'Tous les joueurs' : (m.username || `User #${m.user_id}`);
+    document.getElementById('mr-date').textContent  = m.date_envoi || m.created_at || '—';
     document.getElementById('mr-reads').textContent = m.read_count !== undefined ? `${m.read_count} / ${m.total_recipients || '?'}` : '—';
 
-    const body = document.getElementById('mr-body');
-    body.innerHTML = parseMarkdown(m.contenu || '');
+    // Rendu Markdown identique à la mailbox
+    document.getElementById('mr-body').innerHTML = parseMarkdown(m.contenu || '');
+
+    // Ferme le panneau de suppression ciblée si ouvert
+    const panel = document.getElementById('del-recipients-panel');
+    if (panel) panel.classList.add('hidden');
+
+    // Boutons selon type de message
+    const foot = document.getElementById('mrp-foot-buttons');
+    if (isAll) {
+        foot.innerHTML = `
+            <button onclick="deleteMessageForAll()" class="btn btn-red btn-sm">SUPPRIMER POUR TOUS</button>
+            <button onclick="toggleDeleteRecipients()" class="btn btn-orange btn-sm">SUPPRIMER POUR...</button>
+        `;
+    } else {
+        foot.innerHTML = `<button onclick="deleteMessage()" class="btn btn-red btn-sm">SUPPRIMER</button>`;
+    }
 
     renderMessages();
 }
@@ -1007,6 +1167,68 @@ function deleteMessage() {
             loadAll();
         }
     });
+}
+
+function deleteMessageForAll() {
+    if (!selectedMsgId) return;
+    if (!confirm('Supprimer ce message pour TOUS les destinataires ?\nCette action est irréversible.')) return;
+    adminFetch(`messages/${selectedMsgId}`, 'DELETE').then(ok => {
+        if (ok) {
+            selectedMsgId = null;
+            document.getElementById('msg-empty').classList.remove('hidden');
+            document.getElementById('msg-active').style.display = 'none';
+            loadAll();
+        }
+    });
+}
+
+async function toggleDeleteRecipients() {
+    const panel = document.getElementById('del-recipients-panel');
+    if (!panel.classList.contains('hidden')) { panel.classList.add('hidden'); return; }
+
+    panel.innerHTML = '<div style="padding:8px 12px;color:var(--t2);font-size:0.85em">Chargement des destinataires...</div>';
+    panel.classList.remove('hidden');
+
+    try {
+        const r = await fetch(`${API_URL}/api/admin/messages/${selectedMsgId}/recipients`, {
+            headers: { 'X-Admin-Pass': PASS }
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const recipients = await r.json();
+        if (!recipients.length) {
+            panel.innerHTML = '<div style="padding:8px 12px;color:var(--t3);font-size:0.85em">Aucun destinataire trouvé.</div>';
+            return;
+        }
+        panel.innerHTML = `
+            <div style="padding:6px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg2);">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.82em;color:var(--t2)">
+                    <input type="checkbox" id="del-check-all" onchange="toggleAllRecipients(this)"> Tout sélectionner
+                </label>
+                <button onclick="confirmDeleteForSelected()" class="btn btn-red btn-sm">CONFIRMER</button>
+            </div>
+            ${recipients.map(u => `
+                <label class="recipient-check-row">
+                    <input type="checkbox" name="del-recipient" value="${u.id}">
+                    <span style="flex:1">${escH(u.username)}</span>
+                    <span style="color:var(--t3);font-size:0.78em">${u.is_read ? 'Lu' : 'Non lu'}</span>
+                </label>
+            `).join('')}
+        `;
+    } catch(e) {
+        panel.innerHTML = `<div style="padding:8px 12px;color:var(--red);font-size:0.85em">Erreur : ${escH(e.message)}</div>`;
+    }
+}
+
+function toggleAllRecipients(cb) {
+    document.querySelectorAll('input[name="del-recipient"]').forEach(el => { el.checked = cb.checked; });
+}
+
+async function confirmDeleteForSelected() {
+    const checked = [...document.querySelectorAll('input[name="del-recipient"]:checked')].map(el => +el.value);
+    if (!checked.length) { alert('Aucun destinataire sélectionné.'); return; }
+    if (!confirm(`Supprimer ce message pour ${checked.length} destinataire(s) ?`)) return;
+    const ok = await adminFetch(`messages/${selectedMsgId}/recipients/delete`, 'POST', { user_ids: checked });
+    if (ok) document.getElementById('del-recipients-panel').classList.add('hidden');
 }
 
 // ====== SYSTEM TAB ======
@@ -1058,37 +1280,50 @@ async function triggerArchive() {
 }
 
 // ====== COMPOSE / MESSAGE ======
-let composeTarget = 'all';
+let selectedRecipients = [];
+let searchDebounce = null;
 
 function openCompose(uid, username) {
-    composeTarget = uid;
-    const overlay = document.getElementById('compose-overlay');
-    const title = document.getElementById('compose-title');
-    const targetSel = document.getElementById('c-target');
-    const searchRow = document.getElementById('c-user-search-row');
-
+    // Réinitialisation
+    selectedRecipients = [];
     document.getElementById('c-subject').value = '';
     document.getElementById('c-body').value = '';
     document.getElementById('c-preview').classList.add('hidden');
     document.getElementById('c-body').classList.remove('hidden');
     document.getElementById('btn-preview').textContent = 'PRÉVISUALISER';
+    document.getElementById('c-user-search').value = '';
+    document.getElementById('c-user-suggestions').classList.add('hidden');
+    document.getElementById('c-user-result').textContent = '';
+    previewOn = false;
 
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('c-date').value = now.toISOString().slice(0, 16);
+
+    const overlay    = document.getElementById('compose-overlay');
+    const title      = document.getElementById('compose-title');
+    const targetSel  = document.getElementById('c-target');
+    const searchRow  = document.getElementById('c-user-search-row');
 
     if (uid === 'all') {
         title.textContent = 'BROADCAST — TOUS LES JOUEURS';
         targetSel.value = 'all';
         searchRow.classList.add('hidden');
     } else {
-        title.textContent = `MESSAGE À ${(username || '').toUpperCase()}`;
-        document.getElementById('c-uid').value = uid;
+        title.textContent = 'NOUVEAU MESSAGE';
         targetSel.value = 'specific';
-        searchRow.classList.add('hidden');
-        document.getElementById('c-user-result').textContent = `Destinataire : ${username || 'User #' + uid}`;
         searchRow.classList.remove('hidden');
+        if (Array.isArray(uid)) {
+            // Appelé depuis la liste users avec [u.id]
+            uid.forEach((id, i) => {
+                const name = Array.isArray(username) ? username[i] : username;
+                selectedRecipients.push({ id, username: name || `User #${id}` });
+            });
+        } else if (uid) {
+            selectedRecipients = [{ id: uid, username: username || `User #${uid}` }];
+        }
     }
+    renderRecipientTags();
     overlay.classList.remove('hidden');
 }
 
@@ -1098,25 +1333,66 @@ function onTargetChange() {
     const val = document.getElementById('c-target').value;
     const row = document.getElementById('c-user-search-row');
     row.classList.toggle('hidden', val !== 'specific');
-    if (val === 'all') { composeTarget = 'all'; document.getElementById('c-uid').value = ''; }
+    if (val === 'all') { selectedRecipients = []; renderRecipientTags(); }
 }
 
-async function searchUser() {
+// Recherche live (debounce 260 ms, min 2 chars)
+function onUserSearchInput() {
     const q = document.getElementById('c-user-search').value.trim();
-    if (!q) return;
-    const res = document.getElementById('c-user-result');
-    res.textContent = 'Recherche...';
+    clearTimeout(searchDebounce);
+    document.getElementById('c-user-suggestions').classList.add('hidden');
+    if (q.length < 2) return;
+    searchDebounce = setTimeout(() => searchUsersLive(q), 260);
+}
+
+async function searchUsersLive(q) {
     try {
-        const r = await fetch(`${API_URL}/api/admin/users/search?q=${encodeURIComponent(q)}`, { headers: { 'X-Admin-Pass': PASS } });
+        const r = await fetch(`${API_URL}/api/admin/users/search?q=${encodeURIComponent(q)}`, {
+            headers: { 'X-Admin-Pass': PASS }
+        });
         const data = await r.json();
-        if (data && data.id) {
-            composeTarget = data.id;
-            document.getElementById('c-uid').value = data.id;
-            res.innerHTML = `<span style="color:var(--green)">Trouvé : ${escH(data.username)} (ID ${data.id})</span>`;
-        } else {
-            res.innerHTML = '<span style="color:var(--red)">Aucun utilisateur trouvé</span>';
+        const results = Array.isArray(data) ? data : (data && data.id ? [data] : []);
+        const sugg = document.getElementById('c-user-suggestions');
+        if (!results.length) {
+            sugg.innerHTML = '<div class="user-suggestion" style="color:var(--t3);cursor:default">Aucun résultat</div>';
+            sugg.classList.remove('hidden');
+            return;
         }
-    } catch { res.innerHTML = '<span style="color:var(--red)">Erreur réseau</span>'; }
+        sugg.innerHTML = results.map(u =>
+            `<div class="user-suggestion" onclick="addRecipient(${u.id}, '${escH(u.username)}')">
+                ${escH(u.username)} <span style="color:var(--t3)">(ID&nbsp;${u.id})</span>
+            </div>`
+        ).join('');
+        sugg.classList.remove('hidden');
+    } catch { /* réseau silencieux */ }
+}
+
+function addRecipient(id, username) {
+    if (selectedRecipients.find(r => r.id === id)) return; // déjà présent
+    selectedRecipients.push({ id, username });
+    renderRecipientTags();
+    document.getElementById('c-user-search').value = '';
+    document.getElementById('c-user-suggestions').classList.add('hidden');
+}
+
+function removeRecipient(id) {
+    selectedRecipients = selectedRecipients.filter(r => r.id !== id);
+    renderRecipientTags();
+}
+
+function renderRecipientTags() {
+    const container = document.getElementById('c-recipients-tags');
+    if (!container) return;
+    if (!selectedRecipients.length) {
+        container.innerHTML = '<span style="color:var(--t3);font-size:0.82em;padding:2px 4px">Aucun destinataire sélectionné</span>';
+        return;
+    }
+    container.innerHTML = selectedRecipients.map(r => `
+        <div class="recipient-tag">
+            <span>${escH(r.username)}</span>
+            <button type="button" onclick="removeRecipient(${r.id})" title="Retirer">✕</button>
+        </div>
+    `).join('');
 }
 
 let previewOn = false;
@@ -1138,10 +1414,7 @@ function togglePreview() {
 function livePreview() { if (previewOn) document.getElementById('c-preview').innerHTML = parseMarkdown(document.getElementById('c-body').value); }
 
 async function sendMessage() {
-    const subj = document.getElementById('c-subject').value.trim();
-    const body = document.getElementById('c-body').classList.contains('hidden')
-        ? document.getElementById('c-preview').dataset.raw
-        : document.getElementById('c-body').value.trim();
+    const subj    = document.getElementById('c-subject').value.trim();
     const rawBody = document.getElementById('c-body').value.trim();
     if (!subj || !rawBody) { alert('Objet et contenu requis.'); return; }
 
@@ -1149,7 +1422,18 @@ async function sendMessage() {
     let dateUtc = null;
     if (inputDate) dateUtc = new Date(inputDate).toISOString().slice(0,19).replace('T',' ');
 
-    const uid = document.getElementById('c-target').value === 'all' ? 'all' : document.getElementById('c-uid').value;
+    const targetType = document.getElementById('c-target').value;
+    let uid;
+    if (targetType === 'all') {
+        uid = 'all';
+    } else {
+        if (!selectedRecipients.length) { alert('Veuillez ajouter au moins un destinataire.'); return; }
+        // Un seul → envoie à l'ID ; plusieurs → tableau d'IDs
+        uid = selectedRecipients.length === 1
+            ? selectedRecipients[0].id
+            : selectedRecipients.map(r => r.id);
+    }
+
     const ok = await adminFetch('messages/send', 'POST', { user_id: uid, objet: subj, contenu: rawBody, date_envoi: dateUtc });
     if (ok) { closeCompose(); setStatus('Message envoyé.'); }
 }
@@ -1220,6 +1504,11 @@ async function adminFetch(path, method = 'POST', body = {}) {
 // ====== MARKDOWN ======
 function parseMarkdown(text) {
     if (!text) return '';
+    // Utilise marked.js + DOMPurify (identique à la mailbox)
+    if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+        return DOMPurify.sanitize(marked.parse(text));
+    }
+    // Fallback basique si les librairies ne sont pas chargées
     return text
         .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
         .replace(/^### (.*$)/gim, '<h3>$1</h3>')
