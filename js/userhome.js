@@ -25,14 +25,28 @@ async function initUserHome() {
         const followedList = data.followed_tags || [];
         const limits = data.limits || { claim_max: 1, follow_max: 15 };
 
+        // Séparer les tags vérifiés des tags en attente de vérification
+        const verifiedClaimed = claimedList.filter(t => t.is_verified !== false);
+        const pendingClaimed  = claimedList.filter(t => t.is_verified === false);
+
         document.getElementById('counter-follows').innerText = `${followedList.length} / ${limits.follow_max}`;
 
         // ==========================================
         // 1. GESTION DU COMPTE LIÉ (PRINCIPAL)
         // ==========================================
         const linkedContainer = document.getElementById('linked-account-container');
-        
-        if (claimedList.length === 0) {
+
+        if (pendingClaimed.length > 0 && verifiedClaimed.length === 0) {
+            // Un défi de vérification est en cours
+            linkedContainer.innerHTML = `
+                <div class="empty-link-card" style="min-height: 120px; height: auto; border-color: #ffce00; cursor: default;">
+                    <div style="font-size: 1.5em; margin-bottom: 8px;">⏳</div>
+                    <div style="font-size: 1.1em; font-weight: bold; text-align: center; color: #ffce00;">Vérification en cours</div>
+                    <div style="font-size: 0.9em; color: #888; margin-top: 5px;">Tag : ${pendingClaimed[0].tag}</div>
+                    <button onclick="openLinkModal()" class="btn-3d btn-yellow w-auto" style="margin-top: 10px; font-size: 0.85em; padding: 6px 14px;">Continuer la vérification</button>
+                </div>
+            `;
+        } else if (verifiedClaimed.length === 0) {
             linkedContainer.innerHTML = `
                 <div class="empty-link-card clickable" onclick="openLinkModal()" style="min-height: 120px; max-height: 160px; height: auto;">
                     <div class="plus-btn">+</div>
@@ -40,7 +54,7 @@ async function initUserHome() {
                 </div>
             `;
         } else {
-            const linkedTag = claimedList[0].tag;
+            const linkedTag = verifiedClaimed[0].tag;
             linkedContainer.innerHTML = `<div class="skeleton-box" style="width:100%; height:120px; border-radius:15px;"></div>`;
             await fetchAndRenderLinkedAccount(linkedTag, linkedContainer);
         }

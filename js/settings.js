@@ -3,28 +3,30 @@ function setupIntervalUI(tier, interval) {
     document.getElementById('interval-basic').classList.add('hidden');
     document.getElementById('interval-custom').classList.add('hidden');
     const minutesContainer = document.getElementById('container-minutes');
-    
-    if (tier === 'basic') {
+    const tierLabel = (typeof TIER_LABELS !== 'undefined' && TIER_LABELS[tier]) ? TIER_LABELS[tier] : tier;
+
+    if (tier === 'free' || tier === 'basic') {
         document.getElementById('interval-basic').classList.remove('hidden');
-        document.getElementById('select-interval-basic').value = interval || 720;
+        document.getElementById('select-interval-basic').value = interval || 2880;
     } else {
         document.getElementById('interval-custom').classList.remove('hidden');
-        
+
         // Calcul Heures / Minutes
         const h = Math.floor(interval / 60);
         const m = interval % 60;
         document.getElementById('input-hours').value = h;
         document.getElementById('input-minutes').value = m;
-        
+
         const msg = document.getElementById('interval-limit-msg');
-        
-        if (tier === 'subscriber') {
-            msg.innerText = "⭐ Abonné : Réglage en Heures uniquement (Min 1h).";
-            // On cache totalement les minutes
+
+        if (tier === 'starter') {
+            msg.innerText = `🌟 ${tierLabel} : Réglage en Heures uniquement (Min 6h).`;
+            minutesContainer.classList.add('hidden');
+        } else if (tier === 'subscriber') {
+            msg.innerText = `⭐ ${tierLabel} : Réglage en Heures uniquement (Min 1h).`;
             minutesContainer.classList.add('hidden');
         } else {
-            msg.innerText = "👑 Premium : Précision à la minute (Min 15 min).";
-            // On affiche les minutes
+            msg.innerText = `👑 ${tierLabel} : Précision à la minute (Min 15 min).`;
             minutesContainer.classList.remove('hidden');
         }
     }
@@ -34,7 +36,7 @@ async function saveInterval() {
     const token = localStorage.getItem('token');
     let min = 720;
     
-    if (currentUserTier === 'basic') {
+    if (currentUserTier === 'free' || currentUserTier === 'basic') {
         min = parseInt(document.getElementById('select-interval-basic').value);
     } else {
         const h = parseInt(document.getElementById('input-hours').value) || 0;

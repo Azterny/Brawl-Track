@@ -143,7 +143,9 @@
         .badge-r { color: var(--red);    border-color: var(--red); }
         .badge-b { color: var(--blue);   border-color: var(--blue); }
         .badge-o { color: var(--orange); border-color: var(--orange); }
+        .tier-free       { color: var(--t2); }
         .tier-basic      { color: var(--t2); }
+        .tier-starter    { color: var(--green); }
         .tier-subscriber { color: var(--blue); }
         .tier-premium    { color: var(--acc); }
         .details-row { background: #060606; }
@@ -419,6 +421,9 @@
         <div class="nav-item" onclick="setTab('system')" id="nav-system">
             <span class="ic">◧</span> Système
         </div>
+        <div class="nav-item" onclick="setTab('archivage')" id="nav-archivage">
+            <span class="ic">◎</span> Archivage
+        </div>
     </div>
     <div class="sb-foot">
         <button onclick="loadAll()" class="btn btn-ghost" style="width:100%; margin-bottom:6px;">ACTUALISER</button>
@@ -481,7 +486,8 @@
                 <div class="tb-sep"></div>
                 <label class="fl"><input type="checkbox" onchange="toggleUFilter('premium')"> Premium</label>
                 <label class="fl"><input type="checkbox" onchange="toggleUFilter('subscriber')"> Subscriber</label>
-                <label class="fl"><input type="checkbox" onchange="toggleUFilter('basic')"> Basic</label>
+                <label class="fl"><input type="checkbox" onchange="toggleUFilter('starter')"> Starter</label>
+                <label class="fl"><input type="checkbox" onchange="toggleUFilter('free')"> Free</label>
                 <label class="fl"><input type="checkbox" onchange="toggleUFilter('active_today')"> Connecté aujourd'hui</label>
                 <div class="tb-sep"></div>
                 <span style="color:var(--t2)">Tri:</span>
@@ -634,6 +640,73 @@
             </div>
         </div>
 
+        <!-- ==== TAB: ARCHIVAGE ==== -->
+        <div id="tab-archivage" class="tab-panel">
+            <div class="sys-grid">
+
+                <!-- Section 1 : Seuils de classement -->
+                <div class="sys-card">
+                    <h3>Seuils de Classement</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <div class="fr">
+                            <label>Archiver jusqu'au rang N (Global)</label>
+                            <input type="number" id="arch-top-global-limit" min="1" max="200" value="200" style="width:100%">
+                        </div>
+                        <div class="fr">
+                            <label>Archiver jusqu'au rang N (par Brawler)</label>
+                            <input type="number" id="arch-top-brawler-limit" min="1" max="100" value="100" style="width:100%">
+                        </div>
+                        <button class="btn btn-acc" onclick="saveArchivageLimits()">Enregistrer les seuils</button>
+                    </div>
+                </div>
+
+                <!-- Section 2 : Fréquence d'archivage -->
+                <div class="sys-card">
+                    <h3>Fréquence d'Archivage</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <div class="fr">
+                            <label>Intervalle Global (minutes)</label>
+                            <input type="number" id="arch-global-interval" min="60" max="10080" value="360" style="width:100%">
+                        </div>
+                        <div class="fr">
+                            <label>Intervalle par Brawler (minutes)</label>
+                            <input type="number" id="arch-brawler-interval" min="60" max="10080" value="720" style="width:100%">
+                        </div>
+                        <div class="toggle-row" id="arch-enabled-toggle" onclick="toggleArchivageEnabled()" style="cursor:pointer; user-select:none;">
+                            <div>
+                                <div class="toggle-label">Archivage classés activé</div>
+                                <div class="toggle-sub">Active/désactive l'archivage des tags classés</div>
+                            </div>
+                            <div class="toggle on" id="arch-toggle-btn"></div>
+                        </div>
+                        <button class="btn btn-acc" onclick="saveArchivageIntervals()">Enregistrer la fréquence</button>
+                    </div>
+                </div>
+
+                <!-- Section 3 : Statistiques -->
+                <div class="sys-card">
+                    <h3>Statistiques d'Archivage Classés</h3>
+                    <div id="arch-stats">
+                        <div class="met-row"><span class="met-label">Tags Top Global</span><span class="met-val" id="arch-top-global-count">—</span></div>
+                        <div class="met-row"><span class="met-label">Tags Top Brawler</span><span class="met-val" id="arch-top-brawler-count">—</span></div>
+                        <div class="met-row"><span class="met-label">Archives Global (24h)</span><span class="met-val" id="arch-global-24h">—</span></div>
+                        <div class="met-row"><span class="met-label">Archives Brawler (24h)</span><span class="met-val" id="arch-brawler-24h">—</span></div>
+                        <div class="met-row"><span class="met-label">Dernier scrape</span><span class="met-val" id="arch-last-scrape" style="color:var(--green)">—</span></div>
+                    </div>
+                </div>
+
+                <!-- Section 3b : Contrôles -->
+                <div class="sys-card">
+                    <h3>Contrôles Scraper</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <button class="btn btn-orange" onclick="triggerScraper()">⚡ Forcer le scraper maintenant</button>
+                        <p style="color:var(--t2); font-size:0.85em;">Déclenche immédiatement un passage du scraper de classement (top global + brawlers).</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div><!-- /page-body -->
 </div><!-- /main -->
 
@@ -695,7 +768,7 @@ function escH(s) {
 // ====== NAV / TABS ======
 const TAB_TITLES = {
     stats: 'VUE D\'ENSEMBLE', users: 'UTILISATEURS',
-    tags: 'TAGS', messages: 'MESSAGES', system: 'SYSTÈME'
+    tags: 'TAGS', messages: 'MESSAGES', system: 'SYSTÈME', archivage: 'ARCHIVAGE'
 };
 let currentTab = 'stats';
 
@@ -707,6 +780,7 @@ function setTab(tab) {
     document.getElementById('page-title').textContent = TAB_TITLES[tab];
     currentTab = tab;
     if (tab === 'messages') renderMessages();
+    if (tab === 'archivage') loadArchivageTab();
 }
 
 // ====== DATA ======
@@ -888,8 +962,8 @@ function getFilteredUsers() {
     const s = document.getElementById('u-search').value.toLowerCase();
     if (s) data = data.filter(u => u.username.toLowerCase().includes(s) || String(u.id).includes(s));
 
-    const tierF = ['premium','subscriber','basic'].filter(f => uFilters.has(f));
-    if (tierF.length) data = data.filter(u => tierF.includes(u.tier));
+    const tierF = ['premium','subscriber','starter','free'].filter(f => uFilters.has(f));
+    if (tierF.length) data = data.filter(u => tierF.includes(u.tier) || (tierF.includes('free') && u.tier === 'basic'));
     if (uFilters.has('active_today')) {
         const now = Date.now();
         data = data.filter(u => u.last_login && (now - new Date(u.last_login) < 86400000));
@@ -939,7 +1013,8 @@ function renderUsers() {
             <td>
                 <select class="tier-${escH(u.tier)}" onchange="updateTier(${u.id}, this)"
                         style="padding:2px 5px; border-color:transparent;">
-                    <option value="basic"      ${u.tier==='basic'      ?'selected':''}>Basic</option>
+                    <option value="free"       ${(u.tier==='free'||u.tier==='basic') ?'selected':''}>Free</option>
+                    <option value="starter"    ${u.tier==='starter'    ?'selected':''}>Starter</option>
                     <option value="subscriber" ${u.tier==='subscriber' ?'selected':''}>Subscriber</option>
                     <option value="premium"    ${u.tier==='premium'    ?'selected':''}>Premium</option>
                 </select>
@@ -1519,6 +1594,73 @@ function parseMarkdown(text) {
         .replace(/`(.*?)`/gim,       '<code>$1</code>')
         .replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank' rel='noopener'>$1</a>")
         .replace(/\n/gim, '<br>');
+}
+
+// ====== ARCHIVAGE TAB ======
+let archivageEnabled = true;
+
+async function loadArchivageTab() {
+    try {
+        const h = { 'X-Admin-Pass': PASS };
+        const [statsRes, cfgRes] = await Promise.all([
+            fetch(`${API_URL}/api/admin/archivage/stats`, { headers: h }),
+            fetch(`${API_URL}/api/admin/archivage/config`, { headers: h })
+        ]);
+
+        if (cfgRes.ok) {
+            const cfg = await cfgRes.json();
+            document.getElementById('arch-top-global-limit').value  = cfg.top_global_limit  ?? 200;
+            document.getElementById('arch-top-brawler-limit').value = cfg.top_brawler_limit ?? 100;
+            document.getElementById('arch-global-interval').value   = cfg.top_global_interval  ?? 360;
+            document.getElementById('arch-brawler-interval').value  = cfg.top_brawler_interval ?? 720;
+            archivageEnabled = cfg.ranked_archiving_enabled !== false;
+            const btn = document.getElementById('arch-toggle-btn');
+            if (btn) btn.classList.toggle('on', archivageEnabled);
+        }
+
+        if (statsRes.ok) {
+            const s = await statsRes.json();
+            const setV = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ?? '—'; };
+            setV('arch-top-global-count',  s.top_global_count);
+            setV('arch-top-brawler-count', s.top_brawler_count);
+            setV('arch-global-24h',        s.top_global_archived_24h);
+            setV('arch-brawler-24h',       s.top_brawler_archived_24h);
+            setV('arch-last-scrape',       s.last_scrape || '—');
+        }
+    } catch(e) {
+        console.error('Archivage tab error:', e);
+    }
+}
+
+async function saveArchivageLimits() {
+    const body = {
+        top_global_limit:  parseInt(document.getElementById('arch-top-global-limit').value),
+        top_brawler_limit: parseInt(document.getElementById('arch-top-brawler-limit').value)
+    };
+    const ok = await adminFetch('archivage/config', 'POST', body);
+    if (ok) setStatus('Seuils enregistrés.');
+}
+
+async function saveArchivageIntervals() {
+    const body = {
+        top_global_interval:  parseInt(document.getElementById('arch-global-interval').value),
+        top_brawler_interval: parseInt(document.getElementById('arch-brawler-interval').value),
+        ranked_archiving_enabled: archivageEnabled
+    };
+    const ok = await adminFetch('archivage/config', 'POST', body);
+    if (ok) setStatus('Fréquence enregistrée.');
+}
+
+function toggleArchivageEnabled() {
+    archivageEnabled = !archivageEnabled;
+    const btn = document.getElementById('arch-toggle-btn');
+    if (btn) btn.classList.toggle('on', archivageEnabled);
+}
+
+async function triggerScraper() {
+    if (!confirm('Déclencher le scraper de classement maintenant ?')) return;
+    const ok = await adminFetch('archivage/scrape-now', 'POST', {});
+    if (ok) setStatus('Scraper déclenché.');
 }
 </script>
 </body>
