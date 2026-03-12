@@ -2,219 +2,634 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Edit Tag - Brawl Track</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditer Tag — Brawl Track Admin</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
-        body { background-color: #000; color: #ccc; font-family: monospace; margin: 0; padding: 20px; font-size: 14px; }
-        #container { max-width: 1000px; margin: 0 auto; border: 1px solid #444; background: #111; padding: 15px; }
-        header { display: flex; justify-content: space-between; border-bottom: 2px solid #ffce00; padding-bottom: 15px; margin-bottom: 20px; }
-        .title-block h1 { margin: 0; color: #fff; font-size: 1.5em; }
-        .title-block h2 { margin: 5px 0 0 0; color: #ffce00; font-size: 1.1em; }
-        .controls { background: #222; padding: 10px; display: flex; gap: 10px; margin-bottom: 15px; border: 1px solid #333; }
-        select, button, input { background: #000; color: #fff; border: 1px solid #555; padding: 5px 10px; cursor: pointer; font-family: monospace; }
-        button:hover { background: #333; }
-        .btn-green { color: #28a745; border-color: #28a745; }
-        .btn-red { color: #ff5555; border-color: #ff5555; }
-        #chart-container { background: #080808; border: 1px solid #333; padding: 10px; height: 300px; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; border-bottom: 2px solid #444; padding: 5px; color: #888; }
-        td { border-bottom: 1px solid #222; padding: 5px; }
-        tr:hover { background: #1a1a1a; }
-        .loading { text-align: center; padding: 20px; color: #888; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg:  #0a0a0a; --bg2: #111; --bg3: #1a1a1a;
+            --border: #232323; --border2: #333;
+            --acc: #ffce00; --acc2: #e6b800;
+            --text: #ccc; --t2: #888; --t3: #555;
+            --green: #28a745; --red: #e53935; --blue: #1e88e5; --orange: #fd7e14;
+        }
+        body { background: var(--bg); color: var(--text); font-family: monospace, sans-serif; font-size: 13px; min-height: 100vh; }
+        input, select, button, textarea {
+            background: var(--bg); color: var(--text); border: 1px solid var(--border2);
+            padding: 5px 10px; font-family: monospace; font-size: 0.93em; cursor: pointer;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--acc); outline: none; }
+        button:hover { background: var(--bg3); }
+        .btn { padding: 5px 12px; font-size: 0.85em; border: 1px solid; font-family: monospace; cursor: pointer; }
+        .btn-sm { padding: 2px 7px; font-size: 0.78em; }
+        .btn-acc   { background: var(--acc); color: #000; border-color: var(--acc); font-weight: bold; }
+        .btn-green { color: var(--green); border-color: var(--green); background: transparent; }
+        .btn-green:hover { background: var(--green); color: #000; }
+        .btn-red   { color: var(--red);   border-color: var(--red);   background: transparent; }
+        .btn-red:hover   { background: var(--red);   color: #fff; }
+        .btn-blue  { color: var(--blue);  border-color: var(--blue);  background: transparent; }
+        .btn-blue:hover  { background: var(--blue);  color: #fff; }
+        .btn-orange{ color: var(--orange);border-color: var(--orange);background: transparent; }
+        .btn-orange:hover{ background: var(--orange);color: #fff; }
+        .btn-ghost { color: var(--t2); border-color: var(--border2); background: transparent; }
+        .btn-ghost:hover { color: var(--text); background: var(--bg3); }
+        .hidden { display: none !important; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border2); }
+
+        /* ——— LAYOUT ——— */
+        #wrapper {
+            max-width: 1300px; margin: 0 auto; padding: 16px;
+            display: flex; flex-direction: column; gap: 14px;
+        }
+
+        /* ——— HEADER ——— */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; background: var(--bg2);
+            border: 1px solid var(--border);
+        }
+        .top-bar-left { display: flex; flex-direction: column; gap: 4px; }
+        .tag-name { color: #fff; font-size: 1.3em; font-weight: bold; }
+        .tag-sub  { color: var(--t2); font-size: 0.85em; display: flex; gap: 14px; flex-wrap: wrap; }
+        .tag-sub .verified { color: var(--green); }
+        .top-bar-right { display: flex; gap: 8px; align-items: center; }
+
+        /* ——— INFO CARDS ——— */
+        .info-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .info-card { background: var(--bg2); border: 1px solid var(--border); padding: 12px 14px; }
+        .info-label { color: var(--t3); font-size: 0.72em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .info-value { color: #fff; font-size: 1.2em; font-weight: bold; }
+        .info-sub   { color: var(--t2); font-size: 0.78em; margin-top: 4px; }
+
+        /* ——— CHART ——— */
+        .chart-section { background: var(--bg2); border: 1px solid var(--border); padding: 14px; }
+        .chart-controls {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+        }
+        .chart-controls h3 { color: var(--t2); font-size: 0.78em; text-transform: uppercase; letter-spacing: 1px; margin-right: auto; }
+        .period-btn { padding: 3px 10px; font-size: 0.78em; border: 1px solid var(--border2); color: var(--t2); cursor: pointer; background: transparent; }
+        .period-btn:hover  { background: var(--bg3); color: var(--text); }
+        .period-btn.active { background: var(--acc); color: #000; border-color: var(--acc); font-weight: bold; }
+        #chart-wrap { height: 240px; }
+
+        /* ——— MAIN CONTENT ——— */
+        .content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 14px; align-items: start; }
+
+        /* ——— TABLE ——— */
+        .table-section { background: var(--bg2); border: 1px solid var(--border); overflow: hidden; }
+        .table-head {
+            padding: 10px 14px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+        }
+        .table-head h3 { color: var(--t2); font-size: 0.78em; text-transform: uppercase; letter-spacing: 1px; }
+        .view-sel { display: flex; align-items: center; gap: 7px; }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            text-align: left; padding: 7px 10px; color: var(--t3);
+            font-size: 0.72em; text-transform: uppercase;
+            border-bottom: 1px solid var(--border2); background: var(--bg);
+        }
+        td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: var(--bg3); }
+        .delta-pos { color: var(--green); }
+        .delta-neg { color: var(--red); }
+        .delta-zero { color: var(--t3); }
+
+        /* ——— SIDE PANEL ——— */
+        .side-panel { display: flex; flex-direction: column; gap: 10px; }
+        .side-card { background: var(--bg2); border: 1px solid var(--border); padding: 14px; }
+        .side-card h3 { color: var(--t2); font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 7px; }
+        .field-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        .field-row:last-child { margin-bottom: 0; }
+        .field-label { color: var(--t2); font-size: 0.78em; }
+        .field-val { color: #fff; }
+        .freq-row { display: flex; gap: 7px; align-items: center; }
+        .freq-row input { flex: 1; }
+
+        /* ——— ADD POINT FORM ——— */
+        .add-form { display: flex; flex-direction: column; gap: 8px; }
+        .add-form input { width: 100%; }
+        .add-form .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+        /* ——— INLINE EDIT ——— */
+        .edit-form {
+            background: var(--bg3); border: 1px solid var(--border2);
+            padding: 10px; margin: 0; display: flex; flex-direction: column; gap: 7px;
+        }
+        .edit-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+        .edit-form input { width: 100%; }
+        .edit-form-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+        /* ——— BADGE ——— */
+        .badge { display: inline-block; padding: 1px 6px; border: 1px solid var(--border2); color: var(--acc); font-size: 0.85em; }
+        .badge-g { color: var(--green); border-color: var(--green); }
     </style>
 </head>
 <body>
+<div id="wrapper">
 
-<div id="container">
-    <header>
-        <div class="title-block">
-            <h1 id="owner-name">Chargement...</h1>
-            <h2 id="tag-str">#...</h2>
+    <!-- ——— TOP BAR ——— -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <div class="tag-name">
+                <span id="owner-name" style="color:var(--acc)">...</span>
+                &nbsp;<span id="tag-str" style="color:var(--t2); font-size:0.8em">#...</span>
+            </div>
+            <div class="tag-sub">
+                <span>Propriétaire : <span id="owner-id" style="color:#fff">—</span></span>
+                <span id="verified-badge" class="hidden verified">Compte vérifié ✔</span>
+                <span>Tag ID : <span id="tag-id-display" style="color:#fff">—</span></span>
+            </div>
         </div>
-        <button onclick="window.location.href='admin.html'">[ RETOUR ]</button>
-    </header>
-
-    <div id="chart-container">
-        <canvas id="myChart"></canvas>
+        <div class="top-bar-right">
+            <select id="view-select" onchange="onViewChange()" style="padding:5px 8px;">
+                <option value="global">GLOBAL (trophées totaux)</option>
+                <option disabled>— BRAWLERS —</option>
+            </select>
+            <button onclick="window.location.href='admin.html'" class="btn btn-ghost">← RETOUR</button>
+        </div>
     </div>
 
-    <div class="controls">
-        <span>Affichage :</span>
-        <select id="view-select" onchange="loadHistory()">
-            <option value="global">GLOBAL (Utilisateur)</option>
-            <option disabled>--- BRAWLERS ---</option>
-        </select>
-        <button onclick="addPoint()" class="btn-green">+ AJOUTER POINT</button>
-        <button onclick="loadHistory()">ACTUALISER</button>
+    <!-- ——— INFO CARDS ——— -->
+    <div class="info-grid">
+        <div class="info-card">
+            <div class="info-label">Trophées actuels</div>
+            <div class="info-value kpi-acc" id="info-trophies" style="color:var(--acc)">—</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Total archives</div>
+            <div class="info-value" id="info-total">—</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Dernière archive</div>
+            <div class="info-value" id="info-last" style="font-size:0.85em;padding-top:4px">—</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Fréquence</div>
+            <div class="info-value" id="info-freq">—</div>
+            <div class="info-sub">minutes</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Prochaine archive</div>
+            <div class="info-value" id="info-next" style="color:var(--green); font-size:0.85em; padding-top:4px">—</div>
+        </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>DATE (UTC)</th>
-                <th>TROPHÉES</th>
-                <th style="text-align:right">ACTIONS</th>
-            </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-    </table>
-</div>
+    <!-- ——— CHART ——— -->
+    <div class="chart-section">
+        <div class="chart-controls">
+            <h3>Historique des trophées</h3>
+            <button class="period-btn" onclick="setPeriod(7)"  id="p7">7j</button>
+            <button class="period-btn active" onclick="setPeriod(30)" id="p30">30j</button>
+            <button class="period-btn" onclick="setPeriod(90)" id="p90">90j</button>
+            <button class="period-btn" onclick="setPeriod(0)"  id="p0">Tout</button>
+        </div>
+        <div id="chart-wrap"><canvas id="myChart"></canvas></div>
+    </div>
+
+    <!-- ——— CONTENT GRID ——— -->
+    <div class="content-grid">
+
+        <!-- TABLE -->
+        <div class="table-section">
+            <div class="table-head">
+                <h3 id="table-title">Points d'archive</h3>
+                <div style="color:var(--t2); font-size:0.82em;" id="table-count"></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date (UTC)</th>
+                        <th>Trophées</th>
+                        <th>Delta</th>
+                        <th style="text-align:right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="hist-body">
+                    <tr><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">Chargement...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SIDE PANEL -->
+        <div class="side-panel">
+
+            <!-- Ajouter un point -->
+            <div class="side-card">
+                <h3>Ajouter un point</h3>
+                <div class="add-form">
+                    <div class="field-row">
+                        <div class="field-label">Trophées</div>
+                        <input type="number" id="add-trophies" placeholder="Ex: 45000" min="0">
+                    </div>
+                    <div class="field-row">
+                        <div class="field-label">Date & heure (UTC)</div>
+                        <input type="datetime-local" id="add-date">
+                    </div>
+                    <button onclick="addPoint()" class="btn btn-green" style="width:100%">+ AJOUTER</button>
+                </div>
+            </div>
+
+            <!-- Paramètres du tag -->
+            <div class="side-card">
+                <h3>Paramètres du tag</h3>
+                <div class="field-row">
+                    <div class="field-label">Fréquence d'archivage</div>
+                    <div class="freq-row">
+                        <input type="number" id="freq-input" min="1" placeholder="minutes">
+                        <button onclick="saveFreq()" class="btn btn-blue">OK</button>
+                    </div>
+                    <div id="freq-status" style="font-size:0.78em; color:var(--t2); margin-top:3px;"></div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">Actions</div>
+                    <div style="display:flex; gap:7px; flex-wrap:wrap; margin-top:4px;">
+                        <button onclick="unclaimTag()" class="btn btn-orange btn-sm">UNCLAIM</button>
+                        <button onclick="deleteTag()" class="btn btn-red btn-sm">SUPPRIMER TAG</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Infos propriétaire -->
+            <div class="side-card">
+                <h3>Propriétaire</h3>
+                <div class="field-row">
+                    <div class="field-label">Nom d'utilisateur</div>
+                    <div class="field-val" id="side-owner">—</div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">Grade</div>
+                    <div class="field-val" id="side-tier">—</div>
+                </div>
+                <div class="field-row">
+                    <div class="field-label">Dernière connexion</div>
+                    <div class="field-val" style="color:var(--t2)" id="side-login">—</div>
+                </div>
+                <div style="margin-top:10px;">
+                    <button onclick="goToUser()" class="btn btn-ghost btn-sm" style="width:100%">VOIR L'UTILISATEUR</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div><!-- /wrapper -->
 
 <script src="js/config.js"></script>
 <script>
-    const params = new URLSearchParams(window.location.search);
-    const TAG_ID = params.get('tag_id');
-    const ADMIN_KEY = sessionStorage.getItem('admin_key_v3');
+    const params  = new URLSearchParams(window.location.search);
+    const TAG_ID  = params.get('tag_id');
+    const PASS    = sessionStorage.getItem('admin_key_v3');
 
-    if (!TAG_ID || !ADMIN_KEY) {
-        alert("Accès non autorisé ou session expirée. Veuillez vous reconnecter.");
+    if (!TAG_ID || !PASS) {
+        alert('Accès non autorisé ou session expirée.');
         window.location.href = 'admin.html';
     }
 
-    let chartInstance = null;
+    let chartInst = null;
+    let allHistory = [];
+    let currentPeriod = 30;
+    let tagDetails = {};
+    let editingId = null;
+    let isBrawlerView = false;
 
+    function escH(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ——— INIT ———
     async function init() {
         await loadTagDetails();
+        setDefaultDate();
         loadHistory();
     }
 
+    function setDefaultDate() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('add-date').value = now.toISOString().slice(0,16);
+    }
+
+    // ——— TAG DETAILS ———
     async function loadTagDetails() {
         try {
-            const res = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/details`, {
-                headers: { 'X-Admin-Pass': ADMIN_KEY }
-            });
-            if(!res.ok) throw new Error("Erreur load details");
-            const data = await res.json();
+            const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/details`, { headers: { 'X-Admin-Pass': PASS } });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            tagDetails = await r.json();
+            renderDetails();
+        } catch (e) {
+            console.error(e);
+            alert('Impossible de charger les informations du tag.');
+        }
+    }
 
-            document.getElementById('owner-name').innerText = data.owner;
-            document.getElementById('tag-str').innerText = data.tag;
+    function renderDetails() {
+        const d = tagDetails;
+        document.getElementById('owner-name').textContent = d.owner || '—';
+        document.getElementById('tag-str').textContent = '#' + (d.tag || '—').replace('#','');
+        document.getElementById('tag-id-display').textContent = TAG_ID;
+        document.getElementById('owner-id').textContent = d.owner_id || '—';
 
-            const sel = document.getElementById('view-select');
-            data.brawlers.forEach(bid => {
+        if (d.is_verified) document.getElementById('verified-badge').classList.remove('hidden');
+
+        document.getElementById('info-trophies').textContent = (d.current_trophies ?? '—').toLocaleString?.('fr-FR') ?? (d.current_trophies ?? '—');
+        document.getElementById('info-total').textContent = d.total_archives ?? '—';
+        document.getElementById('info-last').textContent = d.last_archive || '—';
+        document.getElementById('info-freq').textContent = d.rec_temp ?? '—';
+        document.getElementById('freq-input').value = d.rec_temp ?? '';
+
+        // Prochaine archive
+        if (d.last_archive && d.rec_temp) {
+            const next = new Date(d.last_archive.replace(' ','T')).getTime() + d.rec_temp * 60000;
+            const diff = Math.ceil((next - Date.now()) / 60000);
+            document.getElementById('info-next').textContent = diff > 0 ? `dans ${diff} min` : 'Maintenant';
+        } else {
+            document.getElementById('info-next').textContent = '—';
+        }
+
+        // Propriétaire
+        document.getElementById('side-owner').textContent = d.owner || '(non lié)';
+        document.getElementById('side-tier').textContent = d.owner_tier || '—';
+        document.getElementById('side-login').textContent = d.owner_last_login || '—';
+
+        // Brawlers dans le select
+        const sel = document.getElementById('view-select');
+        // Remove old brawler options first
+        while (sel.options.length > 2) sel.remove(2);
+        if (d.brawlers && d.brawlers.length) {
+            d.brawlers.forEach(b => {
                 const opt = document.createElement('option');
-                opt.value = bid;
-                opt.innerText = `Brawler ID: ${bid}`;
+                opt.value = b.id;
+                opt.textContent = b.name ? `${b.name} (ID ${b.id})` : `Brawler ID ${b.id}`;
                 sel.appendChild(opt);
             });
+        }
 
-        } catch(e) { console.error(e); alert("Impossible de charger le tag"); }
+        document.title = `Éditer ${d.tag || TAG_ID} — Admin`;
     }
 
+    // ——— HISTORY ———
     async function loadHistory() {
+        const body = document.getElementById('hist-body');
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">Chargement...</td></tr>';
+
         const view = document.getElementById('view-select').value;
-        const tbody = document.getElementById('tbody');
-        tbody.innerHTML = '<tr><td colspan="3" class="loading">Chargement...</td></tr>';
+        isBrawlerView = view !== 'global';
 
         let url = `${API_URL}/api/admin/tag/${TAG_ID}/history`;
-        if(view !== 'global') url += `?brawler_id=${view}`;
+        if (isBrawlerView) url += `?brawler_id=${view}`;
 
         try {
-            const res = await fetch(url, { headers: { 'X-Admin-Pass': ADMIN_KEY } });
-            const data = await res.json();
-            renderTable(data);
-            const chartData = [...data].reverse();
-            renderChart(chartData);
-        } catch(e) { tbody.innerHTML = '<tr><td colspan="3">Erreur</td></tr>'; }
+            const r = await fetch(url, { headers: { 'X-Admin-Pass': PASS } });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const data = await r.json();
+            allHistory = data; // newest first (as returned)
+            renderTable(allHistory);
+            renderChart();
+
+            const title = isBrawlerView
+                ? (tagDetails.brawlers?.find(b => String(b.id) === view)?.name || `Brawler ${view}`)
+                : 'Global';
+            document.getElementById('table-title').textContent = title;
+            document.getElementById('table-count').textContent = `${data.length} point(s)`;
+        } catch { body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red)">Erreur de chargement</td></tr>'; }
     }
 
-    function renderTable(data) {
-        const tbody = document.getElementById('tbody');
-        tbody.innerHTML = '';
-        const isBrawler = document.getElementById('view-select').value !== 'global';
+    function onViewChange() { editingId = null; loadHistory(); }
 
-        data.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${row.recorded_at}</td>
-                <td style="color:#ffce00; font-weight:bold;">${row.trophies}</td>
-                <td style="text-align:right">
-                    <button onclick="editPoint(${row.id}, ${row.trophies}, ${isBrawler})">EDIT</button>
-                    <button onclick="deletePoint(${row.id}, ${isBrawler})" class="btn-red">DEL</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
+    // ——— CHART ———
+    function setPeriod(days) {
+        currentPeriod = days;
+        ['7','30','90','0'].forEach(d => {
+            const btn = document.getElementById('p' + d);
+            btn.className = 'period-btn' + (String(days) === d ? ' active' : '');
         });
-        if(data.length === 0) tbody.innerHTML = '<tr><td colspan="3" style="text-align:center">Aucun historique</td></tr>';
+        renderChart();
     }
 
-    function renderChart(data) {
-        const ctx = document.getElementById('myChart').getContext('2d');
-        if(chartInstance) chartInstance.destroy();
+    function renderChart() {
+        const raw = [...allHistory].reverse(); // chronological order
+        const filtered = currentPeriod === 0 ? raw : raw.slice(-currentPeriod);
 
-        chartInstance = new Chart(ctx, {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        if (chartInst) chartInst.destroy();
+
+        if (!filtered.length) return;
+
+        chartInst = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.map(d => d.recorded_at.split(' ')[0]),
+                labels: filtered.map(d => d.recorded_at.split(' ')[0]),
                 datasets: [{
                     label: 'Trophées',
-                    data: data.map(d => d.trophies),
+                    data: filtered.map(d => d.trophies),
                     borderColor: '#ffce00',
-                    backgroundColor: 'rgba(255, 206, 0, 0.1)',
+                    backgroundColor: 'rgba(255,206,0,0.07)',
                     borderWidth: 2,
-                    tension: 0.1,
-                    pointRadius: 2
+                    tension: 0.2,
+                    pointRadius: filtered.length > 60 ? 0 : 2,
+                    pointHoverRadius: 4
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `${ctx.parsed.y.toLocaleString('fr-FR')} trophées`
+                        }
+                    }
+                },
                 scales: {
-                    x: { ticks: { color: '#666' }, grid: { color: '#222' } },
-                    y: { ticks: { color: '#666' }, grid: { color: '#222' } }
+                    x: { ticks: { color: '#555', maxTicksLimit: 12 }, grid: { color: '#1a1a1a' } },
+                    y: { ticks: { color: '#555', callback: v => v.toLocaleString('fr-FR') }, grid: { color: '#1a1a1a' } }
                 }
             }
         });
     }
 
+    // ——— TABLE ———
+    function renderTable(data) {
+        const tbody = document.getElementById('hist-body');
+        tbody.innerHTML = '';
+
+        if (!data.length) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">Aucun historique</td></tr>';
+            return;
+        }
+
+        data.forEach((row, idx) => {
+            // Delta vs previous point (data is newest-first, so idx+1 is older)
+            const prev = data[idx + 1];
+            let deltaHTML = '<span class="delta-zero">—</span>';
+            if (prev !== undefined) {
+                const d = row.trophies - prev.trophies;
+                if (d > 0) deltaHTML = `<span class="delta-pos">+${d.toLocaleString('fr-FR')}</span>`;
+                else if (d < 0) deltaHTML = `<span class="delta-neg">${d.toLocaleString('fr-FR')}</span>`;
+                else deltaHTML = '<span class="delta-zero">±0</span>';
+            }
+
+            const tr = document.createElement('tr');
+            tr.id = `row-${row.id}`;
+            tr.innerHTML = `
+                <td style="color:var(--t2)">${escH(row.recorded_at)}</td>
+                <td style="color:var(--acc);font-weight:bold">${(row.trophies ?? 0).toLocaleString('fr-FR')}</td>
+                <td>${deltaHTML}</td>
+                <td style="text-align:right">
+                    <button onclick="startEdit(${row.id}, ${row.trophies}, '${escH(row.recorded_at)}')" class="btn btn-ghost btn-sm">ÉDITER</button>
+                    <button onclick="deletePoint(${row.id})" class="btn btn-red btn-sm">✕</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+
+            // Inline edit row
+            if (editingId === row.id) {
+                const editRow = document.createElement('tr');
+                editRow.id = `edit-${row.id}`;
+                editRow.innerHTML = `
+                    <td colspan="4" style="padding:0">
+                        <div class="edit-form">
+                            <div class="edit-form-row">
+                                <div>
+                                    <div style="color:var(--t2);font-size:0.78em;margin-bottom:3px">Trophées</div>
+                                    <input type="number" id="edit-trophies" value="${row.trophies}" style="width:100%">
+                                </div>
+                                <div>
+                                    <div style="color:var(--t2);font-size:0.78em;margin-bottom:3px">Date (UTC)</div>
+                                    <input type="datetime-local" id="edit-date" value="${row.recorded_at.replace(' ','T').slice(0,16)}" style="width:100%">
+                                </div>
+                            </div>
+                            <div class="edit-form-actions">
+                                <button onclick="cancelEdit()" class="btn btn-ghost btn-sm">ANNULER</button>
+                                <button onclick="saveEdit(${row.id})" class="btn btn-green btn-sm">ENREGISTRER</button>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(editRow);
+            }
+        });
+    }
+
+    // ——— CRUD POINTS ———
+    function startEdit(id, trophies, date) {
+        editingId = id;
+        renderTable(allHistory);
+        // Scroll to edit row
+        const el = document.getElementById('edit-' + id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function cancelEdit() { editingId = null; renderTable(allHistory); }
+
+    async function saveEdit(id) {
+        const t = parseInt(document.getElementById('edit-trophies').value, 10);
+        const d = document.getElementById('edit-date').value;
+        if (isNaN(t) || !d) { alert('Valeurs invalides.'); return; }
+
+        const date = d.replace('T', ' ') + ':00';
+        await sendAction('PUT', { id, trophies: t, date, is_brawler: isBrawlerView });
+    }
+
     async function addPoint() {
+        const t = parseInt(document.getElementById('add-trophies').value, 10);
+        const d = document.getElementById('add-date').value;
+        if (isNaN(t) || !d) { alert('Veuillez remplir les deux champs.'); return; }
+
+        const date = d.replace('T', ' ') + ':00';
         const view = document.getElementById('view-select').value;
-        const val = prompt("Nombre de Trophées :");
-        if(!val) return;
-        
-        const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
-        const date = prompt("Date (YYYY-MM-DD HH:MM:SS) :", now);
-        if(!date) return;
-
-        const payload = {
+        await sendAction('POST', {
             tag_id: TAG_ID,
-            trophies: parseInt(val),
-            date: date,
-            brawler_id: view === 'global' ? null : view
-        };
-
-        await sendAction('POST', payload);
+            trophies: t,
+            date,
+            brawler_id: isBrawlerView ? view : null
+        });
+        document.getElementById('add-trophies').value = '';
+        setDefaultDate();
     }
 
-    async function editPoint(id, oldVal, isBrawler) {
-        const newVal = prompt("Nouveaux Trophées :", oldVal);
-        if(!newVal || newVal == oldVal) return;
-
-        const payload = { id: id, trophies: parseInt(newVal), is_brawler: isBrawler };
-        await sendAction('PUT', payload);
-    }
-
-    async function deletePoint(id, isBrawler) {
-        if(!confirm("Supprimer ce point d'archive ?")) return;
-        const payload = { id: id, is_brawler: isBrawler };
-        await sendAction('DELETE', payload);
+    async function deletePoint(id) {
+        if (!confirm('Supprimer ce point d\'archive ?')) return;
+        await sendAction('DELETE', { id, is_brawler: isBrawlerView });
     }
 
     async function sendAction(method, body) {
         try {
-            const res = await fetch(`${API_URL}/api/admin/point`, {
-                method: method,
-                headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': ADMIN_KEY },
+            const r = await fetch(`${API_URL}/api/admin/point`, {
+                method,
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': PASS },
                 body: JSON.stringify(body)
             });
-            const d = await res.json();
-            if(res.ok) {
-                loadHistory();
+            const d = await r.json().catch(() => ({}));
+            if (r.ok) {
+                editingId = null;
+                await loadHistory();
+                await loadTagDetails();
+            } else { alert('Erreur : ' + (d.message || r.status)); }
+        } catch { alert('Erreur réseau.'); }
+    }
+
+    // ——— TAG SETTINGS ———
+    async function saveFreq() {
+        const val = parseInt(document.getElementById('freq-input').value, 10);
+        if (isNaN(val) || val < 1) { document.getElementById('freq-status').textContent = 'Valeur invalide.'; return; }
+        try {
+            const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/frequency`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': PASS },
+                body: JSON.stringify({ minutes: val })
+            });
+            const status = document.getElementById('freq-status');
+            if (r.ok) {
+                status.style.color = 'var(--green)';
+                status.textContent = 'Fréquence mise à jour.';
+                tagDetails.rec_temp = val;
+                document.getElementById('info-freq').textContent = val;
             } else {
-                alert("Erreur: " + d.message);
+                status.style.color = 'var(--red)';
+                status.textContent = 'Erreur.';
             }
-        } catch(e) { alert("Erreur Réseau"); }
+            setTimeout(() => { status.textContent = ''; }, 3000);
+        } catch { document.getElementById('freq-status').textContent = 'Erreur réseau.'; }
+    }
+
+    async function unclaimTag() {
+        if (!confirm('Unclaim ce tag ? Le propriétaire perdra l\'accès à cet historique.')) return;
+        try {
+            const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/unclaim`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': PASS },
+                body: '{}'
+            });
+            if (r.ok) { await loadTagDetails(); }
+            else { alert('Erreur'); }
+        } catch { alert('Erreur réseau.'); }
+    }
+
+    async function deleteTag() {
+        if (!confirm('Supprimer définitivement ce tag et tout son historique ?\nCette action est irréversible.')) return;
+        try {
+            const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}`, {
+                method: 'DELETE',
+                headers: { 'X-Admin-Pass': PASS }
+            });
+            if (r.ok) { window.location.href = 'admin.html'; }
+            else { alert('Erreur'); }
+        } catch { alert('Erreur réseau.'); }
+    }
+
+    function goToUser() {
+        if (tagDetails.owner_id) {
+            window.location.href = `admin.html#user-${tagDetails.owner_id}`;
+        }
     }
 
     init();
