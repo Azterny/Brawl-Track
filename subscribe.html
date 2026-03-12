@@ -6,15 +6,17 @@
     <title>Brawl-Track | Plans d'Abonnement</title>
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="/assets/logo.png">
+    <link rel="stylesheet" href="/css/footer.css">
     <style>
         :root {
             --bg-dark: #0f111a;
             --bg-card: #181c25;
             --text-main: #f1f1f1;
             --text-muted: #a1a5b5;
-            --color-subscriber:       #00e5ff;
-            --color-super-subscriber: #b500ff;
-            --color-premium:          #ffcc00;
+            --color-free:       #888888;
+            --color-starter:    #28a745;
+            --color-subscriber: #00e5ff;
+            --color-premium:    #ffcc00;
             --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
@@ -42,7 +44,6 @@
         .hero-title span { color: var(--color-premium); }
         .hero-subtitle { font-size: 1.2rem; color: var(--text-muted); max-width: 600px; margin: 0 auto; line-height: 1.5; }
 
-        /* Fix #18 — Badge "Bientôt disponible" */
         .coming-soon-banner {
             background: rgba(255,206,0,0.1);
             border: 1px solid rgba(255,206,0,0.3);
@@ -60,8 +61,8 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 40px;
-            max-width: 1200px;
+            gap: 30px;
+            max-width: 1400px;
             padding: 0 20px;
             margin-bottom: 80px;
         }
@@ -69,8 +70,8 @@
         .pricing-card {
             background-color: var(--bg-card);
             border-radius: 20px;
-            width: 320px;
-            padding: 40px 30px;
+            width: 290px;
+            padding: 36px 28px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -80,65 +81,78 @@
             z-index: 1;
         }
 
-        .card-subscriber { border-color: rgba(0,229,255,0.2); box-shadow: 0 10px 30px rgba(0,229,255,0.05); }
-        .card-subscriber:hover { transform: translateY(-10px); box-shadow: 0 15px 40px rgba(0,229,255,0.2); border-color: var(--color-subscriber); }
+        .card-free       { border-color: rgba(136,136,136,0.2); box-shadow: 0 10px 30px rgba(136,136,136,0.05); }
+        .card-free:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(136,136,136,0.15); border-color: var(--color-free); }
 
-        .card-super-subscriber { border-color: rgba(181,0,255,0.2); box-shadow: 0 10px 30px rgba(181,0,255,0.05); transform: scale(1.05); z-index: 2; }
-        .card-super-subscriber:hover { transform: scale(1.05) translateY(-10px); box-shadow: 0 15px 40px rgba(181,0,255,0.2); border-color: var(--color-super-subscriber); }
+        .card-starter       { border-color: rgba(40,167,69,0.2); box-shadow: 0 10px 30px rgba(40,167,69,0.05); }
+        .card-starter:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(40,167,69,0.2); border-color: var(--color-starter); }
 
-        .card-premium { border-color: rgba(255,204,0,0.2); box-shadow: 0 10px 30px rgba(255,204,0,0.05); }
-        .card-premium:hover { transform: translateY(-10px); box-shadow: 0 15px 40px rgba(255,204,0,0.2); border-color: var(--color-premium); }
+        .card-subscriber       { border-color: rgba(0,229,255,0.2); box-shadow: 0 10px 30px rgba(0,229,255,0.05); }
+        .card-subscriber:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,229,255,0.2); border-color: var(--color-subscriber); }
+
+        .card-premium { border-color: rgba(255,204,0,0.2); box-shadow: 0 10px 30px rgba(255,204,0,0.05); transform: scale(1.04); z-index: 2; }
+        .card-premium:hover { transform: scale(1.04) translateY(-8px); box-shadow: 0 15px 40px rgba(255,204,0,0.3); border-color: var(--color-premium); }
 
         .badge-popular {
             position: absolute; top: -15px;
-            background: linear-gradient(90deg, #ff007b, #b500ff);
-            color: white; padding: 5px 20px; border-radius: 20px;
+            background: linear-gradient(90deg, #ffcc00, #ff9900);
+            color: #000; padding: 5px 20px; border-radius: 20px;
             font-size: 0.85rem; font-weight: bold; text-transform: uppercase;
-            box-shadow: 0 5px 15px rgba(181,0,255,0.4);
+            box-shadow: 0 5px 15px rgba(255,204,0,0.4);
         }
 
-        .grade-icon { width: 80px; height: 80px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); transition: transform 0.3s ease; }
+        .grade-icon { width: 72px; height: 72px; object-fit: contain; margin-bottom: 18px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); transition: transform 0.3s ease; }
         .pricing-card:hover .grade-icon { transform: scale(1.1); }
 
-        .plan-name { font-size: 1.8rem; font-weight: bold; margin-bottom: 10px; text-transform: capitalize; }
-        .subscriber-text       { color: var(--color-subscriber); }
-        .super-subscriber-text { color: var(--color-super-subscriber); }
-        .premium-text          { color: var(--color-premium); }
+        .plan-name { font-size: 1.7rem; font-weight: bold; margin-bottom: 8px; text-transform: capitalize; }
+        .free-text       { color: var(--color-free); }
+        .starter-text    { color: var(--color-starter); }
+        .subscriber-text { color: var(--color-subscriber); }
+        .premium-text    { color: var(--color-premium); }
 
-        .plan-price    { font-size: 2.5rem; font-weight: 800; margin-bottom: 5px; }
-        .plan-duration { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 30px; }
+        .plan-price    { font-size: 2.4rem; font-weight: 800; margin-bottom: 5px; }
+        .plan-duration { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 28px; }
 
-        .benefits-list { list-style: none; width: 100%; margin-bottom: 30px; flex-grow: 1; }
-        .benefits-list li { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; display: flex; align-items: center; gap: 10px; }
+        .benefits-list { list-style: none; width: 100%; margin-bottom: 28px; flex-grow: 1; }
+        .benefits-list li { padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.93rem; display: flex; align-items: center; gap: 10px; }
 
         .check-icon { font-size: 1.1rem; font-weight: bold; }
-        .subscriber-check       { color: var(--color-subscriber); }
-        .super-subscriber-check { color: var(--color-super-subscriber); }
-        .premium-check          { color: var(--color-premium); }
+        .free-check       { color: var(--color-free); }
+        .starter-check    { color: var(--color-starter); }
+        .subscriber-check { color: var(--color-subscriber); }
+        .premium-check    { color: var(--color-premium); }
 
-        /* Fix #18 — Bouton désactivé tant que Stripe n'est pas intégré */
         .cta-btn {
-            width: 100%; padding: 16px; border: none; border-radius: 12px;
+            width: 100%; padding: 14px; border: none; border-radius: 12px;
             font-size: 1rem; font-weight: 800; cursor: not-allowed;
             text-transform: uppercase; letter-spacing: 1px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             opacity: 0.55;
             position: relative;
         }
-        .btn-subscriber       { background: linear-gradient(135deg, #00c8e8, #0099bb); color: #fff; }
-        .btn-super-subscriber { background: linear-gradient(135deg, #9900cc, #6600aa); color: #fff; }
-        .btn-premium          { background: linear-gradient(135deg, #ffcc00, #ff9900); color: #000; }
+        .btn-free       { background: linear-gradient(135deg, #555, #333); color: #ccc; }
+        .btn-starter    { background: linear-gradient(135deg, #28a745, #1e7e34); color: #fff; }
+        .btn-subscriber { background: linear-gradient(135deg, #00c8e8, #0099bb); color: #fff; }
+        .btn-premium    { background: linear-gradient(135deg, #ffcc00, #ff9900); color: #000; }
 
         .soon-label {
             display: block; font-size: 0.72rem; font-weight: 400; letter-spacing: 0;
             text-transform: none; margin-top: 4px; opacity: 0.8;
         }
 
+        .current-plan-badge {
+            position: absolute; top: -15px;
+            background: #2d2d2d; border: 1px solid #555;
+            color: #aaa; padding: 4px 14px; border-radius: 20px;
+            font-size: 0.8rem; text-transform: uppercase;
+        }
+
         @media (max-width: 768px) {
             .hero-title { font-size: 2rem; }
-            .pricing-container { gap: 24px; }
-            .card-super-subscriber { transform: none; }
-            .card-super-subscriber:hover { transform: translateY(-10px); }
+            .pricing-container { gap: 20px; }
+            .card-premium { transform: none; }
+            .card-premium:hover { transform: translateY(-8px); }
+            .pricing-card { width: 100%; max-width: 340px; }
         }
     </style>
 </head>
@@ -149,7 +163,6 @@
         <p class="hero-subtitle">Débloquez des mises à jour en temps réel, plus de profils suivis et des statistiques avancées.</p>
     </div>
 
-    <!-- Fix #18 — Information explicite sur la disponibilité -->
     <div class="coming-soon-banner">
         <strong>Les abonnements arrivent bientôt</strong>
         L'intégration du paiement est en cours de développement. Revenez prochainement !
@@ -157,16 +170,55 @@
 
     <div class="pricing-container">
 
+        <!-- FREE -->
+        <div class="pricing-card card-free">
+            <span class="current-plan-badge">Plan actuel</span>
+            <img src="/assets/grade/free.png" alt="Free Icon" class="grade-icon" onerror="this.src='/assets/default_icon.png'">
+            <h2 class="plan-name free-text">Free</h2>
+            <div class="plan-price">0€</div>
+            <div class="plan-duration">pour toujours</div>
+            <ul class="benefits-list">
+                <li><span class="check-icon free-check">✓</span> Mise à jour toutes les <b>48h</b></li>
+                <li><span class="check-icon free-check">✓</span> Suivi jusqu'à <b>10 joueurs</b></li>
+                <li><span class="check-icon free-check">✓</span> <b>1 profil</b> revendiqué (Claim)</li>
+                <li><span class="check-icon free-check">✓</span> Recherche publique illimitée</li>
+                <li><span class="check-icon free-check">✓</span> Historique 30 jours</li>
+            </ul>
+            <button class="cta-btn btn-free" disabled>
+                Plan gratuit
+                <span class="soon-label">Votre plan par défaut</span>
+            </button>
+        </div>
+
+        <!-- STARTER -->
+        <div class="pricing-card card-starter">
+            <img src="/assets/grade/starter.png" alt="Starter Icon" class="grade-icon" onerror="this.src='/assets/default_icon.png'">
+            <h2 class="plan-name starter-text">Starter</h2>
+            <div class="plan-price">1.99€</div>
+            <div class="plan-duration">par mois</div>
+            <ul class="benefits-list">
+                <li><span class="check-icon starter-check">✓</span> Mise à jour toutes les <b>12h</b></li>
+                <li><span class="check-icon starter-check">✓</span> Suivi jusqu'à <b>25 joueurs</b></li>
+                <li><span class="check-icon starter-check">✓</span> <b>1 profil</b> revendiqué (Claim)</li>
+                <li><span class="check-icon starter-check">✓</span> Bordure Verte sur le Leaderboard</li>
+                <li><span class="check-icon starter-check">✓</span> Historique 3 mois</li>
+            </ul>
+            <button class="cta-btn btn-starter" disabled>
+                S'abonner
+                <span class="soon-label">Disponible prochainement</span>
+            </button>
+        </div>
+
         <!-- SUBSCRIBER -->
         <div class="pricing-card card-subscriber">
-            <img src="/assets/grade/subscriber.png" alt="Subscriber Icon" class="grade-icon" onerror="this.src='https://via.placeholder.com/80/00e5ff/ffffff?text=SUB'">
+            <img src="/assets/grade/subscriber.png" alt="Subscriber Icon" class="grade-icon" onerror="this.src='/assets/default_icon.png'">
             <h2 class="plan-name subscriber-text">Subscriber</h2>
             <div class="plan-price">2.99€</div>
             <div class="plan-duration">par mois</div>
             <ul class="benefits-list">
                 <li><span class="check-icon subscriber-check">✓</span> <b>Mise à jour toutes les heures</b></li>
                 <li><span class="check-icon subscriber-check">✓</span> Suivi jusqu'à <b>50 joueurs</b></li>
-                <li><span class="check-icon subscriber-check">✓</span> <b>2 profils</b> revendiqués (Claim)</li>
+                <li><span class="check-icon subscriber-check">✓</span> <b>1 profil</b> revendiqué (Claim)</li>
                 <li><span class="check-icon subscriber-check">✓</span> Bordure Cyan sur le Leaderboard</li>
                 <li><span class="check-icon subscriber-check">✓</span> Historique 6 mois</li>
             </ul>
@@ -176,36 +228,17 @@
             </button>
         </div>
 
-        <!-- SUPER SUBSCRIBER -->
-        <div class="pricing-card card-super-subscriber">
-            <span class="badge-popular">Populaire</span>
-            <img src="/assets/grade/super_subscriber.png" alt="Super Subscriber Icon" class="grade-icon" onerror="this.src='https://via.placeholder.com/80/b500ff/ffffff?text=SUPER'">
-            <h2 class="plan-name super-subscriber-text">Super Subscriber</h2>
-            <div class="plan-price">5.99€</div>
-            <div class="plan-duration">par mois</div>
-            <ul class="benefits-list">
-                <li><span class="check-icon super-subscriber-check">✓</span> <b>Mise à jour toutes les 30 min</b></li>
-                <li><span class="check-icon super-subscriber-check">✓</span> Suivi jusqu'à <b>75 joueurs</b></li>
-                <li><span class="check-icon super-subscriber-check">✓</span> <b>3 profils</b> revendiqués (Claim)</li>
-                <li><span class="check-icon super-subscriber-check">✓</span> Bordure Violette sur le Leaderboard</li>
-                <li><span class="check-icon super-subscriber-check">✓</span> Historique 1 an</li>
-            </ul>
-            <button class="cta-btn btn-super-subscriber" disabled>
-                S'abonner
-                <span class="soon-label">Disponible prochainement</span>
-            </button>
-        </div>
-
         <!-- PREMIUM -->
         <div class="pricing-card card-premium">
-            <img src="/assets/grade/premium.png" alt="Premium Icon" class="grade-icon" onerror="this.src='https://via.placeholder.com/80/ffcc00/ffffff?text=PREM'">
+            <span class="badge-popular">Meilleur choix</span>
+            <img src="/assets/grade/premium.png" alt="Premium Icon" class="grade-icon" onerror="this.src='/assets/default_icon.png'">
             <h2 class="plan-name premium-text">Premium</h2>
             <div class="plan-price">8.99€</div>
             <div class="plan-duration">par mois</div>
             <ul class="benefits-list">
                 <li><span class="check-icon premium-check">✓</span> <b>Mise à jour toutes les 15 min</b></li>
                 <li><span class="check-icon premium-check">✓</span> Suivi jusqu'à <b>100 joueurs</b></li>
-                <li><span class="check-icon premium-check">✓</span> <b>5 profils</b> revendiqués (Claim)</li>
+                <li><span class="check-icon premium-check">✓</span> <b>1 profil</b> revendiqué (Claim)</li>
                 <li><span class="check-icon premium-check">✓</span> Bordure &amp; Néon Or sur le Leaderboard</li>
                 <li><span class="check-icon premium-check">✓</span> Historique illimité</li>
                 <li><span class="check-icon premium-check">✓</span> Serveurs dédiés ultra-rapides</li>
@@ -218,5 +251,8 @@
 
     </div>
 
+    <footer id="site-footer"></footer>
+    <script src="/js/config.js"></script>
+    <script src="/js/footer.js"></script>
 </body>
 </html>

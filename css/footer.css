@@ -1,0 +1,72 @@
+/* =========================================
+   FOOTER.CSS — Styles du pied de page
+   ========================================= */
+
+#site-footer {
+    width: 100%;
+    background: #0d0d0d;
+    border-top: 1px solid #222;
+    margin-top: auto;
+    padding: 32px 20px 24px;
+}
+
+.footer-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Audiowide', sans-serif;
+    font-size: 1.1em;
+    color: #ffce00;
+    letter-spacing: 1px;
+}
+
+.footer-logo-img {
+    height: 28px;
+    object-fit: contain;
+}
+
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 20px;
+}
+
+.footer-links a {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.88em;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: #ffce00;
+}
+
+.footer-legal {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.footer-legal p {
+    color: #555;
+    font-size: 0.78em;
+}
+
+.footer-disclaimer {
+    color: #444 !important;
+    font-size: 0.73em !important;
+    max-width: 560px;
+    line-height: 1.5;
+}

@@ -107,7 +107,7 @@ function getRightActions(token, safeUsername, notifBadge, notifCountText) {
     } else {
         return `
             <a href="/" class="nav-link">Connexion</a>
-            <a href="/" class="nav-btn-cta">S'inscrire</a>
+            <a href="/sign-in" class="nav-btn-cta">S'inscrire</a>
         `;
     }
 }
@@ -132,7 +132,8 @@ function getMobileLinks(token, safeUsername, notifCountText) {
             <a href="#" onclick="focusSearch()" class="mobile-link">🔎 Recherche</a>
             <a href="/leaderboard" class="mobile-link"><img src="/assets/icons/leaderboard.png" alt="" style="height: 1.2em; vertical-align: middle; margin-right: 8px;" onerror="this.style.display='none'">Classements</a>
             <hr style="border-color:#333; width:100%; opacity:0.3;">
-            <a href="/" class="nav-btn-cta" style="text-align:center; display:block;">Se Connecter</a>
+            <a href="/" class="mobile-link" style="text-align:center; display:block;">Se Connecter</a>
+            <a href="/sign-in" class="nav-btn-cta" style="text-align:center; display:block; margin-top:8px;">Créer un compte</a>
         `;
     }
     return html;

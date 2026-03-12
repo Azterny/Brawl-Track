@@ -23,13 +23,25 @@ window.onload = function() {
         window.history.replaceState({}, '', '/');
     }
     const token = localStorage.getItem('token');
+    const msgEl = document.getElementById('message');
+
+    // Afficher message de bienvenue après inscription
+    if (new URLSearchParams(window.location.search).get('registered') === '1') {
+        if (msgEl) {
+            msgEl.style.color = '#28a745';
+            msgEl.innerText = '✅ Compte créé avec succès ! Connectez-vous maintenant.';
+        }
+        // Nettoyer l'URL
+        window.history.replaceState({}, '', '/');
+    }
+
     if (token) {
         const loginForm = document.getElementById('login-form');
         if (loginForm) {
             loginForm.innerHTML = `
                 <h2 style="color: #28a745;">Bon retour !</h2>
                 <p>Tu es déjà connecté.</p>
-                <button onclick="window.location.href='userhome.html'" class="btn-3d btn-yellow">ACCÉDER À MES COMPTES</button>
+                <button onclick="window.location.href='/home'" class="btn-3d btn-yellow">ACCÉDER À MES COMPTES</button>
                 <button onclick="logoutNav()" class="btn-3d btn-red">Se Déconnecter</button>
             `;
         }

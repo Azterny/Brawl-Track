@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brawl-Track | Créer un compte</title>
+    <meta name="description" content="Créez votre compte Brawl-Track pour suivre vos statistiques Brawl Stars.">
+    <link rel="icon" type="image/png" href="/assets/logo.png">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="global-navbar"></div>
+
+    <div style="text-align: center; margin-top: 50px; margin-bottom: 30px;">
+        <a href="/" style="text-decoration: none;">
+            <h1 style="font-size: 2.8em; margin-bottom: 8px; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">BRAWL TRACK</h1>
+        </a>
+        <p style="color: #888;">Suivi de statistiques &amp; Historique</p>
+    </div>
+
+    <div class="landing-wrapper" style="max-width: 480px; margin: 0 auto 60px; padding: 0 15px;">
+        <div class="landing-column" style="min-width: 0; width: 100%;">
+
+            <h2 style="color: #ffce00; margin-bottom: 20px;">Créer un compte</h2>
+
+            <input type="text" id="reg-username" placeholder="Nom d'utilisateur (3–20 caractères)" maxlength="20" autocomplete="username">
+            <input type="password" id="reg-password" placeholder="Mot de passe (8 caractères minimum)" autocomplete="new-password">
+            <input type="password" id="reg-confirm" placeholder="Confirmer le mot de passe" autocomplete="new-password" onkeyup="if(event.key === 'Enter') doRegister()">
+
+            <button onclick="doRegister()" class="btn-3d btn-green" id="btn-register" style="width: 100%; margin-top: 5px;">S'INSCRIRE</button>
+
+            <p id="reg-message" style="margin-top: 15px; font-weight: bold; min-height: 1.2em;"></p>
+
+            <p style="margin-top: 20px; color: #888; border-top: 1px solid #333; padding-top: 20px;">
+                Vous avez déjà un compte ? <a href="/" style="color: #ffce00;">Se connecter</a>
+            </p>
+        </div>
+    </div>
+
+    <footer id="site-footer"></footer>
+    <script src="/js/config.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/navbar.js"></script>
+    <script src="/js/signin.js"></script>
+    <script src="/js/footer.js"></script>
+</body>
+</html>

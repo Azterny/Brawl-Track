@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/index.css">
     <link rel="stylesheet" href="/css/responsive.css">
+    <link rel="stylesheet" href="/css/footer.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Lilita+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -44,17 +45,7 @@
                 <input type="password" id="login-password" placeholder="Mot de passe" onkeyup="if(event.key === 'Enter') login()">
                 <button onclick="login()" class="btn-3d btn-yellow">SE CONNECTER</button>
                 <p style="margin-top: 15px; color: #888;">
-                    Pas de compte ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Créer un compte</a>
-                </p>
-            </div>
-
-            <div id="register-form" class="hidden">
-                <h2 style="color: #ffce00;">Créer un compte</h2>
-                <input type="text" id="reg-username" placeholder="Pseudo">
-                <input type="password" id="reg-password" placeholder="Mot de passe">
-                <button onclick="register()" class="btn-3d btn-green">S'INSCRIRE</button>
-                <p style="margin-top: 15px; color: #888;">
-                    Déjà inscrit ? <a href="#" onclick="toggleForms()" style="color: #ffce00;">Se connecter</a>
+                    Pas de compte ? <a href="/sign-in" style="color: #ffce00;">Créer un compte</a>
                 </p>
             </div>
 
@@ -72,11 +63,13 @@
 
     </div>
     
+    <footer id="site-footer"></footer>
     <script src="/js/config.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/navbar.js"></script>
     <script src="/js/index.js"></script>
-    
+    <script src="/js/footer.js"></script>
+
 </body>
 </html>
