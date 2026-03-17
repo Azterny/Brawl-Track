@@ -713,7 +713,7 @@
 <script src="js/config.js"></script>
 <script>
 // ====== AUTH ======
-const ADMIN_KEY = 'admin_key_v3';
+const ADMIN_KEY = 'bt_admin_token_v4';
 let PASS = sessionStorage.getItem(ADMIN_KEY);
 if (PASS) { document.getElementById('login-overlay').classList.add('hidden'); loadAll(); }
 
@@ -750,8 +750,9 @@ async function login() {
             body: JSON.stringify({ password: p })
         });
         if (r.ok) {
-            PASS = p;
-            sessionStorage.setItem(ADMIN_KEY, p);
+            const data = await r.json();
+            PASS = data.token;
+            sessionStorage.setItem(ADMIN_KEY, data.token);
             document.getElementById('login-overlay').classList.add('hidden');
             loadAll();
         } else { alert('Mot de passe incorrect.'); }
@@ -799,7 +800,7 @@ function setStatus(txt) { document.getElementById('status-text').textContent = t
 async function loadAll() {
     if (!PASS) return;
     setStatus('Actualisation...');
-    const h = { 'X-Admin-Pass': PASS };
+    const h = { 'X-Admin-Token': PASS };
 
     const calls = [
         fetch(`${API_URL}/api/admin/stats/overview`, { headers: h }).then(r => r.json()).then(d => { overview = d; renderKPIs(); renderRecentTables(); }),
@@ -1266,7 +1267,7 @@ async function toggleDeleteRecipients() {
 
     try {
         const r = await fetch(`${API_URL}/api/admin/messages/${selectedMsgId}/recipients`, {
-            headers: { 'X-Admin-Pass': PASS }
+            headers: { 'X-Admin-Token': PASS }
         });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const recipients = await r.json();
@@ -1558,8 +1559,11 @@ function unclaim(tid) {
 
 function delTag(tid) {
     if (confirm('Supprimer ce tag et tout son historique ?\nCette action est irréversible.')) {
-        fetch(`${API_URL}/api/admin/tag/${tid}`, { method: 'DELETE', headers: { 'X-Admin-Pass': PASS } })
-            .then(r => { if (r.ok) loadAll(); else alert('Erreur'); });
+        fetch(`${API_URL}/api/admin/tag/${tid}`, { method: 'DELETE', headers: { 'X-Admin-Token': PASS } })
+            .then(r => {
+                if (r.status === 401 || r.status === 403) { logout(); return; }
+                if (r.ok) loadAll(); else alert('Erreur');
+            });
     }
 }
 
@@ -1568,11 +1572,14 @@ async function adminFetch(path, method = 'POST', body = {}) {
     try {
         const r = await fetch(`${API_URL}/api/admin/${path}`, {
             method,
-            headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': PASS },
+            headers: { 'Content-Type': 'application/json', 'X-Admin-Token': PASS },
             body: method !== 'GET' && method !== 'DELETE' ? JSON.stringify(body) : undefined
         });
         if (r.ok) { loadAll(); return true; }
-        else { const d = await r.json().catch(() => ({})); alert('Erreur : ' + (d.message || r.status)); return false; }
+        if (r.status === 401 || r.status === 403) { logout(); return false; }
+        const d = await r.json().catch(() => ({}));
+        alert('Erreur : ' + (d.message || r.status));
+        return false;
     } catch { alert('Erreur réseau.'); return false; }
 }
 
@@ -1601,7 +1608,7 @@ let archivageEnabled = true;
 
 async function loadArchivageTab() {
     try {
-        const h = { 'X-Admin-Pass': PASS };
+        const h = { 'X-Admin-Token': PASS };
         const [statsRes, cfgRes] = await Promise.all([
             fetch(`${API_URL}/api/admin/archivage/stats`, { headers: h }),
             fetch(`${API_URL}/api/admin/archivage/config`, { headers: h })
