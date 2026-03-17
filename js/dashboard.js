@@ -619,6 +619,13 @@ function getInterpolatedValue(targetDate, allData) {
     return null;
 }
 
+function isGapSegment(p0, p1) {
+    if (!p0 || !p1) return false;
+    if (p0.type === 'ghost' || p1.type === 'ghost') return false;
+    if (p0.y === p1.y) return false; // même valeur (plateau) → pas de marquage
+    return (p1.x - p0.x) > 20 * 3600 * 1000; // > 20h
+}
+
 // =========================================================
 // === GESTION GRAPH PRINCIPAL ===
 // =========================================================
@@ -1188,9 +1195,23 @@ function renderGenericChart(config) {
 
     const segmentCallback = {
         borderColor: segCtx => {
+            const p0 = finalDataPoints[segCtx.p0DataIndex];
             const p1 = finalDataPoints[segCtx.p1DataIndex];
             if (p1 && (p1.cType === 'locked' || p1.cType === 'unlocked')) return '#ffffff';
+            if (isGapSegment(p0, p1)) return color + '55';
             return color;
+        },
+        borderDash: segCtx => {
+            const p0 = finalDataPoints[segCtx.p0DataIndex];
+            const p1 = finalDataPoints[segCtx.p1DataIndex];
+            if (isGapSegment(p0, p1)) return [5, 5];
+            return undefined;
+        },
+        backgroundColor: segCtx => {
+            const p0 = finalDataPoints[segCtx.p0DataIndex];
+            const p1 = finalDataPoints[segCtx.p1DataIndex];
+            if (isGapSegment(p0, p1)) return color + '06';
+            return color + '1A';
         }
     };
 
