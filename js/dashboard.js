@@ -622,6 +622,14 @@ function getInterpolatedValue(targetDate, allData) {
 function isGapSegment(p0, p1) {
     if (!p0 || !p1) return false;
     if (p0.type === 'ghost' || p1.type === 'ghost') return false;
+    if (p0.type === 'live'  || p1.type === 'live')  return false;
+    if (p0.y === p1.y) return false;
+    return (p1.x - p0.x) > 20 * 3600 * 1000;
+}
+
+function isGapSegment(p0, p1) {
+    if (!p0 || !p1) return false;
+    if (p0.type === 'ghost' || p1.type === 'ghost') return false;
     if (p0.y === p1.y) return false; // même valeur (plateau) → pas de marquage
     return (p1.x - p0.x) > 20 * 3600 * 1000; // > 20h
 }
