@@ -296,7 +296,7 @@
 <script>
     const params  = new URLSearchParams(window.location.search);
     const TAG_ID  = params.get('tag_id');
-    const PASS    = sessionStorage.getItem('admin_key_v3');
+    const PASS = sessionStorage.getItem('bt_admin_token_v4');
 
     if (!TAG_ID || !PASS) {
         alert('Accès non autorisé ou session expirée.');
@@ -360,7 +360,8 @@
     // ——— TAG DETAILS ———
     async function loadTagDetails() {
         try {
-            const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/details`, { headers: { 'X-Admin-Pass': PASS } });
+            const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/details`, { headers: { 'X-Admin-Token': PASS } });
+            if (r.status === 401 || r.status === 403) { window.location.href = 'admin.html'; return; }
             if (!r.ok) throw new Error('HTTP ' + r.status);
             tagDetails = await r.json();
             renderDetails();
@@ -419,26 +420,26 @@
     async function loadHistory() {
         const body = document.getElementById('hist-body');
         body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--t3);padding:20px">Chargement...</td></tr>';
-
+    
         const view = document.getElementById('view-select').value;
         isBrawlerView = view !== 'global';
-
+    
         let url = `${API_URL}/api/admin/tag/${TAG_ID}/history`;
         if (isBrawlerView) url += `?brawler_id=${view}`;
-
+    
         try {
-            const r = await fetch(url, { headers: { 'X-Admin-Pass': PASS } });
+            const r = await fetch(url, { headers: { 'X-Admin-Token': PASS } });
+            if (r.status === 401 || r.status === 403) { window.location.href = 'admin.html'; return; }
             if (!r.ok) throw new Error('HTTP ' + r.status);
             const data = await r.json();
-            allHistory = data; // newest first (as returned)
+            allHistory = data;
             renderTable(allHistory);
             renderChart();
-
+    
             const title = isBrawlerView
                 ? (tagDetails.brawlers?.find(b => String(b.id) === view)?.name || `Brawler ${view}`)
                 : 'Global';
             document.getElementById('table-title').textContent = title;
-            // table-count est géré par renderTable via la barre de pagination
         } catch { body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--red)">Erreur de chargement</td></tr>'; }
     }
 
@@ -618,9 +619,10 @@
         try {
             const r = await fetch(`${API_URL}/api/admin/point`, {
                 method,
-                headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': PASS },
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Token': PASS },
                 body: JSON.stringify(body)
             });
+            if (r.status === 401 || r.status === 403) { window.location.href = 'admin.html'; return; }
             const d = await r.json().catch(() => ({}));
             if (r.ok) {
                 editingId = null;
@@ -637,9 +639,10 @@
         try {
             const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/frequency`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': PASS },
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Token': PASS },
                 body: JSON.stringify({ minutes: val })
             });
+            if (r.status === 401 || r.status === 403) { window.location.href = 'admin.html'; return; }
             const status = document.getElementById('freq-status');
             if (r.ok) {
                 status.style.color = 'var(--green)';
@@ -659,9 +662,10 @@
         try {
             const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}/unclaim`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Admin-Pass': PASS },
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Token': PASS },
                 body: '{}'
             });
+            if (r.status === 401 || r.status === 403) { window.location.href = 'admin.html'; return; }
             if (r.ok) { await loadTagDetails(); }
             else { alert('Erreur'); }
         } catch { alert('Erreur réseau.'); }
@@ -672,13 +676,13 @@
         try {
             const r = await fetch(`${API_URL}/api/admin/tag/${TAG_ID}`, {
                 method: 'DELETE',
-                headers: { 'X-Admin-Pass': PASS }
+                headers: { 'X-Admin-Token': PASS }
             });
+            if (r.status === 401 || r.status === 403) { window.location.href = 'admin.html'; return; }
             if (r.ok) { window.location.href = 'admin.html'; }
             else { alert('Erreur'); }
         } catch { alert('Erreur réseau.'); }
     }
-
     function goToUser() {
         if (tagDetails.owner_id) {
             window.location.href = `admin.html#user-${tagDetails.owner_id}`;
